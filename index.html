@@ -20,13 +20,47 @@
         p {
             font-size: 1.5em;
         }
-        a {
-            color: blue;
+        .tool-box {
+            display: flex;
+            align-items: stretch; /* Stretches children to the full height */
+            justify-content: flex-start;
+            margin: 20px auto;
+            border: 2px solid black;
+            border-radius: 10px;
+            max-width: 600px;
+            overflow: hidden; /* Ensures button fits cleanly */
+        }
+        .button-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #4CAF50; /* Nice green color */
+            color: white;
             text-decoration: none;
             font-weight: bold;
+            font-size: 1.2em;
+            text-align: left;
+            cursor: pointer;
+            border: none;
+            padding: 15px 15px; /* Added top and bottom padding */
+            width: 200px; /* Fixed width for consistent design */
+            border-right: 2px solid black; /* Optional visual divider */
         }
-        a:hover {
-            text-decoration: underline;
+        .button-link img {
+            margin-left: 10px;
+            width: 40px; /* Icon size */
+            height: 40px;
+        }
+        .button-link:hover {
+            background-color: #3e8e41; /* Darker green on hover */
+        }
+        .description {
+            font-size: 1em;
+            color: black;
+            text-align: left;
+            padding: 10px;
+            margin: 0;
+            flex-grow: 1; /* Makes description take up the remaining space */
         }
         footer {
             margin-top: 50px;
@@ -39,9 +73,25 @@
     <h1>Welcome to My Website</h1>
     <p>This is where I put little tools I made with AI to solve fun problems.</p>
     <p>Explore my creations:</p>
-    <ul>
-        <li><a href="centroid.html">Centroid Finder Tool</a></li>
-        <!-- Add more links to tools as you create them -->
-    </ul>
+    
+    <div class="tool-box">
+        <a class="button-link" href="centroid.html">
+            Centroid Finder Tool
+            <img src="https://static-00.iconduck.com/assets.00/cursor-click-icon-976x1024-r4frcs8z.png" alt="Mouse Icon">
+        </a>
+        <p class="description">A tool to calculate the centroid of a set of locations.</p>
+    </div>
+
+    <div class="tool-box">
+        <a class="button-link" href="job_selector/job_selector.html">
+            Job Selector Tool
+            <img src="https://static-00.iconduck.com/assets.00/cursor-click-icon-976x1024-r4frcs8z.png" alt="Mouse Icon">
+        </a>
+        <p class="description">An app that helps medics rank their job preferences starting with a CSV with all the jobs in.</p>
+    </div>
+    
+    <footer>
+        &copy; 2025 - Created with a love for AI and solving fun problems.
+    </footer>
 </body>
 </html>
