@@ -36,24 +36,7 @@
       z-index: 999;
     }
 
-    /* The map takes up most of the screen */
-    #map {
-      width: 100%;
-      height: calc(100% - 200px); /* make room for header & footer */
-      box-sizing: border-box;
-    }
-
-    /* Controls area */
-    #controls {
-      padding: 10px;
-      text-align: center;
-    }
-    #controls button,
-    #controls input[type="file"] {
-      margin: 5px;
-    }
-
-    /* Footer showing the current centroid */
+    /* Footer at the bottom */
     footer {
       background-color: #f5f5f5;
       padding: 10px 0;
@@ -62,6 +45,82 @@
       box-shadow: 0 -1px 5px rgba(0,0,0,0.1);
       position: relative;
       z-index: 999;
+    }
+
+    /* The map container in the middle */
+    #mapContainer {
+      position: relative;  /* So the overlay can be absolutely positioned */
+      width: 100%;
+      height: calc(100% - 200px); /* 200px for header + footer */
+      box-sizing: border-box;
+    }
+
+    /* The Leaflet map itself */
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* The overlay on the right */
+    #friendsOverlay {
+      position: absolute;
+      top: 10px;    /* a bit of padding from the top */
+      right: 10px;  /* a bit of padding from the right edge */
+      width: 270px;
+      background-color: rgba(255, 255, 255, 0.8); /* slight transparency */
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      z-index: 9999; /* on top of the map */
+    }
+
+    #friendsOverlay h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    #friendsList {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      max-height: 300px; /* if you expect lots of entries */
+      overflow-y: auto;  /* scroll if needed */
+    }
+
+    #friendsList li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 4px 0;
+      background: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .leftItems {
+      display: flex;
+      align-items: center;
+      gap: 6px; /* spacing between checkbox and label text */
+    }
+
+    .remove-btn {
+      color: #fff;
+      background-color: red;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 14px;
+      line-height: 18px;
+      padding: 0;
+    }
+
+    /* Controls area below the map container */
+    #controls {
+      padding: 10px;
+      text-align: center;
     }
   </style>
 </head>
@@ -72,8 +131,16 @@
     The Centroid App
   </header>
 
-  <!-- The Leaflet map container -->
-  <div id="map"></div>
+  <!-- The map + overlay container -->
+  <div id="mapContainer">
+    <div id="map"></div>
+
+    <!-- Overlay listing all friends -->
+    <div id="friendsOverlay">
+      <h2>Friends</h2>
+      <ul id="friendsList"><!-- Filled dynamically --></ul>
+    </div>
+  </div>
 
   <!-- Controls for CSV export/load -->
   <div id="controls">
@@ -92,14 +159,18 @@
     // GLOBAL VARIABLES
     // ------------------------------------------------
     let map;
-    let markers = [];      // Each element: { lat, lng, label, marker }
+    // Each friend is: { id, lat, lng, label, marker, visible }
+    let markers = []; 
     let centroidMarker = null;
+
+    // A simple counter to generate unique IDs
+    let friendIdCounter = 1;
 
     // ------------------------------------------------
     // INITIALIZE MAP
     // ------------------------------------------------
     function initMap() {
-      // Create a Leaflet map centered on the Gardeners Rest
+      // Center on the Gardeners Rest (no marker by default)
       map = L.map('map').setView([53.39264, -1.47091], 15);
 
       // Add OpenStreetMap tile layer
@@ -110,19 +181,6 @@
 
       // On click, add a marker
       map.on('click', onMapClick);
-
-      // ------------------------------------------------
-      // ADD A BEER GLASS ICON MARKER AT GARDENERS REST
-      // ------------------------------------------------
-      const beerIcon = L.icon({
-        iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/58/Beer_mug_icon.png',
-        iconSize: [32, 32],      // size of the icon
-        iconAnchor: [16, 32],    // point of the icon which will correspond to marker's location
-        popupAnchor: [0, -32]    // point from which the popup should open
-      });
-
-      const beerMarker = L.marker([53.39264, -1.47091], { icon: beerIcon }).addTo(map);
-      beerMarker.bindPopup("Gardeners Rest - Enjoy a pint!");
     }
 
     // ------------------------------------------------
@@ -130,42 +188,128 @@
     // ------------------------------------------------
     function onMapClick(e) {
       const label = prompt("Enter your friend's name (label for this pin):");
-      if (label === null || label.trim() === '') {
+      if (!label || label.trim() === '') {
         return; // If user canceled or left blank
       }
 
       const lat = e.latlng.lat;
       const lng = e.latlng.lng;
+      const id = `friend-${friendIdCounter++}`;
 
       // Create a Leaflet marker
       const marker = L.marker([lat, lng]).addTo(map);
       marker.bindPopup(label);
 
-      // Add to our list of markers
-      markers.push({ lat, lng, label, marker });
+      // Add to our list of markers (visible by default)
+      markers.push({ id, lat, lng, label, marker, visible: true });
 
-      // Update the centroid marker
+      // Update the DOM list & centroid
+      updateFriendsList();
       updateCentroid();
     }
 
     // ------------------------------------------------
-    // UPDATE CENTROID
+    // UPDATE FRIENDS LIST (OVERLAY)
+    // ------------------------------------------------
+    function updateFriendsList() {
+      const friendsList = document.getElementById('friendsList');
+      friendsList.innerHTML = ''; // Clear the current list
+
+      markers.forEach(friend => {
+        const li = document.createElement('li');
+
+        // LEFT PART: checkbox + label text
+        const leftDiv = document.createElement('div');
+        leftDiv.className = 'leftItems';
+
+        // Checkbox for showing/hiding
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = friend.visible;
+        checkbox.addEventListener('change', (e) => {
+          toggleFriendVisibility(friend.id, e.target.checked);
+        });
+
+        // Label text
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = `${friend.label} 
+          (lat: ${friend.lat.toFixed(5)}, lng: ${friend.lng.toFixed(5)})`;
+
+        leftDiv.appendChild(checkbox);
+        leftDiv.appendChild(labelSpan);
+
+        // RIGHT PART: remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.textContent = 'X';
+        removeBtn.dataset.friendId = friend.id;
+        removeBtn.addEventListener('click', () => {
+          removeFriendById(friend.id);
+        });
+
+        li.appendChild(leftDiv);
+        li.appendChild(removeBtn);
+        friendsList.appendChild(li);
+      });
+    }
+
+    // ------------------------------------------------
+    // TOGGLE FRIEND VISIBILITY
+    // ------------------------------------------------
+    function toggleFriendVisibility(friendId, isVisible) {
+      const friend = markers.find(f => f.id === friendId);
+      if (!friend) return; // not found
+
+      friend.visible = isVisible;
+
+      // Show/hide the marker on the map
+      if (isVisible) {
+        friend.marker.addTo(map);
+      } else {
+        map.removeLayer(friend.marker);
+      }
+      // Recalculate the centroid of only the visible markers
+      updateCentroid();
+    }
+
+    // ------------------------------------------------
+    // REMOVE A FRIEND (FULLY)
+    // ------------------------------------------------
+    function removeFriendById(friendId) {
+      // Find friend in markers array
+      const index = markers.findIndex(f => f.id === friendId);
+      if (index === -1) return; // not found, just in case
+
+      // Remove marker from map
+      map.removeLayer(markers[index].marker);
+
+      // Remove from array
+      markers.splice(index, 1);
+
+      // Update DOM list & centroid
+      updateFriendsList();
+      updateCentroid();
+    }
+
+    // ------------------------------------------------
+    // UPDATE CENTROID (OF VISIBLE MARKERS)
     // ------------------------------------------------
     function updateCentroid() {
-      // If no markers, remove any existing centroid and update footer
-      if (markers.length === 0) {
+      // Consider only visible markers
+      const visibleMarkers = markers.filter(m => m.visible);
+
+      if (visibleMarkers.length === 0) {
         removeCentroid();
         document.getElementById('centroidCoordinates').textContent = 'No centroid yet';
         return;
       }
 
       // Calculate average lat & lng
-      const sumLat = markers.reduce((acc, m) => acc + m.lat, 0);
-      const sumLng = markers.reduce((acc, m) => acc + m.lng, 0);
-      const avgLat = sumLat / markers.length;
-      const avgLng = sumLng / markers.length;
+      const sumLat = visibleMarkers.reduce((acc, m) => acc + m.lat, 0);
+      const sumLng = visibleMarkers.reduce((acc, m) => acc + m.lng, 0);
+      const avgLat = sumLat / visibleMarkers.length;
+      const avgLng = sumLng / visibleMarkers.length;
 
-      // Remove old centroid
       removeCentroid();
 
       // Create new centroid marker (red dot)
@@ -176,9 +320,7 @@
         })
       }).addTo(map);
 
-      centroidMarker.bindPopup(`Centroid of ${markers.length} points`);
-
-      // Update the footer with the coordinates
+      centroidMarker.bindPopup(`Centroid of ${visibleMarkers.length} visible points`);
       document.getElementById('centroidCoordinates').textContent =
         `Centroid is at: ${avgLat.toFixed(5)}, ${avgLng.toFixed(5)}`;
     }
@@ -194,7 +336,7 @@
     }
 
     // ------------------------------------------------
-    // EXPORT TO CSV
+    // EXPORT TO CSV (ALL MARKERS, VISIBLE OR NOT)
     // ------------------------------------------------
     function exportToCSV() {
       if (markers.length === 0) {
@@ -205,17 +347,18 @@
       let csvContent = "data:text/csv;charset=utf-8,";
       csvContent += "lat,lng,label\n"; // header row
 
-      // Add each marker row
+      // Add each marker row (regardless of visibility)
       markers.forEach(m => {
         csvContent += `${m.lat},${m.lng},${m.label}\n`;
       });
 
-      // Include a CENTROID row so we can reload it if we want
-      if (centroidMarker) {
-        const sumLat = markers.reduce((acc, m) => acc + m.lat, 0);
-        const sumLng = markers.reduce((acc, m) => acc + m.lng, 0);
-        const avgLat = sumLat / markers.length;
-        const avgLng = sumLng / markers.length;
+      // Optionally include the centroid row
+      const visibleMarkers = markers.filter(m => m.visible);
+      if (visibleMarkers.length > 0) {
+        const sumLat = visibleMarkers.reduce((acc, m) => acc + m.lat, 0);
+        const sumLng = visibleMarkers.reduce((acc, m) => acc + m.lng, 0);
+        const avgLat = sumLat / visibleMarkers.length;
+        const avgLng = sumLng / visibleMarkers.length;
         csvContent += `${avgLat},${avgLng},CENTROID\n`;
       }
 
@@ -248,7 +391,7 @@
       removeCentroid();
 
       const lines = csvData.split(/\r?\n/);
-      // Assume first line is a header: lat,lng,label
+      // Assume first line is header: lat,lng,label
       const dataLines = lines.slice(1);
 
       dataLines.forEach(line => {
@@ -260,30 +403,31 @@
         const lng = parseFloat(lngStr);
 
         if (label === "CENTROID") {
-          // Place the centroid marker (or skip if you prefer to recalc)
+          // Optionally place the centroid marker. We'll do so for now:
           centroidMarker = L.marker([lat, lng], {
             icon: L.divIcon({
               className: 'centroid-icon',
               html: '<div style="background: red; width: 16px; height: 16px; border-radius: 50%;"></div>'
             })
           }).addTo(map);
-
           centroidMarker.bindPopup("Centroid (loaded from CSV)");
-
-          // Update the footer text
           document.getElementById('centroidCoordinates').textContent =
             `Centroid is at: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-
         } else {
-          // Regular friend’s house marker
+          // Create an ID for the friend
+          const id = `friend-${friendIdCounter++}`;
           const marker = L.marker([lat, lng]).addTo(map);
           marker.bindPopup(label);
-          markers.push({ lat, lng, label, marker });
+
+          // By default, make them visible
+          markers.push({ id, lat, lng, label, marker, visible: true });
         }
       });
 
-      // If you prefer to recalc the centroid fresh from the loaded pins, do:
-      // updateCentroid();
+      // Update the overlay list & centroid
+      updateFriendsList();
+      // Or recalc centroid fresh from loaded pins:
+      updateCentroid();
     }
 
     // ------------------------------------------------
