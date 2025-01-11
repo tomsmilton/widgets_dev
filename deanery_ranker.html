@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>UK Foundation School Ranking</title>
+  <!-- Minimal reset & some nicer styling -->
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background: #fafafa;
+      color: #333;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 760px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      color: #444;
+    }
+    p {
+      margin-bottom: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    .card {
+      border-radius: 5px;
+      background: #f9f9f9;
+      padding: 20px;
+      border: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    .card h3 {
+      margin-bottom: 15px;
+      color: #555;
+      font-size: 1.2rem;
+    }
+    /* Comparison area layout */
+    #compareCards {
+      display: flex;
+      gap: 20px;
+      margin-top: 15px;
+    }
+    .compareCard {
+      flex: 1;
+      border: 2px solid #eee;
+      border-radius: 5px;
+      background: #fff;
+      padding: 15px;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .compareCard:hover {
+      background: #fefefe;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    /* When a card is clicked (selected), dim it briefly */
+    .compareCard.selected {
+      background: #ddd !important;
+    }
+
+    #finalList ul {
+      list-style: none;
+      margin-top: 15px;
+      padding-left: 0;
+    }
+    .ranking-item {
+      background: #fdfdfd;
+      border: 1px solid #eee;
+      border-radius: 3px;
+      padding: 8px;
+      margin-bottom: 8px;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .ranking-item:hover {
+      background: #f3f3f3;
+    }
+    /* A small drag handle on the left */
+    .drag-handle {
+      cursor: grab; 
+      margin-right: 8px;
+      color: #888;
+      font-size: 1.2rem;
+      user-select: none; 
+    }
+    /* When actively dragging, show closed-hand */
+    .ranking-item:active .drag-handle {
+      cursor: grabbing; 
+    }
+    /* Optional small style for the info icon */
+    .info-icon {
+      margin-left: 10px;
+      color: #666;
+      cursor: pointer;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>UK Foundation School Ranking</h1>
+  <p>
+    Ranking deaneries can be hard! This little app takes you through a comparison. On each comparison click on the deanery you would prefer. After you've been through the process you'll have a ranked list. You can also click 
+    the <strong>ℹ️ info icon</strong> to see its medical schools and training locations. 
+    After ranking, feel free to drag and drop in the final list for fine-tuning, 
+    then export to CSV.
+  </p>
+
+  <p>The info on deaneries may be wrong! Please look it up yourself before making a choice!</p>
+
+  <!-- Comparison area -->
+  <div id="comparisonArea" class="card hidden">
+    <h3>Which do you prefer?</h3>
+    <div id="compareCards">
+      <!-- School A card -->
+      <div id="cardA" class="compareCard"></div>
+      <!-- School B card -->
+      <div id="cardB" class="compareCard"></div>
+    </div>
+  </div>
+
+  <!-- Final ranking display -->
+  <div id="finalList" class="card hidden">
+    <h3>Final Ranking (Most Preferred at Top)</h3>
+    <p>Drag and drop rows to fine-tune.</p>
+    <ul id="ranking"></ul>
+    <button id="exportBtn">Export CSV</button>
+  </div>
+</div>
+
+<!-- Include SortableJS for drag-and-drop -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+// ------------------------------
+// 1. DATA
+// ------------------------------
+const foundationSchoolList = [
+  "London",
+  "Kent, Surrey, Sussex (KSS)",
+  "Oxford",
+  "Wessex",
+  "Peninsula",
+  "Severn",
+  "East of England",
+  "Leicestershire, Northamptonshire, and Rutland (LNR)",
+  "Trent",
+  "West Midlands Central",
+  "West Midlands North",
+  "West Midlands South",
+  "Northern",
+  "North West of England",
+  "Yorkshire and Humber",
+  "Northern Ireland",
+  "Wales",
+  "Scotland"
+];
+
+// Full details: medical schools + training locations
+const foundationSchoolDetails = {
+  "London": {
+    medicalSchools: [
+      "Queen Mary, University of London",
+      "University College London",
+      "Imperial College London",
+      "King’s College London",
+      "St. George’s University London"
+    ],
+    trainingLocations: [
+      "Barking", "Bethnal Green", "Braintree", "Bromley", "Camberwell", "Carshalton",
+      "Central and West Middlesex", "Charing Cross", "Chelsea", "Croydon", "Ealing", 
+      "Enfield", "Epping", "Epsom", "Halstead", "Hammersmith", "Harrow", "Harwich",
+      "Havering", "Homerton", "Ilford", "Kingston", "Lewisham", "Leytonstone", 
+      "Marylebone", "Newham", "North Middlesex", "Plaistow", "Redbridge", "Richmond",
+      "Romford", "Tooting", "Uxbridge", "Westminster", "Whipps Cross", "Whitechapel",
+      "Woolwich"
+    ]
+  },
+  "Kent, Surrey, Sussex (KSS)": {
+    medicalSchools: [
+      "Brighton and Sussex Medical School"
+    ],
+    trainingLocations: [
+      "Ashford", "Brighton", "Canterbury", "Chichester", "Chertsey", "Dartford",
+      "Eastbourne", "Frimley", "Gillingham", "Guildford", "Haywards Heath", "Maidstone",
+      "Margate", "Pembury", "Redhill", "St. Leonards-on-Sea", "Worthing"
+    ]
+  },
+  "Oxford": {
+    medicalSchools: [
+      "University of Oxford",
+      "University of Buckingham"
+    ],
+    trainingLocations: [
+      "Aylesbury", "Amersham", "Ascot", "Banbury", "Berkshire", "Buckingham",
+      "High Wycombe", "Milton Keynes", "Oxford", "Reading", "Slough"
+    ]
+  },
+  "Wessex": {
+    medicalSchools: [
+      "University of Southampton"
+    ],
+    trainingLocations: [
+      "Basingstoke", "Bournemouth", "Dorchester", "Isle of Wight", "Jersey",
+      "Poole", "Portsmouth", "Salisbury", "Southampton", "Winchester"
+    ]
+  },
+  "Peninsula": {
+    medicalSchools: [
+      "Plymouth University",
+      "University of Exeter"
+    ],
+    trainingLocations: [
+      "Barnstaple", "Exeter", "Hayle", "Penzance", "Plymouth", 
+      "South Devon", "Torbay", "Truro"
+    ]
+  },
+  "Severn": {
+    medicalSchools: [
+      "University of Bristol"
+    ],
+    trainingLocations: [
+      "Bath", "Bristol", "Cheltenham", "Gloucester", "Swindon", 
+      "Taunton", "Weston-Super-Mare", "Yeovil"
+    ]
+  },
+  "East of England": {
+    medicalSchools: [
+      "Norwich Medical School",
+      "University of Cambridge",
+      "Anglia Ruskin University"
+    ],
+    trainingLocations: [
+      "Cambridge", "Colchester", "Great Yarmouth", "Huntingdon", "Ipswich", 
+      "King’s Lynn", "Norwich", "Peterborough", "West Suffolk", 
+      "Basildon", "Bedford", "Chelmsford", "Clacton-on-Sea", "Harlow", "Hertford",
+      "Luton", "Maldon", "North Hertfordshire", "Southend", "Watford", 
+      "West Hertfordshire", "Westcliff-on-Sea"
+    ]
+  },
+  "Leicestershire, Northamptonshire, and Rutland (LNR)": {
+    medicalSchools: [
+      "University of Leicester"
+    ],
+    trainingLocations: [
+      "Evington", "Kettering", "Leicester", "Northampton"
+    ]
+  },
+  "Trent": {
+    medicalSchools: [
+      "University of Nottingham",
+      "Lincoln Medical School"
+    ],
+    trainingLocations: [
+      "Boston", "Chesterfield", "Derby", "Grantham", "Lincoln",
+      "Mansfield", "Nottingham", "Burton"
+    ]
+  },
+  "West Midlands Central": {
+    medicalSchools: [
+      "University of Birmingham",
+      "Aston University"
+    ],
+    trainingLocations: [
+      "Birmingham", "Solihull", "Sutton Coldfield", "West Bromwich"
+    ]
+  },
+  "West Midlands North": {
+    medicalSchools: [
+      "Keele University"
+    ],
+    trainingLocations: [
+      "Dudley", "Shrewsbury", "Stoke", "Telford", "Walsall", "Wolverhampton"
+    ]
+  },
+  "West Midlands South": {
+    medicalSchools: [
+      "The University of Warwick"
+    ],
+    trainingLocations: [
+      "Coventry", "Hereford", "Nuneaton", "Warwick", "Worcester"
+    ]
+  },
+  "Northern": {
+    medicalSchools: [
+      "Newcastle University",
+      "University of Sunderland"
+    ],
+    trainingLocations: [
+      "Bishop Auckland", "Carlisle", "Darlington", "Durham", "Gateshead", 
+      "Hartlepool", "High Heaton", "Middlesbrough", "Newcastle", "Northallerton", 
+      "Northumberland", "Northumbria", "South Tyneside", "Stockton-on-Tees", 
+      "Sunderland", "Tees", "White Haven"
+    ]
+  },
+  "North West of England": {
+    medicalSchools: [
+      "University of Central Lancashire",
+      "University of Lancaster",
+      "University of Liverpool",
+      "University of Manchester"
+    ],
+    trainingLocations: [
+      "Barrow", "Bebington", "Blackburn", "Blackpool", "Bolton",
+      "Burnley", "Bury", "Cheshire", "Chorley", "Congleton", "Crewe", "Isle of Man",
+      "Lancaster", "Liverpool", "Macclesfield", "Manchester", "Oldham", "Ormskirk",
+      "Prescot", "Preston", "Rochdale", "Runcorn", "Salford", "Southport",
+      "St. Helen’s", "Stockport", "Upton", "Warrington", "Wigan", "Wirral"
+    ]
+  },
+  "Yorkshire and Humber": {
+    medicalSchools: [
+      "Hull and York Medical School",
+      "The University of Sheffield",
+      "University of Leeds"
+    ],
+    trainingLocations: [
+      "North Yorkshire and East Coast: Bridlington, Grimsby, Hull, Scarborough, Scunthorpe, York",
+      "South Yorkshire: Barnsley, Doncaster, Rotherham, Sheffield",
+      "West Yorkshire: Airedale, Bradford, Dewsbury, Halifax, Harrogate, Huddersfield, Leeds, Pontefract, Wakefield"
+    ]
+  },
+  "Northern Ireland": {
+    medicalSchools: [
+      "Queen’s University Belfast"
+    ],
+    trainingLocations: [
+      "Antrim", "Belfast", "Coleraine", "Craigavon", "Downpatrick", "Dundonald",
+      "Enniskillen", "Lisburn", "Londonderry", "Newry", "Omagh"
+    ]
+  },
+  "Wales": {
+    medicalSchools: [
+      "Cardiff University"
+    ],
+    trainingLocations: [
+      "Aberystwyth", "Bangor", "Bridgend", "Cardiff", "Carmarthen",
+      "Haverfordwest", "Llanelli", "Merthyr Tydfil", "Newport", "Rhyl",
+      "Swansea", "Wrexham"
+    ]
+  },
+  "Scotland": {
+    medicalSchools: [
+      "University of Aberdeen",
+      "University of Dundee",
+      "University of Edinburgh",
+      "University of Glasgow",
+      "University of St. Andrews",
+      "University of Stirling"
+    ],
+    trainingLocations: [
+      "Aberdeen", "Airdrie", "Ayr", "Dumfries", "Dundee", "Dunfermline",
+      "Edinburgh", "Elgin", "Falkirk", "Glasgow", "Inverness", "Kilmarnock",
+      "Kirkcaldy", "Livingston", "Paisley", "Perth", "Stirling"
+    ]
+  }
+};
+
+// ------------------------------
+// 2. LOGIC
+// ------------------------------
+let sortedSchools = [];
+let currentIndex = 0;
+let compareIndex = 0;
+
+window.onload = () => {
+  startInsertionSort();
+};
+
+// Put the first school in sorted array, then insertion sort
+function startInsertionSort() {
+  sortedSchools = [ foundationSchoolList[0] ];
+  currentIndex = 1;
+  insertionSortStep();
+}
+
+function insertionSortStep() {
+  if (currentIndex >= foundationSchoolList.length) {
+    // Done
+    hideComparisonArea();
+    showFinalRankingUI();
+    return;
+  }
+  const currentSchool = foundationSchoolList[currentIndex];
+  compareIndex = sortedSchools.length - 1;
+  compareAndInsert(currentSchool, compareIndex);
+}
+
+function compareAndInsert(currentSchool, cIndex) {
+  if (cIndex < 0) {
+    // Insert at top
+    sortedSchools.unshift(currentSchool);
+    currentIndex++;
+    insertionSortStep();
+    return;
+  }
+  showComparisonUI(currentSchool, sortedSchools[cIndex], (userPrefersCurrent) => {
+    if (userPrefersCurrent) {
+      // Keep going left
+      compareAndInsert(currentSchool, cIndex - 1);
+    } else {
+      // Insert below
+      sortedSchools.splice(cIndex + 1, 0, currentSchool);
+      currentIndex++;
+      insertionSortStep();
+    }
+  });
+}
+
+// ------------------------------
+// 3. UI
+// ------------------------------
+function showComparisonUI(schoolA, schoolB, callback) {
+  const comparisonArea = document.getElementById("comparisonArea");
+  comparisonArea.classList.remove("hidden");
+
+  const cardA = document.getElementById("cardA");
+  const cardB = document.getElementById("cardB");
+
+  cardA.innerHTML = makeSchoolHTML(schoolA);
+  cardB.innerHTML = makeSchoolHTML(schoolB);
+
+  // Reset 'selected' if previously set
+  cardA.classList.remove("selected");
+  cardB.classList.remove("selected");
+
+  // Onclick handlers with a brief dimming effect
+  cardA.onclick = () => {
+    // Add a "selected" class
+    cardA.classList.add("selected");
+    // After a short delay, call callback
+    setTimeout(() => callback(true), 200);
+  };
+  cardB.onclick = () => {
+    cardB.classList.add("selected");
+    setTimeout(() => callback(false), 200);
+  };
+}
+
+// Returns HTML for the school name & an info icon
+function makeSchoolHTML(school) {
+  return `
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <div>${escapeHTML(school)}</div>
+      <div class="info-icon" onclick="showSchoolInfo(event, '${escapeHTML(school)}')">ℹ️</div>
+    </div>
+  `;
+}
+
+// Info icon: show medical schools & training locations
+function showSchoolInfo(e, schoolName) {
+  // Stop the click from selecting the card
+  e.stopPropagation();
+  const details = foundationSchoolDetails[schoolName];
+  if (!details) {
+    alert("No details available for " + schoolName);
+    return;
+  }
+
+  const medSchools = details.medicalSchools.map(ms => " - " + ms).join("\n");
+  const locations = details.trainingLocations.map(loc => " - " + loc).join("\n");
+  const info = 
+    `Medical Schools:\n${medSchools}\n\n` + 
+    `Training Locations:\n${locations}`;
+  alert(info);
+}
+
+function escapeHTML(str) {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, '&quot;');
+}
+
+function hideComparisonArea() {
+  document.getElementById("comparisonArea").classList.add("hidden");
+}
+
+// ------------------------------
+// 4. SHOW FINAL RANKING
+// ------------------------------
+function showFinalRankingUI() {
+  const finalListDiv = document.getElementById("finalList");
+  finalListDiv.classList.remove("hidden");
+
+  const rankingUl = document.getElementById("ranking");
+  rankingUl.innerHTML = "";
+
+  for (let i = 0; i < sortedSchools.length; i++) {
+    const li = document.createElement("li");
+    li.className = "ranking-item";
+    li.dataset.index = i.toString();
+
+    // Drag handle
+    const handleSpan = document.createElement("span");
+    handleSpan.className = "drag-handle";
+    handleSpan.textContent = "⠿";
+
+    // School text
+    const textSpan = document.createElement("span");
+    textSpan.textContent = sortedSchools[i];
+
+    li.appendChild(handleSpan);
+    li.appendChild(textSpan);
+    rankingUl.appendChild(li);
+  }
+
+  // Enable Sortable
+  new Sortable(rankingUl, {
+    animation: 150,
+    handle: ".drag-handle",
+    onEnd: () => {
+      const newOrder = [];
+      const lis = rankingUl.querySelectorAll("li");
+      lis.forEach(li => {
+        const oldIndex = parseInt(li.dataset.index, 10);
+        newOrder.push(sortedSchools[oldIndex]);
+      });
+      sortedSchools = newOrder;
+      // Re-tag data-index
+      lis.forEach((li, idx) => { li.dataset.index = idx.toString(); });
+    }
+  });
+
+  // Export button
+  document.getElementById("exportBtn").onclick = () => exportCSV(sortedSchools);
+}
+
+// ------------------------------
+// 5. EXPORT CSV
+// ------------------------------
+function exportCSV(finalArray) {
+  const headers = ["Foundation School"];
+  const lines = [headers.join(",")];
+
+  finalArray.forEach(school => {
+    // If it has commas or quotes, wrap in quotes
+    if (/[,\r\n"]/.test(school)) {
+      school = `"${school.replace(/"/g, '""')}"`;
+    }
+    lines.push(school);
+  });
+
+  const csvContent = lines.join("\n");
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "final_foundation_schools_order.csv";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
+</body>
+</html>
