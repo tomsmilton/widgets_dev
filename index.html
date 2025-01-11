@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Fun Tools</title>
+    <title>Tom's Widgets</title>
     <style>
         body {
             background-color: white;
@@ -18,23 +18,27 @@
             margin-top: 50px;
         }
         p {
-            font-size: 1.5em;
+            text-align: left; /* Align text to the left */
+            margin: 0 auto; /* Centers the paragraph block horizontally */
+            padding-left: 10px; /* Matches inner padding of toolboxes */
+            max-width: 600px; /* Matches the maximum width of the toolboxes */
+            box-sizing: border-box; /* Includes padding within the width */
         }
         .tool-box {
             display: flex;
-            align-items: stretch; /* Stretches children to the full height */
+            align-items: stretch; /* Ensures children match height */
             justify-content: flex-start;
             margin: 20px auto;
             border: 2px solid black;
             border-radius: 10px;
             max-width: 600px;
-            overflow: hidden; /* Ensures button fits cleanly */
+            overflow: hidden; /* Prevents layout breaks */
         }
         .button-link {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background-color: #4CAF50; /* Nice green color */
+            background-color: #4CAF50; /* Default green */
             color: white;
             text-decoration: none;
             font-weight: bold;
@@ -42,9 +46,10 @@
             text-align: left;
             cursor: pointer;
             border: none;
-            padding: 15px 15px; /* Added top and bottom padding */
-            width: 200px; /* Fixed width for consistent design */
+            padding: 15px; /* Consistent padding */
+            flex: 0 0 220px; /* Fixed width for buttons */
             border-right: 2px solid black; /* Optional visual divider */
+            box-sizing: border-box; /* Includes padding in width */
         }
         .button-link img {
             margin-left: 10px;
@@ -54,30 +59,51 @@
         .button-link:hover {
             background-color: #3e8e41; /* Darker green on hover */
         }
+        /* Deanery Ranker button inherits button styles */
+        .deanery-button {
+            background-color: #005EB8; /* NHS Blue */
+        }
+        .deanery-button:hover {
+            background-color: #004080; /* Darker NHS Blue */
+        }
+        .centroid-button {
+            background-color: #FF0000; /* red */
+        }
+        .centroid-button:hover {
+            background-color: #950606; /* red darker */
+        }
         .description {
             font-size: 1em;
             color: black;
             text-align: left;
             padding: 10px;
             margin: 0;
-            flex-grow: 1; /* Makes description take up the remaining space */
+            flex-grow: 1; /* Makes description take remaining space */
         }
         footer {
             margin-top: 50px;
             font-size: 0.8em;
             color: gray;
         }
+        /* Add spacing for narrow screens */
+        @media (max-width: 600px) {
+            .tool-box {
+                margin: 10px 25px; /* Adds padding for small screens */
+            }
+            p {
+                margin: 10px 25px; /* Adds padding for small screens */
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Welcome to My Website</h1>
-    <p>This is where I put little tools I made with AI to solve fun problems.</p>
-    <p>Explore my creations:</p>
+    <h1>Tom's Widgets</h1>
+    <p>This is where I put little tools I made with AI to solve fun problems:</p>
     
     <div class="tool-box">
-        <a class="button-link" href="centroid.html">
+        <a class="button-link centroid-button" href="centroid.html">
             Centroid Finder Tool
-            <img src="https://static-00.iconduck.com/assets.00/cursor-click-icon-976x1024-r4frcs8z.png" alt="Mouse Icon">
+            <img src="icons8-mouse.svg" alt="Mouse Icon">
         </a>
         <p class="description">A tool to calculate the centroid of a set of locations.</p>
     </div>
@@ -85,10 +111,19 @@
     <div class="tool-box">
         <a class="button-link" href="job_selector/job_selector.html">
             Job Selector Tool
-            <img src="https://static-00.iconduck.com/assets.00/cursor-click-icon-976x1024-r4frcs8z.png" alt="Mouse Icon">
+            <img src="icons8-mouse.svg" alt="Mouse Icon">
         </a>
         <p class="description">An app that helps medics rank their job preferences starting with a CSV with all the jobs in.</p>
     </div>
 
+    <div class="tool-box">
+        <a class="button-link deanery-button" href="deanery_ranker.html">
+            Deanery Ranker
+            <img src="icons8-mouse.svg" alt="Mouse Icon">
+        </a>
+        <p class="description">Ranking the deaneries can be hard. This tool guides you through a pairwise selection to rank your preferences.</p>
+    </div>
+
+   
 </body>
 </html>
