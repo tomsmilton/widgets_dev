@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Conversation 1</title>
+  <style>
+    /* Basic styling for the conversation content */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em auto;
+      max-width: 700px;
+      line-height: 1.6;
+      padding: 0 1em;
+    }
+    /* Horizontal rules to separate turns in the conversation */
+    hr {
+      margin: 1.5em 0;
+      border: none;
+      border-top: 1px solid #ccc;
+    }
+    /* Inline code styles (like `foo`) */
+    code {
+      background-color: #f1f1f1;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    /* Code blocks (from triple backticks) */
+    pre {
+      background: #f8f9fa;
+      border: 1px solid #e6e6e6;
+      border-radius: 6px;
+      padding: 1em;
+      overflow-x: auto;
+      margin: 1.5em 0;
+    }
+    pre code {
+      display: block;
+      background: transparent;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="markdown-content"></div>
+
+  <!-- Load the Marked 4.x UMD build -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+
+  <script>
+    fetch('conversation1.md')
+      .then(resp => resp.text())
+      .then(markdown => {
+        // Convert Markdown to HTML
+        const html = marked.parse(markdown);
+        document.getElementById('markdown-content').innerHTML = html;
+      })
+      .catch(err => {
+        document.getElementById('markdown-content').innerHTML =
+          `<p style="color:red;">Error loading Markdown: ${err}</p>`;
+      });
+  </script>
+</body>
+</html>
