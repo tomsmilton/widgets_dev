@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tom's Weekly Log - Week of Feb 3</title>
+  <style>
+    /* Global Styles */
+    body {
+      font-family: "Courier New", Courier, monospace;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      background-color: white;
+      color: black;
+    }
+    /* Sidebar Styling */
+    .sidebar {
+      width: 220px;
+      background-color: #f5f5f5;
+      padding: 20px;
+      box-sizing: border-box;
+      border-right: 2px solid #ccc;
+      height: 100vh;
+      position: fixed;
+      overflow-y: auto;
+    }
+    .sidebar h2 {
+      margin-top: 0;
+      font-size: 1.5em;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    .sidebar li {
+      margin: 10px 0;
+    }
+    .sidebar a {
+      text-decoration: none;
+      color: #333;
+      font-size: 1em;
+    }
+    .sidebar a:hover {
+      text-decoration: underline;
+    }
+    /* Content Area Styling */
+    .content {
+      margin-left: 240px;
+      padding: 20px;
+      box-sizing: border-box;
+      width: calc(100% - 240px);
+    }
+    h1, h2, h3 {
+      margin: 0 0 10px;
+    }
+    .intro {
+      margin-bottom: 30px;
+    }
+    .week-section {
+      margin-bottom: 40px;
+    }
+    .week-section h2 {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+    /* Table Styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #e0e0e0;
+    }
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      body {
+        display: block;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 2px solid #ccc;
+      }
+      .content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <h2>Weekly Log</h2>
+    <ul>
+      <li><a href="#week-feb3">Week of Feb 3</a></li>
+    </ul>
+  </div>
+  
+  <!-- Main Content Area -->
+  <div class="content">
+    <h1>Tom's Weekly Log</h1>
+    <p class="intro">Welcome to my weekly log where I track what I’ve been reading and listening to. This page will grow over time as I add more weeks.</p>
+    
+    <!-- Week Section: Feb 3 -->
+    <div id="week-feb3" class="week-section">
+      <h2>Week of Feb 3, 2025</h2>
+      
+      <!-- Reading Section -->
+      <h3>Reading</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Clandestine in Chile: The Adventures of Miguel Littín</td>
+            <td>Started!</td>
+          </tr>
+          <!-- Additional reading entries can be added here -->
+        </tbody>
+      </table>
+      
+      <!-- Listening Section -->
+      <h3>Listening</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Example</td>
+            <td>Example</td>
+          </tr>
+          <!-- Additional listening entries can be added here -->
+        </tbody>
+      </table>
+      
+    </div>
+    
+  </div>
+</body>
+</html>
