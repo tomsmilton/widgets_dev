@@ -39,13 +39,14 @@
         }
         .tool-box {
             display: flex;
-            align-items: stretch; /* Ensures children match height */
+            align-items: stretch;
             justify-content: flex-start;
-            margin: 20px auto;
+            margin: 20px auto 0;
             border: 2px solid black;
-            border-radius: 10px;
+            border-radius: 10px; /* Default to full rounded corners */
             max-width: 600px;
-            overflow: hidden; /* Prevents layout breaks */
+            overflow: hidden;
+            box-sizing: border-box;
         }
         .button-link {
             display: flex;
@@ -89,7 +90,7 @@
             font-size: 1em;
             color: black;
             text-align: left;
-            padding: 10px;
+            padding: 10px 15px; /* Match padding across boxes */
             margin: 0;
             flex-grow: 1; /* Makes description take remaining space */
         }
@@ -107,6 +108,44 @@
                 margin: 10px 25px; /* Adds padding for small screens */
             }
         }
+        /* Remove the conversation link styles */
+        .conversation-link,
+        .conversation-box {
+            display: none;
+        }
+        /* Style for the development log box */
+        .dev-log-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            border: 2px solid black;
+            border-radius: 0 0 10px 10px;
+            max-width: 600px;
+            background-color: #f5f5f5;
+            padding: 10px 15px;
+            box-sizing: border-box;
+        }
+        .dev-log-box a {
+            color: #666;
+            text-decoration: none;
+            font-size: 0.9em;
+            padding: 5px;
+            text-align: center;
+            width: 100%;
+            font-weight: bold;
+        }
+        .dev-log-box a:hover {
+            text-decoration: underline;
+        }
+        /* Special case for tool-box when followed by dev-log-box */
+        .tool-box + .dev-log-box {
+            margin-top: 0;
+        }
+        .tool-box:has(+ .dev-log-box) {
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+        }
     </style>
 </head>
 <body>
@@ -120,6 +159,9 @@
         </a>
         <p class="description">A tool to calculate the centroid of a set of locations.</p>
     </div>
+    <div class="dev-log-box">
+        <a href="prompt_logs/conversation1.html">View ChatGPT transcript →</a>
+    </div>
 
     <div class="tool-box">
         <a class="button-link" href="job_selector/job_selector.html">
@@ -129,6 +171,7 @@
         <p class="description">An app that helps medics rank their job preferences starting with a CSV with all the jobs in.</p>
     </div>
 
+
     <div class="tool-box">
         <a class="button-link deanery-button" href="deanery_ranker.html">
             Deanery Ranker
@@ -137,6 +180,5 @@
         <p class="description">Ranking the deaneries can be hard. This tool guides you through a pairwise selection to rank your preferences.</p>
     </div>
 
-   
 </body>
 </html>
