@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CentroidApp - Find Your Center</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  
+  <style>
+    /* Base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    /* Sidebar styles */
+    .sidebar {
+      width: 350px;
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .sidebar-collapsed {
+      transform: translateX(-350px);
+    }
+    
+    .sidebar-toggle {
+      position: absolute;
+      left: 350px;
+      top: 10px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 0 4px 4px 0;
+      padding: 10px;
+      cursor: pointer;
+      z-index: 1000;
+      transition: left 0.3s ease;
+    }
+    
+    .sidebar-toggle-collapsed {
+      left: 0;
+    }
+    
+    .app-title {
+      margin-bottom: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .location-list {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    
+    .location-item {
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #34495e;
+      border-radius: 5px;
+      position: relative;
+    }
+    
+    .location-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .location-coordinates {
+      font-size: 12px;
+      color: #bdc3c7;
+    }
+    
+    .remove-location {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      cursor: pointer;
+      color: #e74c3c;
+    }
+    
+    .visibility-toggle {
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .sidebar-button {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background: #3498db;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      font-weight: bold;
+    }
+    
+    .sidebar-button:hover {
+      background: #2980b9;
+    }
+    
+    .sidebar-button.danger {
+      background: #e74c3c;
+    }
+    
+    .sidebar-button.danger:hover {
+      background: #c0392b;
+    }
+    
+    .center-info {
+      padding: 15px;
+      background: #34495e;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    
+    .center-coordinates {
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    
+    /* Map container */
+    .map-container {
+      flex-grow: 1;
+      position: relative;
+    }
+    
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+    
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    
+    .modal {
+      width: 80%;
+      max-width: 600px;
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      color: #333;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-title {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    
+    .modal-content {
+      margin-bottom: 30px;
+    }
+    
+    .modal-content h3 {
+      margin: 20px 0 10px;
+      color: #2c3e50;
+    }
+    
+    .modal-content p {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    
+    .modal-content ul {
+      padding-left: 20px;
+      margin-bottom: 10px;
+    }
+    
+    .modal-content li {
+      margin-bottom: 5px;
+    }
+    
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .modal-button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background: #3498db;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    .modal-button:hover {
+      background: #2980b9;
+    }
+    
+    /* Add location modal */
+    .input-group {
+      margin-bottom: 15px;
+    }
+    
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    
+    /* Added marker styles */
+    .custom-marker {
+      text-align: center;
+    }
+    
+    .marker-label {
+      background: white;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: -5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    
+    /* Centroid marker */
+    .centroid-marker {
+      color: #e74c3c;
+      font-size: 20px;
+    }
+    
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(44, 62, 80, 0.9);
+      color: white;
+      padding: 15px 30px;
+      border-radius: 5px;
+      font-weight: bold;
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .toast.show {
+      opacity: 1;
+    }
+    
+    /* Weather info */
+    .weather-info {
+      padding: 15px;
+      background: #34495e;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    
+    .weather-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .weather-title i {
+      margin-right: 10px;
+    }
+    
+    .weather-loading {
+      font-style: italic;
+      color: #bdc3c7;
+    }
+    
+    .weather-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .weather-item {
+      text-align: center;
+    }
+    
+    .weather-value {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    .weather-label {
+      font-size: 12px;
+      color: #bdc3c7;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="app-title">
+      <span>CentroidApp</span>
+      <i class="fas fa-map-pin"></i>
+    </div>
+    
+    <div class="center-info">
+      <div>Centroid Location:</div>
+      <div class="center-coordinates" id="centroid-coordinates">Add locations to calculate</div>
+    </div>
+    
+    <div class="weather-info">
+      <div class="weather-title">
+        <i class="fas fa-cloud-sun"></i>
+        <span>Weather at Centroid</span>
+      </div>
+      <div class="weather-loading" id="weather-container">
+        Add locations to see weather
+      </div>
+    </div>
+    
+    <div class="button-group">
+      <button class="sidebar-button" id="add-location">
+        <i class="fas fa-plus"></i> Add Location
+      </button>
+      <button class="sidebar-button" id="export-data">
+        <i class="fas fa-file-export"></i> Export
+      </button>
+      <button class="sidebar-button" id="import-data">
+        <i class="fas fa-file-import"></i> Import
+      </button>
+      <button class="sidebar-button danger" id="clear-all">
+        <i class="fas fa-trash"></i> Clear All
+      </button>
+    </div>
+    
+    <h3>Locations</h3>
+    <div class="location-list" id="location-list">
+      <!-- Locations will be added here dynamically -->
+    </div>
+  </div>
+  
+  <button class="sidebar-toggle" id="sidebar-toggle">
+    <i class="fas fa-chevron-right" id="toggle-icon"></i>
+  </button>
+  
+  <!-- Map Container -->
+  <div class="map-container">
+    <div id="map"></div>
+  </div>
+  
+  <!-- Welcome Modal -->
+  <div class="modal-overlay" id="welcome-modal">
+    <div class="modal">
+      <h2 class="modal-title">Welcome to CentroidApp!</h2>
+      <div class="modal-content">
+        <p>CentroidApp helps you find the geographic center (centroid) of multiple locations. Perfect for finding a central meeting point between friends or planning events!</p>
+        
+        <h3>How to Use</h3>
+        <ul>
+          <li><strong>Add locations</strong> by clicking on the map or using the "Add Location" button</li>
+          <li><strong>Name each location</strong> (e.g., "John's House", "Sarah's Office")</li>
+          <li><strong>View the centroid</strong> (marked in red on the map)</li>
+          <li><strong>Show/hide locations</strong> using the eye icon</li>
+          <li><strong>Remove locations</strong> using the trash icon</li>
+          <li><strong>Import/Export</strong> your locations as CSV</li>
+        </ul>
+        
+        <h3>Extra Features</h3>
+        <ul>
+          <li><strong>Weather at Centroid</strong> - See the current weather at the center point</li>
+          <li><strong>Distance Calculator</strong> - See how far each person is from the centroid</li>
+          <li><strong>Collapsible Sidebar</strong> - Toggle the sidebar to maximize map view</li>
+          <li><strong>Auto-save</strong> - Your locations are automatically saved in your browser</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-button" id="welcome-close">Get Started</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add Location Modal -->
+  <div class="modal-overlay" id="add-location-modal" style="display: none;">
+    <div class="modal">
+      <h2 class="modal-title">Add New Location</h2>
+      <div class="modal-content">
+        <div class="input-group">
+          <label for="location-name">Who lives here?</label>
+          <input type="text" id="location-name" placeholder="e.g., John Smith">
+        </div>
+        <div class="input-group">
+          <label for="location-address">Address (optional)</label>
+          <input type="text" id="location-address" placeholder="e.g., 123 Main St, City">
+        </div>
+        <div class="center-coordinates" id="new-location-coordinates">
+          Coordinates: ...
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-button" id="cancel-add-location" style="background: #7f8c8d; margin-right: 10px;">Cancel</button>
+        <button class="modal-button" id="confirm-add-location">Add Location</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Import Modal -->
+  <div class="modal-overlay" id="import-modal" style="display: none;">
+    <div class="modal">
+      <h2 class="modal-title">Import Locations</h2>
+      <div class="modal-content">
+        <p>Paste your CSV data below. The format should be:</p>
+        <p><code>name,latitude,longitude,visible</code></p>
+        <div class="input-group">
+          <textarea id="import-csv" rows="10" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-button" id="cancel-import" style="background: #7f8c8d; margin-right: 10px;">Cancel</button>
+        <button class="modal-button" id="confirm-import">Import Data</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+  
+  <!-- Leaflet JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  
+  <script>
+    // Application state
+    const appState = {
+      locations: [],
+      centroid: null,
+      lastClickedPosition: null,
+      weatherData: null
+    };
+    
+    // DOM elements
+    const map = L.map('map').setView([40, -95], 4); // Default view centered on US
+    const locationList = document.getElementById('location-list');
+    const centroidCoordinates = document.getElementById('centroid-coordinates');
+    const weatherContainer = document.getElementById('weather-container');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const toggleIcon = document.getElementById('toggle-icon');
+    const sidebar = document.querySelector('.sidebar');
+    const welcomeModal = document.getElementById('welcome-modal');
+    const welcomeClose = document.getElementById('welcome-close');
+    const addLocationModal = document.getElementById('add-location-modal');
+    const newLocationCoordinates = document.getElementById('new-location-coordinates');
+    const toast = document.getElementById('toast');
+    const importModal = document.getElementById('import-modal');
+    
+    // Map layers
+    const markers = L.layerGroup().addTo(map);
+    let centroidMarker = null;
+    
+    // Initialize map
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    // Event listeners
+    document.getElementById('add-location').addEventListener('click', () => {
+      showToast('Click on the map to add a location');
+    });
+    
+    document.getElementById('export-data').addEventListener('click', exportLocations);
+    document.getElementById('import-data').addEventListener('click', () => {
+      importModal.style.display = 'flex';
+    });
+    
+    document.getElementById('clear-all').addEventListener('click', clearAllLocations);
+    
+    sidebarToggle.addEventListener('click', toggleSidebar);
+    
+    map.on('click', handleMapClick);
+    
+    welcomeClose.addEventListener('click', () => {
+      welcomeModal.style.display = 'none';
+    });
+    
+    document.getElementById('cancel-add-location').addEventListener('click', () => {
+      addLocationModal.style.display = 'none';
+      appState.lastClickedPosition = null;
+    });
+    
+    document.getElementById('confirm-add-location').addEventListener('click', addNewLocation);
+    
+    document.getElementById('cancel-import').addEventListener('click', () => {
+      importModal.style.display = 'none';
+    });
+    
+    document.getElementById('confirm-import').addEventListener('click', importLocations);
+    
+    // Load saved data from localStorage
+    loadFromLocalStorage();
+    
+    // Functions
+    function handleMapClick(e) {
+      appState.lastClickedPosition = e.latlng;
+      newLocationCoordinates.textContent = `Coordinates: ${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+      addLocationModal.style.display = 'flex';
+    }
+    
+    function addNewLocation() {
+      const name = document.getElementById('location-name').value.trim();
+      
+      if (!name) {
+        showToast('Please enter a name');
+        return;
+      }
+      
+      if (!appState.lastClickedPosition) {
+        showToast('Please click on the map first');
+        return;
+      }
+      
+      const newLocation = {
+        name: name,
+        lat: appState.lastClickedPosition.lat,
+        lng: appState.lastClickedPosition.lng,
+        visible: true
+      };
+      
+      appState.locations.push(newLocation);
+      addLocationToList(newLocation, appState.locations.length - 1);
+      addMarkerToMap(newLocation, appState.locations.length - 1);
+      updateCentroid();
+      saveToLocalStorage();
+      
+      // Reset and close modal
+      document.getElementById('location-name').value = '';
+      document.getElementById('location-address').value = '';
+      addLocationModal.style.display = 'none';
+      
+      showToast(`Added ${name}'s location`);
+    }
+    
+    function addLocationToList(location, index) {
+      const locationItem = document.createElement('div');
+      locationItem.className = 'location-item';
+      locationItem.dataset.index = index;
+      
+      locationItem.innerHTML = `
+        <div class="location-name">
+          <i class="fas fa-eye${location.visible ? '' : '-slash'} visibility-toggle" data-index="${index}"></i>
+          ${location.name}
+        </div>
+        <div class="location-coordinates">
+          Lat: ${location.lat.toFixed(6)}, Lng: ${location.lng.toFixed(6)}
+        </div>
+        <div class="location-distance" id="distance-${index}"></div>
+        <i class="fas fa-trash remove-location" data-index="${index}"></i>
+      `;
+      
+      locationList.appendChild(locationItem);
+      
+      // Add event listeners
+      locationItem.querySelector('.visibility-toggle').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleLocationVisibility(parseInt(e.target.dataset.index));
+      });
+      
+      locationItem.querySelector('.remove-location').addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeLocation(parseInt(e.target.dataset.index));
+      });
+    }
+    
+    function addMarkerToMap(location, index) {
+      const marker = L.marker([location.lat, location.lng], {
+        opacity: location.visible ? 1 : 0.4
+      }).addTo(markers);
+      
+      // Custom popup
+      marker.bindPopup(`
+        <div class="custom-marker">
+          <b>${location.name}</b><br>
+          Lat: ${location.lat.toFixed(6)}<br>
+          Lng: ${location.lng.toFixed(6)}
+        </div>
+      `);
+      
+      // Store the marker reference and index
+      marker.locationIndex = index;
+      
+      // Store the marker in the location object
+      appState.locations[index].marker = marker;
+    }
+    
+    function toggleLocationVisibility(index) {
+      const location = appState.locations[index];
+      location.visible = !location.visible;
+      
+      // Update icon in list
+      const icon = document.querySelector(`.visibility-toggle[data-index="${index}"]`);
+      if (icon) {
+        icon.className = `fas fa-eye${location.visible ? '' : '-slash'} visibility-toggle`;
+      }
+      
+      // Update marker visibility
+      if (location.marker) {
+        location.marker.setOpacity(location.visible ? 1 : 0.4);
+      }
+      
+      updateCentroid();
+      saveToLocalStorage();
+    }
+    
+    function removeLocation(index) {
+      // Remove marker from map
+      const location = appState.locations[index];
+      if (location.marker) {
+        markers.removeLayer(location.marker);
+      }
+      
+      // Remove from array
+      appState.locations.splice(index, 1);
+      
+      // Rebuild the list (to ensure indexes are correct)
+      refreshLocationList();
+      
+      updateCentroid();
+      saveToLocalStorage();
+      
+      showToast('Location removed');
+    }
+    
+    function refreshLocationList() {
+      // Clear the list
+      locationList.innerHTML = '';
+      
+      // Re-add all locations
+      appState.locations.forEach((location, index) => {
+        addLocationToList(location, index);
+      });
+    }
+    
+    function updateCentroid() {
+      const visibleLocations = appState.locations.filter(loc => loc.visible);
+      
+      if (visibleLocations.length === 0) {
+        centroidCoordinates.textContent = 'Add locations to calculate';
+        weatherContainer.innerHTML = 'Add locations to see weather';
+        
+        // Remove centroid marker if exists
+        if (centroidMarker) {
+          map.removeLayer(centroidMarker);
+          centroidMarker = null;
+        }
+        
+        appState.centroid = null;
+        return;
+      }
+      
+      // Calculate centroid
+      let totalLat = 0;
+      let totalLng = 0;
+      
+      visibleLocations.forEach(loc => {
+        totalLat += loc.lat;
+        totalLng += loc.lng;
+      });
+      
+      const centroidLat = totalLat / visibleLocations.length;
+      const centroidLng = totalLng / visibleLocations.length;
+      
+      appState.centroid = {
+        lat: centroidLat,
+        lng: centroidLng
+      };
+      
+      // Update display
+      centroidCoordinates.textContent = `Lat: ${centroidLat.toFixed(6)}, Lng: ${centroidLng.toFixed(6)}`;
+      
+      // Update or add centroid marker
+      if (centroidMarker) {
+        centroidMarker.setLatLng([centroidLat, centroidLng]);
+      } else {
+        centroidMarker = L.marker([centroidLat, centroidLng], {
+          icon: L.divIcon({
+            html: '<i class="fas fa-star centroid-marker"></i>',
+            className: 'centroid-icon',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          })
+        }).addTo(map);
+        
+        centroidMarker.bindPopup("<b>Centroid</b><br>Geographic center of all visible locations");
+      }
+      
+      // Update distances
+      updateDistances();
+      
+      // Get weather for centroid
+      fetchWeather(centroidLat, centroidLng);
+    }
+    
+    function updateDistances() {
+      if (!appState.centroid) return;
+      
+      appState.locations.forEach((location, index) => {
+        const distance = calculateDistance(
+          location.lat, 
+          location.lng, 
+          appState.centroid.lat, 
+          appState.centroid.lng
+        );
+        
+        const distanceElement = document.getElementById(`distance-${index}`);
+        if (distanceElement) {
+          distanceElement.textContent = `Distance to center: ${distance.toFixed(1)} km`;
+        }
+      });
+    }
+    
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      // Haversine formula to calculate distance between two points
+      const R = 6371; // Radius of Earth in kilometers
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+    
+    function fetchWeather(lat, lng) {
+      // Note: In a real application, you would use a real weather API
+      // This is a mock implementation
+      weatherContainer.innerHTML = '<div class="weather-loading">Loading weather data...</div>';
+      
+      // Simulate API call
+      setTimeout(() => {
+        // Mock weather data
+        const weatherTypes = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rainy', 'Stormy'];
+        const weatherTemp = Math.round(Math.random() * 30);
+        const weatherWind = Math.round(Math.random() * 20);
+        const weatherHumidity = Math.round(Math.random() * 100);
+        
+        const weatherType = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+        let weatherIcon = 'fa-sun';
+        
+        if (weatherType === 'Partly Cloudy') weatherIcon = 'fa-cloud-sun';
+        else if (weatherType === 'Cloudy') weatherIcon = 'fa-cloud';
+        else if (weatherType === 'Rainy') weatherIcon = 'fa-cloud-rain';
+        else if (weatherType === 'Stormy') weatherIcon = 'fa-bolt';
+        
+        weatherContainer.innerHTML = `
+          <div class="weather-details">
+            <div class="weather-item">
+              <div class="weather-value"><i class="fas ${weatherIcon}"></i> ${weatherType}</div>
+              <div class="weather-label">Condition</div>
+            </div>
+            <div class="weather-item">
+              <div class="weather-value">${weatherTemp}°C</div>
+              <div class="weather-label">Temperature</div>
+            </div>
+            <div class="weather-item">
+              <div class="weather-value">${weatherWind} km/h</div>
+              <div class="weather-label">Wind</div>
+            </div>
+            <div class="weather-item">
+              <div class="weather-value">${weatherHumidity}%</div>
+              <div class="weather-label">Humidity</div>
+            </div>
+          </div>
+        `;
+      }, 1000);
+    }
+    
+    function exportLocations() {
+      if (appState.locations.length === 0) {
+        showToast('No locations to export');
+        return;
+      }
+      
+      // Create CSV content
+      let csvContent = 'name,latitude,longitude,visible\n';
+      
+      appState.locations.forEach(loc => {
+        csvContent += `"${loc.name}",${loc.lat},${loc.lng},${loc.visible}\n`;
+      });
+      
+      // Create download link
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'centroid_locations.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      showToast('Exported locations to CSV');
+    }
+    
+    function importLocations() {
+      const csvData = document.getElementById('import-csv').value.trim();
+      
+      if (!csvData) {
+        showToast('Please paste CSV data');
+        return;
+      }
+      
+      try {
+        // Parse CSV (simple parser)
+        const lines = csvData.split('\n');
+        const header = lines[0].toLowerCase();
+        
+        if (!header.includes('name') || !header.includes('latitude') || !header.includes('longitude')) {
+          throw new Error('CSV must include name, latitude, and longitude columns');
+        }
+        
+        const newLocations = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+          
+          const parts = lines[i].split(',');
+          
+          if (parts.length < 3) continue;
+          
+          const name = parts[0].replace(/"/g, '').trim();
+          const lat = parseFloat(parts[1]);
+          const lng = parseFloat(parts[2]);
+          const visible = parts.length > 3 ? parts[3].trim().toLowerCase() === 'true' : true;
+          
+          if (isNaN(lat) || isNaN(lng)) continue;
+          
+          newLocations.push({
+            name,
+            lat,
+            lng,
+            visible
+          });
+        }
+        
+        if (newLocations.length === 0) {
+          throw new Error('No valid locations found in CSV');
+        }
+        
+        // Clear existing locations
+        clearAllLocations(false);
+        
+        // Add new locations
+        newLocations.forEach((loc, index) => {
+          appState.locations.push(loc);
+          addLocationToList(loc, index);
+          addMarkerToMap(loc, index);
+        });
+        
+        updateCentroid();
+        saveToLocalStorage();
+        
+        // Close modal and show confirmation
+        importModal.style.display = 'none';
+        document.getElementById('import-csv').value = '';
+        
+        showToast(`Imported ${newLocations.length} locations`);
+        
+        // Fit map to show all markers
+        if (newLocations.length > 0) {
+          const group = L.featureGroup(newLocations.map(loc => loc.marker));
+          map.fitBounds(group.getBounds().pad(0.2));
+        }
+      } catch (error) {
+        showToast(error.message || 'Error importing CSV');
+      }
+    }
+    
+    function clearAllLocations(showConfirmation = true) {
+      // Clear markers
+      markers.clearLayers();
+      
+      // Clear list
+      locationList.innerHTML = '';
+      
+      // Clear array
+      appState.locations = [];
+      
+      // Update centroid
+      updateCentroid();
+      
+      // Save to localStorage
+      saveToLocalStorage();
+      
+      if (showConfirmation) {
+        showToast('All locations cleared');
+      }
+    }
+    
+    function toggleSidebar() {
+      sidebar.classList.toggle('sidebar-collapsed');
+      sidebarToggle.classList.toggle('sidebar-toggle-collapsed');
+      
+      if (sidebar.classList.contains('sidebar-collapsed')) {
+        toggleIcon.className = 'fas fa-chevron-left';
+      } else {
+        toggleIcon.className = 'fas fa-chevron-right';
+      }
+    }
+    
+    function showToast(message) {
+      toast.textContent = message;
+      toast.className = 'toast show';
+      
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 3000);
+    }
+    
+    function saveToLocalStorage() {
+      // Create a clean version of locations without circular references
+      const locationsToSave = appState.locations.map(loc => ({
+        name: loc.name,
+        lat: loc.lat,
+        lng: loc.lng,
+        visible: loc.visible
+      }));
+      
+      localStorage.setItem('centroidAppLocations', JSON.stringify(locationsToSave));
+    }
+    
+    function loadFromLocalStorage() {
+      const savedLocations = localStorage.getItem('centroidAppLocations');
+      
+      if (savedLocations) {
+        try {
+          const locations = JSON.parse(savedLocations);
+          
+          if (Array.isArray(locations) && locations.length > 0) {
+            locations.forEach((loc, index) => {
+              appState.locations.push(loc);
+              addLocationToList(loc, index);
+              addMarkerToMap(loc, index);
+            });
+            
+            updateCentroid();
+            
+            // Fit map to show all markers
+            const group = L.featureGroup(locations.map(loc => loc.marker));
+            map.fitBounds(group.getBounds().pad(0.2));
+          }
+        } catch (error) {
+          console.error('Error loading saved locations:', error);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
