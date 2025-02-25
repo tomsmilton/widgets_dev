@@ -24,20 +24,18 @@
       display: flex;
       height: 100vh;
       overflow: hidden;
-      background-color: #f8f9fa;
     }
     
     /* Sidebar styles */
     .sidebar {
       width: 350px;
-      background: #ffffff;
-      color: #555;
+      background: #2c3e50;
+      color: white;
       padding: 20px;
       display: flex;
       flex-direction: column;
       transition: transform 0.3s ease;
       z-index: 1000;
-      box-shadow: 0 0 15px rgba(0,0,0,0.08);
     }
     
     .sidebar-collapsed {
@@ -48,19 +46,14 @@
       position: absolute;
       left: 350px;
       top: 10px;
-      background: #4dabf7;
+      background: #2c3e50;
       color: white;
       border: none;
-      border-radius: 0 8px 8px 0;
+      border-radius: 0 4px 4px 0;
       padding: 10px;
       cursor: pointer;
       z-index: 1000;
-      transition: left 0.3s ease, background 0.2s ease;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    }
-    
-    .sidebar-toggle:hover {
-      background: #339af0;
+      transition: left 0.3s ease;
     }
     
     .sidebar-toggle-collapsed {
@@ -68,55 +61,36 @@
     }
     
     .app-title {
-      margin-bottom: 25px;
-      font-size: 28px;
+      margin-bottom: 20px;
+      font-size: 24px;
       font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      color: #339af0;
-      padding-bottom: 15px;
-      border-bottom: 2px solid #e9ecef;
     }
     
     .location-list {
       flex-grow: 1;
       overflow-y: auto;
       margin-bottom: 20px;
-      padding-right: 5px;
     }
     
     .location-item {
-      padding: 15px;
-      margin-bottom: 12px;
-      background: #f1f3f5;
-      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #34495e;
+      border-radius: 5px;
       position: relative;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      border-left: 4px solid #4dabf7;
-    }
-    
-    .location-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
     }
     
     .location-name {
       font-weight: bold;
-      margin-bottom: 8px;
-      color: #495057;
+      margin-bottom: 5px;
     }
     
     .location-coordinates {
       font-size: 12px;
-      color: #868e96;
-      margin-bottom: 5px;
-    }
-    
-    .location-distance {
-      font-size: 12px;
-      color: #339af0;
-      font-weight: 500;
+      color: #bdc3c7;
     }
     
     .remove-location {
@@ -124,103 +98,60 @@
       right: 10px;
       top: 10px;
       cursor: pointer;
-      color: #fa5252;
-      opacity: 0.7;
-      transition: opacity 0.2s ease;
-    }
-    
-    .remove-location:hover {
-      opacity: 1;
+      color: #e74c3c;
     }
     
     .visibility-toggle {
       margin-right: 10px;
       cursor: pointer;
-      color: #4dabf7;
-      transition: color 0.2s ease;
-    }
-    
-    .visibility-toggle:hover {
-      color: #339af0;
     }
     
     .button-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
     
     .sidebar-button {
-      padding: 12px;
+      padding: 10px;
       border: none;
-      border-radius: 8px;
-      background: #4dabf7;
+      border-radius: 5px;
+      background: #3498db;
       color: white;
       cursor: pointer;
-      transition: background 0.2s ease, transform 0.1s ease;
-      font-weight: 500;
-      font-size: 14px;
+      transition: background 0.2s ease;
+      font-weight: bold;
     }
     
     .sidebar-button:hover {
-      background: #339af0;
-      transform: translateY(-2px);
+      background: #2980b9;
     }
     
     .sidebar-button.danger {
-      background: #fa5252;
+      background: #e74c3c;
     }
     
     .sidebar-button.danger:hover {
-      background: #e03131;
-    }
-    
-    .sidebar-button i {
-      margin-right: 8px;
+      background: #c0392b;
     }
     
     .center-info {
-      padding: 18px;
-      background: #e7f5ff;
-      border-radius: 10px;
+      padding: 15px;
+      background: #34495e;
+      border-radius: 5px;
       margin-bottom: 20px;
-      border-left: 4px solid #339af0;
     }
     
     .center-coordinates {
       font-weight: bold;
-      margin-top: 8px;
-      color: #339af0;
-    }
-    
-    /* Section headers */
-    h3 {
-      margin: 20px 0 15px;
-      color: #495057;
-      font-size: 18px;
-      position: relative;
-      padding-bottom: 8px;
-    }
-    
-    h3::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      height: 3px;
-      width: 40px;
-      background: #4dabf7;
-      border-radius: 2px;
+      margin-top: 5px;
     }
     
     /* Map container */
     .map-container {
       flex-grow: 1;
       position: relative;
-      border-radius: 0 0 0 20px;
-      overflow: hidden;
-      box-shadow: -5px 0 15px rgba(0,0,0,0.05);
     }
     
     #map {
@@ -235,44 +166,28 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.7);
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 2000;
-      backdrop-filter: blur(4px);
     }
     
     .modal {
       width: 80%;
       max-width: 600px;
       background: white;
-      border-radius: 16px;
+      border-radius: 10px;
       padding: 30px;
-      color: #495057;
+      color: #333;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      animation: modalAppear 0.3s ease-out;
-    }
-    
-    @keyframes modalAppear {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
     }
     
     .modal-title {
       font-size: 24px;
       margin-bottom: 20px;
-      color: #339af0;
-      border-bottom: 2px solid #e9ecef;
-      padding-bottom: 15px;
+      color: #2c3e50;
     }
     
     .modal-content {
@@ -281,23 +196,21 @@
     
     .modal-content h3 {
       margin: 20px 0 10px;
-      color: #495057;
+      color: #2c3e50;
     }
     
     .modal-content p {
-      margin-bottom: 15px;
-      line-height: 1.6;
-      color: #495057;
+      margin-bottom: 10px;
+      line-height: 1.5;
     }
     
     .modal-content ul {
       padding-left: 20px;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
     
     .modal-content li {
-      margin-bottom: 8px;
-      line-height: 1.5;
+      margin-bottom: 5px;
     }
     
     .modal-footer {
@@ -306,46 +219,35 @@
     }
     
     .modal-button {
-      padding: 12px 25px;
+      padding: 10px 20px;
       border: none;
-      border-radius: 8px;
-      background: #4dabf7;
+      border-radius: 5px;
+      background: #3498db;
       color: white;
       cursor: pointer;
-      font-weight: 500;
-      transition: background 0.2s ease, transform 0.1s ease;
+      font-weight: bold;
     }
     
     .modal-button:hover {
-      background: #339af0;
-      transform: translateY(-2px);
+      background: #2980b9;
     }
     
     /* Add location modal */
     .input-group {
-      margin-bottom: 18px;
+      margin-bottom: 15px;
     }
     
     .input-group label {
       display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: #495057;
+      margin-bottom: 5px;
+      font-weight: bold;
     }
     
     .input-group input {
       width: 100%;
-      padding: 12px 15px;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      font-size: 15px;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .input-group input:focus {
-      outline: none;
-      border-color: #4dabf7;
-      box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
     }
     
     /* Added marker styles */
@@ -355,19 +257,18 @@
     
     .marker-label {
       background: white;
-      padding: 3px 8px;
-      border-radius: 4px;
+      padding: 2px 5px;
+      border-radius: 3px;
       font-size: 12px;
       font-weight: bold;
       margin-top: -5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
     
     /* Centroid marker */
     .centroid-marker {
-      color: #fa5252;
-      font-size: 24px;
-      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+      color: #e74c3c;
+      font-size: 20px;
     }
     
     /* Toast notification */
@@ -376,20 +277,18 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(73, 80, 87, 0.9);
+      background: rgba(44, 62, 80, 0.9);
       color: white;
       padding: 15px 30px;
-      border-radius: 30px;
-      font-weight: 500;
+      border-radius: 5px;
+      font-weight: bold;
       z-index: 2000;
       opacity: 0;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: opacity 0.3s ease;
     }
     
     .toast.show {
       opacity: 1;
-      transform: translateX(-50%) translateY(-10px);
     }
     
     /* Weather info */
@@ -435,117 +334,10 @@
       font-size: 12px;
       color: #bdc3c7;
     }
-    
-    /* Nearby places styles */
-    .nearby-places {
-      padding: 18px;
-      background: #fff4e6;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      border-left: 4px solid #fd7e14;
-    }
-    
-    .nearby-title {
-      font-weight: bold;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: #495057;
-    }
-    
-    .nearby-title i {
-      margin-right: 10px;
-      color: #fd7e14;
-    }
-    
-    .nearby-loading {
-      font-style: italic;
-      color: #868e96;
-    }
-    
-    .place-list {
-      max-height: 220px;
-      overflow-y: auto;
-      padding-right: 5px;
-      margin-top: 15px;
-    }
-    
-    .place-item {
-      padding: 12px;
-      margin-bottom: 8px;
-      background: #ffffff;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      border-left: 3px solid #fd7e14;
-    }
-    
-    .place-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-    }
-    
-    .place-name {
-      font-weight: 600;
-      margin-bottom: 5px;
-      color: #495057;
-    }
-    
-    .place-type {
-      font-size: 11px;
-      color: white;
-      display: inline-block;
-      padding: 2px 8px;
-      background: #fd7e14;
-      border-radius: 20px;
-      margin-right: 8px;
-    }
-    
-    .place-distance {
-      font-size: 12px;
-      color: #868e96;
-    }
-    
-    .place-buttons {
-      text-align: center;
-      margin-top: 15px;
-      margin-bottom: 10px;
-    }
-    
-    .place-filter {
-      display: inline-block;
-      font-size: 13px;
-      padding: 6px 12px;
-      margin: 0 4px;
-      background: #ffffff;
-      border: 1px solid #fd7e14;
-      border-radius: 20px;
-      color: #fd7e14;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .place-filter:hover {
-      background: #fff4e6;
-    }
-    
-    .place-filter.active {
-      background: #fd7e14;
-      border-color: #fd7e14;
-      color: white;
-    }
-    
-    /* Custom marker styles */
-    .place-marker i {
-      color: #fd7e14;
-      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
-    }
   </style>
 </head>
 <body>
-      <!-- Sidebar -->
+  <!-- Sidebar -->
   <div class="sidebar">
     <div class="app-title">
       <span>CentroidApp</span>
@@ -557,23 +349,13 @@
       <div class="center-coordinates" id="centroid-coordinates">Add locations to calculate</div>
     </div>
     
-    <div class="nearby-places">
-      <div class="nearby-title">
-        <div>
-          <i class="fas fa-utensils"></i>
-          <span>Meet Up Spots</span>
-        </div>
-        <button class="sidebar-button" id="find-places" style="padding: 5px 10px; font-size: 12px;">
-          <i class="fas fa-search"></i> Find
-        </button>
+    <div class="weather-info">
+      <div class="weather-title">
+        <i class="fas fa-cloud-sun"></i>
+        <span>Weather at Centroid</span>
       </div>
-      <div class="place-buttons">
-        <span class="place-filter active" data-type="restaurant">Restaurants</span>
-        <span class="place-filter" data-type="pub">Pubs</span>
-        <span class="place-filter" data-type="cafe">Cafes</span>
-      </div>
-      <div class="nearby-loading" id="places-container">
-        Calculate a centroid to find nearby places
+      <div class="weather-loading" id="weather-container">
+        Add locations to see weather
       </div>
     </div>
     
@@ -592,7 +374,7 @@
       </button>
     </div>
     
-    <h3>Your Locations</h3>
+    <h3>Locations</h3>
     <div class="location-list" id="location-list">
       <!-- Locations will be added here dynamically -->
     </div>
@@ -612,21 +394,21 @@
     <div class="modal">
       <h2 class="modal-title">Welcome to CentroidApp!</h2>
       <div class="modal-content">
-        <p>CentroidApp helps you find the perfect meet-up spot between multiple locations. Great for planning gatherings with friends or family across town!</p>
+        <p>CentroidApp helps you find the geographic center (centroid) of multiple locations. Perfect for finding a central meeting point between friends or planning events!</p>
         
         <h3>How to Use</h3>
         <ul>
           <li><strong>Add locations</strong> by clicking on the map or using the "Add Location" button</li>
           <li><strong>Name each location</strong> (e.g., "John's House", "Sarah's Office")</li>
-          <li><strong>View the centroid</strong> (marked with a star on the map)</li>
-          <li><strong>Find meeting places</strong> near the centroid - restaurants, pubs, and cafes</li>
+          <li><strong>View the centroid</strong> (marked in red on the map)</li>
           <li><strong>Show/hide locations</strong> using the eye icon</li>
           <li><strong>Remove locations</strong> using the trash icon</li>
+          <li><strong>Import/Export</strong> your locations as CSV</li>
         </ul>
         
         <h3>Extra Features</h3>
         <ul>
-          <li><strong>Nearby Places</strong> - Find the nearest restaurants, pubs, and cafes to your centroid</li>
+          <li><strong>Weather at Centroid</strong> - See the current weather at the center point</li>
           <li><strong>Distance Calculator</strong> - See how far each person is from the centroid</li>
           <li><strong>Collapsible Sidebar</strong> - Toggle the sidebar to maximize map view</li>
           <li><strong>Auto-save</strong> - Your locations are automatically saved in your browser</li>
@@ -692,16 +474,14 @@
       locations: [],
       centroid: null,
       lastClickedPosition: null,
-      nearbyPlaces: [],
-      placesMarkers: L.layerGroup(),
-      activePlaceType: 'restaurant',
-      hasZoomedToFit: false
+      weatherData: null
     };
     
     // DOM elements
-    const map = L.map('map').setView([53.3811, -1.4701], 13); // Sheffield, UK
+    const map = L.map('map').setView([40, -95], 4); // Default view centered on US
     const locationList = document.getElementById('location-list');
     const centroidCoordinates = document.getElementById('centroid-coordinates');
+    const weatherContainer = document.getElementById('weather-container');
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const toggleIcon = document.getElementById('toggle-icon');
     const sidebar = document.querySelector('.sidebar');
@@ -714,17 +494,12 @@
     
     // Map layers
     const markers = L.layerGroup().addTo(map);
-    appState.placesMarkers.addTo(map);
     let centroidMarker = null;
     
     // Initialize map
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-    
-    // Add a welcome message marker in Sheffield
-    const welcomeMarker = L.marker([53.3811, -1.4701]).addTo(map);
-    welcomeMarker.bindPopup("<b>Welcome to Sheffield!</b><br>Click anywhere on the map to add locations.").openPopup();
     
     // Event listeners
     document.getElementById('add-location').addEventListener('click', () => {
@@ -758,18 +533,6 @@
     });
     
     document.getElementById('confirm-import').addEventListener('click', importLocations);
-    
-    document.getElementById('find-places').addEventListener('click', () => findNearbyPlaces());
-    
-    // Add event listeners for place filters
-    document.querySelectorAll('.place-filter').forEach(filter => {
-      filter.addEventListener('click', (e) => {
-        document.querySelectorAll('.place-filter').forEach(f => f.classList.remove('active'));
-        e.target.classList.add('active');
-        appState.activePlaceType = e.target.dataset.type;
-        filterPlaces(appState.activePlaceType);
-      });
-    });
     
     // Load saved data from localStorage
     loadFromLocalStorage();
@@ -855,9 +618,8 @@
       marker.bindPopup(`
         <div class="custom-marker">
           <b>${location.name}</b><br>
-          ${location.distance ? `<span style="color: #339af0;">${location.distance.toFixed(1)} km to center</span><br>` : ''}
-          <span style="color: #868e96; font-size: 12px;">Lat: ${location.lat.toFixed(6)}<br>
-          Lng: ${location.lng.toFixed(6)}</span>
+          Lat: ${location.lat.toFixed(6)}<br>
+          Lng: ${location.lng.toFixed(6)}
         </div>
       `);
       
@@ -921,16 +683,13 @@
       
       if (visibleLocations.length === 0) {
         centroidCoordinates.textContent = 'Add locations to calculate';
-        document.getElementById('places-container').innerHTML = 'Calculate a centroid to find nearby places';
+        weatherContainer.innerHTML = 'Add locations to see weather';
         
         // Remove centroid marker if exists
         if (centroidMarker) {
           map.removeLayer(centroidMarker);
           centroidMarker = null;
         }
-        
-        // Clear any place markers
-        appState.placesMarkers.clearLayers();
         
         appState.centroid = null;
         return;
@@ -964,26 +723,19 @@
           icon: L.divIcon({
             html: '<i class="fas fa-star centroid-marker"></i>',
             className: 'centroid-icon',
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
           })
         }).addTo(map);
         
-        centroidMarker.bindPopup("<b>Centroid</b><br>This is the central point between all visible locations");
+        centroidMarker.bindPopup("<b>Centroid</b><br>Geographic center of all visible locations");
       }
       
       // Update distances
       updateDistances();
       
-      // Update nearby places display
-      document.getElementById('places-container').innerHTML = 'Click "Find" to search for nearby places';
-      
-      // If this is the first centroid calculation, zoom to fit all markers
-      if (visibleLocations.length > 0 && !appState.hasZoomedToFit) {
-        const group = L.featureGroup([...visibleLocations.map(loc => loc.marker), centroidMarker]);
-        map.fitBounds(group.getBounds().pad(0.2));
-        appState.hasZoomedToFit = true;
-      }
+      // Get weather for centroid
+      fetchWeather(centroidLat, centroidLng);
     }
     
     function updateDistances() {
@@ -1016,7 +768,50 @@
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       return R * c;
     }
-
+    
+    function fetchWeather(lat, lng) {
+      // Note: In a real application, you would use a real weather API
+      // This is a mock implementation
+      weatherContainer.innerHTML = '<div class="weather-loading">Loading weather data...</div>';
+      
+      // Simulate API call
+      setTimeout(() => {
+        // Mock weather data
+        const weatherTypes = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Rainy', 'Stormy'];
+        const weatherTemp = Math.round(Math.random() * 30);
+        const weatherWind = Math.round(Math.random() * 20);
+        const weatherHumidity = Math.round(Math.random() * 100);
+        
+        const weatherType = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+        let weatherIcon = 'fa-sun';
+        
+        if (weatherType === 'Partly Cloudy') weatherIcon = 'fa-cloud-sun';
+        else if (weatherType === 'Cloudy') weatherIcon = 'fa-cloud';
+        else if (weatherType === 'Rainy') weatherIcon = 'fa-cloud-rain';
+        else if (weatherType === 'Stormy') weatherIcon = 'fa-bolt';
+        
+        weatherContainer.innerHTML = `
+          <div class="weather-details">
+            <div class="weather-item">
+              <div class="weather-value"><i class="fas ${weatherIcon}"></i> ${weatherType}</div>
+              <div class="weather-label">Condition</div>
+            </div>
+            <div class="weather-item">
+              <div class="weather-value">${weatherTemp}°C</div>
+              <div class="weather-label">Temperature</div>
+            </div>
+            <div class="weather-item">
+              <div class="weather-value">${weatherWind} km/h</div>
+              <div class="weather-label">Wind</div>
+            </div>
+            <div class="weather-item">
+              <div class="weather-value">${weatherHumidity}%</div>
+              <div class="weather-label">Humidity</div>
+            </div>
+          </div>
+        `;
+      }, 1000);
+    }
     
     function exportLocations() {
       if (appState.locations.length === 0) {
@@ -1159,23 +954,6 @@
       }, 3000);
     }
     
-    // Helper function to get a friendly distance description
-    function getFriendlyDistance(distance) {
-      if (distance < 0.1) {
-        return 'very close by';
-      } else if (distance < 0.5) {
-        return 'a short walk away';
-      } else if (distance < 1) {
-        return 'about a 10 min walk';
-      } else if (distance < 2) {
-        return 'a 20 min walk away';
-      } else if (distance < 5) {
-        return 'a short drive away';
-      } else {
-        return `${distance.toFixed(1)} km away`;
-      }
-    }
-    
     function saveToLocalStorage() {
       // Create a clean version of locations without circular references
       const locationsToSave = appState.locations.map(loc => ({
@@ -1211,274 +989,6 @@
         } catch (error) {
           console.error('Error loading saved locations:', error);
         }
-      }
-    }
-    
-    // Function to find nearby places using the Overpass API
-    function findNearbyPlaces() {
-      if (!appState.centroid) {
-        showToast('You need to add locations first to calculate a centroid');
-        return;
-      }
-      
-      const placesContainer = document.getElementById('places-container');
-      placesContainer.innerHTML = '<div class="nearby-loading">Searching for nearby places...</div>';
-      
-      // Clear existing place markers
-      appState.placesMarkers.clearLayers();
-      
-      // Get centroid coordinates
-      const { lat, lng } = appState.centroid;
-      
-      // Set search radius in meters (1km)
-      const radius = 1000;
-      
-      // Prepare Overpass API query
-      // This will search for restaurants, pubs, and cafes near the centroid
-      const overpassQuery = `
-        [out:json];
-        (
-          node["amenity"="restaurant"](around:${radius},${lat},${lng});
-          node["amenity"="pub"](around:${radius},${lat},${lng});
-          node["amenity"="cafe"](around:${radius},${lat},${lng});
-          node["amenity"="bar"](around:${radius},${lat},${lng});
-          way["amenity"="restaurant"](around:${radius},${lat},${lng});
-          way["amenity"="pub"](around:${radius},${lat},${lng});
-          way["amenity"="cafe"](around:${radius},${lat},${lng});
-          way["amenity"="bar"](around:${radius},${lat},${lng});
-        );
-        out center;
-      `;
-      
-      // Use fetch API to query Overpass
-      fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        body: overpassQuery
-      })
-      .then(response => response.json())
-      .then(data => {
-        // Process the results
-        const places = data.elements.map(element => {
-          // Get coordinates (handle both nodes and ways)
-          const coordinates = element.type === 'node' 
-            ? { lat: element.lat, lng: element.lon } 
-            : { lat: element.center.lat, lng: element.center.lon };
-          
-          // Calculate distance from centroid
-          const distance = calculateDistance(
-            appState.centroid.lat, 
-            appState.centroid.lng, 
-            coordinates.lat, 
-            coordinates.lng
-          );
-          
-          // Determine place type
-          let type = 'restaurant';
-          if (element.tags.amenity === 'pub' || element.tags.amenity === 'bar') {
-            type = 'pub';
-          } else if (element.tags.amenity === 'cafe') {
-            type = 'cafe';
-          }
-          
-          // Create a place object
-          return {
-            id: element.id,
-            name: element.tags.name || 'Unnamed place',
-            type: type,
-            coordinates: coordinates,
-            distance: distance
-          };
-        })
-        .filter(place => place.name !== 'Unnamed place')  // Filter out places without names
-        .sort((a, b) => a.distance - b.distance);         // Sort by distance
-        
-        // Save to app state
-        appState.nearbyPlaces = places;
-        
-        // Display places and add markers to map
-        displayNearbyPlaces(places);
-      })
-      .catch(error => {
-        console.error('Error fetching nearby places:', error);
-        placesContainer.innerHTML = 'Error finding nearby places. Please try again.';
-        
-        // Fallback to mock data if API fails
-        showMockNearbyPlaces();
-      });
-    }
-    
-    function showMockNearbyPlaces() {
-      // Create mock places data around the centroid if API fails
-      if (!appState.centroid) return;
-      
-      const { lat, lng } = appState.centroid;
-      const mockPlaces = [];
-      
-      // Generate 10 random places
-      const placeTypes = ['restaurant', 'pub', 'cafe'];
-      const restaurantNames = ["Tasty Bites", "The Golden Fork", "Spice Paradise", "Gourmet Heaven", "Fresh & Delicious"];
-      const pubNames = ["The King's Arms", "The Red Lion", "The Crown", "The Royal Oak", "The White Hart"];
-      const cafeNames = ["Coffee Corner", "Daily Brew", "Sweet Spot", "Morning Joy", "Urban Bean"];
-      
-      for (let i = 0; i < 10; i++) {
-        // Random offset from centroid (roughly within 1km)
-        const latOffset = (Math.random() - 0.5) * 0.02;
-        const lngOffset = (Math.random() - 0.5) * 0.02;
-        
-        // Determine place type
-        const typeIndex = Math.floor(Math.random() * placeTypes.length);
-        const type = placeTypes[typeIndex];
-        
-        // Get appropriate name based on type
-        let name;
-        if (type === 'restaurant') {
-          name = restaurantNames[Math.floor(Math.random() * restaurantNames.length)];
-        } else if (type === 'pub') {
-          name = pubNames[Math.floor(Math.random() * pubNames.length)];
-        } else {
-          name = cafeNames[Math.floor(Math.random() * cafeNames.length)];
-        }
-        
-        // Add suffix to avoid duplicate names
-        name += ` ${i+1}`;
-        
-        // Calculate coordinates
-        const placeCoordinates = {
-          lat: lat + latOffset,
-          lng: lng + lngOffset
-        };
-        
-        // Calculate distance
-        const distance = calculateDistance(
-          lat, lng,
-          placeCoordinates.lat, placeCoordinates.lng
-        );
-        
-        // Add to mock places array
-        mockPlaces.push({
-          id: i,
-          name: name,
-          type: type,
-          coordinates: placeCoordinates,
-          distance: distance
-        });
-      }
-      
-      // Sort by distance
-      mockPlaces.sort((a, b) => a.distance - b.distance);
-      
-      // Save to app state
-      appState.nearbyPlaces = mockPlaces;
-      
-      // Display places
-      displayNearbyPlaces(mockPlaces);
-    }
-    
-    function displayNearbyPlaces(places) {
-      const placesContainer = document.getElementById('places-container');
-      
-      if (places.length === 0) {
-        placesContainer.innerHTML = 'No places found nearby. Try expanding your search.';
-        return;
-      }
-      
-      // Filter places by the active type
-      filterPlaces(appState.activePlaceType);
-    }
-    
-    function filterPlaces(type) {
-      const places = appState.nearbyPlaces.filter(place => place.type === type);
-      const placesContainer = document.getElementById('places-container');
-      
-      if (places.length === 0) {
-        placesContainer.innerHTML = `No ${type}s found nearby.`;
-        return;
-      }
-      
-      // Clear existing place markers
-      appState.placesMarkers.clearLayers();
-      
-      // Create HTML for places list
-      let placesHTML = `<div class="place-list">`;
-      
-      places.slice(0, 5).forEach(place => {
-        const friendlyDistance = getFriendlyDistance(place.distance);
-        
-        placesHTML += `
-          <div class="place-item" data-id="${place.id}">
-            <div class="place-name">${place.name}</div>
-            <div>
-              <span class="place-type">${formatPlaceType(place.type)}</span>
-              <span class="place-distance">${friendlyDistance}</span>
-            </div>
-          </div>
-        `;
-        
-        // Add marker to map
-        const placeIcon = L.divIcon({
-          html: `<i class="fas ${getPlaceIcon(place.type)}"></i>`,
-          className: 'place-marker',
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
-        });
-        
-        const marker = L.marker([place.coordinates.lat, place.coordinates.lng], {
-          icon: placeIcon
-        }).addTo(appState.placesMarkers);
-        
-        marker.bindPopup(`
-          <div style="text-align: center;">
-            <div style="font-weight: bold; font-size: 16px; margin-bottom: 5px; color: #fd7e14;">${place.name}</div>
-            <div style="font-size: 14px; color: #495057;">${formatPlaceType(place.type)}</div>
-            <div style="font-size: 12px; color: #868e96; margin-top: 5px;">${getFriendlyDistance(place.distance)} from center point</div>
-          </div>
-        `);
-      });
-      
-      placesHTML += `</div>`;
-      
-      // Update container
-      placesContainer.innerHTML = placesHTML;
-      
-      // Add event listeners for place items
-      document.querySelectorAll('.place-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const placeId = parseInt(item.dataset.id);
-          const place = appState.nearbyPlaces.find(p => p.id === placeId);
-          
-          if (place) {
-            // Center map on selected place
-            map.setView([place.coordinates.lat, place.coordinates.lng], 16);
-            
-            // Open popup
-            const markers = Array.from(appState.placesMarkers.getLayers());
-            const placeMarker = markers.find(m => 
-              m.getLatLng().lat === place.coordinates.lat && 
-              m.getLatLng().lng === place.coordinates.lng
-            );
-            
-            if (placeMarker) {
-              placeMarker.openPopup();
-            }
-          }
-        });
-      });
-    }
-    
-    function formatPlaceType(type) {
-      return type.charAt(0).toUpperCase() + type.slice(1);
-    }
-    
-    function getPlaceIcon(type) {
-      switch (type) {
-        case 'restaurant':
-          return 'fa-utensils';
-        case 'pub':
-          return 'fa-beer-mug-empty';
-        case 'cafe':
-          return 'fa-coffee';
-        default:
-          return 'fa-store';
       }
     }
   </script>
