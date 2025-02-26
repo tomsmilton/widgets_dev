@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CentroidApp - Find Your Center</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CentroidApp - Find Your Perfect Meeting Point</title>
   
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
@@ -20,11 +20,28 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
+    /* Fix for 100vh in mobile browsers */
     body {
       display: flex;
-      height: 100vh;
+      flex-direction: row;
+      height: 100vh; /* Fallback */
+      height: calc(var(--vh, 1vh) * 100);
       overflow: hidden;
       background-color: #f8f9fa;
+    }
+    
+    /* Mobile styles */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column-reverse;
+        height: 100vh;
+        overflow: hidden;
+      }
+      
+      .map-container {
+        flex: 1;
+        height: 60vh;
+      }
     }
     
     /* Sidebar styles */
@@ -38,6 +55,24 @@
       transition: transform 0.3s ease;
       z-index: 1000;
       box-shadow: 0 0 15px rgba(0,0,0,0.08);
+      overflow-y: auto;
+    }
+    
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: 40vh;
+        padding: 15px;
+        box-shadow: 0 -5px 15px rgba(0,0,0,0.08);
+      }
+      
+      .sidebar.sidebar-collapsed {
+        transform: translateY(calc(100% - 50px));
+      }
+      
+      .location-list {
+        max-height: 30vh;
+      }
     }
     
     .sidebar-collapsed {
@@ -59,6 +94,25 @@
       box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     }
     
+    @media (max-width: 768px) {
+      .sidebar-toggle {
+        top: auto;
+        bottom: calc(40vh - 30px);
+        left: 50%;
+        transform: translateX(-50%) rotate(90deg);
+        border-radius: 8px 8px 0 0;
+        padding: 5px 15px;
+      }
+      
+      .sidebar-toggle-collapsed {
+        bottom: 10px;
+      }
+      
+      #toggle-icon {
+        transform: rotate(90deg);
+      }
+    }
+    
     .sidebar-toggle:hover {
       background: #339af0;
     }
@@ -77,6 +131,14 @@
       color: #339af0;
       padding-bottom: 15px;
       border-bottom: 2px solid #e9ecef;
+    }
+    
+    @media (max-width: 768px) {
+      .app-title {
+        margin-bottom: 15px;
+        font-size: 24px;
+        padding-bottom: 10px;
+      }
     }
     
     .location-list {
@@ -151,6 +213,20 @@
       margin-bottom: 20px;
     }
     
+    @media (max-width: 768px) {
+      .button-group {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-bottom: 15px;
+      }
+    }
+    
+    @media (max-width: 400px) {
+      .button-group {
+        grid-template-columns: 1fr;
+      }
+    }
+    
     .sidebar-button {
       padding: 12px;
       border: none;
@@ -161,6 +237,13 @@
       transition: background 0.2s ease, transform 0.1s ease;
       font-weight: 500;
       font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+      .sidebar-button {
+        padding: 10px;
+        font-size: 13px;
+      }
     }
     
     .sidebar-button:hover {
@@ -223,9 +306,32 @@
       box-shadow: -5px 0 15px rgba(0,0,0,0.05);
     }
     
+    @media (max-width: 768px) {
+      .map-container {
+        border-radius: 0;
+      }
+    }
+    
     #map {
       height: 100%;
       width: 100%;
+    }
+    
+    /* Make map controls more touch-friendly */
+    .leaflet-touch .leaflet-control-layers,
+    .leaflet-touch .leaflet-control-zoom {
+      font-size: 16px;
+    }
+    
+    .leaflet-touch .leaflet-control-layers-toggle {
+      width: 44px;
+      height: 44px;
+    }
+    
+    .leaflet-touch .leaflet-bar a {
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
     }
     
     /* Modal Styles */
@@ -244,7 +350,7 @@
     }
     
     .modal {
-      width: 80%;
+      width: 90%;
       max-width: 600px;
       background: white;
       border-radius: 16px;
@@ -254,6 +360,15 @@
       overflow-y: auto;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       animation: modalAppear 0.3s ease-out;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    @media (max-width: 768px) {
+      .modal {
+        width: 95%;
+        padding: 20px;
+        max-height: 80vh;
+      }
     }
     
     @keyframes modalAppear {
@@ -275,8 +390,30 @@
       padding-bottom: 15px;
     }
     
+    @media (max-width: 768px) {
+      .modal-title {
+        font-size: 20px;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+      }
+    }
+    
     .modal-content {
       margin-bottom: 30px;
+    }
+    
+    @media (max-width: 768px) {
+      .modal-content {
+        margin-bottom: 20px;
+      }
+      
+      .modal-content p {
+        font-size: 14px;
+      }
+      
+      .modal-content li {
+        font-size: 14px;
+      }
     }
     
     .modal-content h3 {
@@ -385,6 +522,16 @@
       opacity: 0;
       transition: opacity 0.3s ease, transform 0.3s ease;
       box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 90%;
+    }
+    
+    @media (max-width: 768px) {
+      .toast {
+        padding: 12px 20px;
+        font-size: 14px;
+        bottom: 60px;
+      }
     }
     
     .toast.show {
@@ -445,6 +592,17 @@
       border-left: 4px solid #fd7e14;
     }
     
+    @media (max-width: 768px) {
+      .nearby-places {
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+      
+      .place-list {
+        max-height: 150px;
+      }
+    }
+    
     .nearby-title {
       font-weight: bold;
       margin-bottom: 12px;
@@ -469,6 +627,7 @@
       overflow-y: auto;
       padding-right: 5px;
       margin-top: 15px;
+      -webkit-overflow-scrolling: touch;
     }
     
     .place-item {
@@ -512,19 +671,29 @@
       text-align: center;
       margin-top: 15px;
       margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     
     .place-filter {
       display: inline-block;
       font-size: 13px;
       padding: 6px 12px;
-      margin: 0 4px;
+      margin: 4px;
       background: #ffffff;
       border: 1px solid #fd7e14;
       border-radius: 20px;
       color: #fd7e14;
       cursor: pointer;
       transition: all 0.2s ease;
+    }
+    
+    @media (max-width: 768px) {
+      .place-filter {
+        font-size: 12px;
+        padding: 5px 10px;
+      }
     }
     
     .place-filter:hover {
@@ -598,9 +767,22 @@
     </div>
   </div>
   
+  <!-- Sidebar toggle button - Initially set icon based on screen size -->
   <button class="sidebar-toggle" id="sidebar-toggle">
     <i class="fas fa-chevron-right" id="toggle-icon"></i>
   </button>
+  
+  <script>
+    // Set correct initial toggle icon based on screen width
+    document.addEventListener('DOMContentLoaded', function() {
+      const toggleIcon = document.getElementById('toggle-icon');
+      if (window.innerWidth <= 768) {
+        toggleIcon.className = 'fas fa-chevron-down';
+      } else {
+        toggleIcon.className = 'fas fa-chevron-right';
+      }
+    });
+  </script>
   
   <!-- Map Container -->
   <div class="map-container">
@@ -722,13 +904,12 @@
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
     
-    // Add a welcome message marker in Sheffield
-    const welcomeMarker = L.marker([53.3811, -1.4701]).addTo(map);
-    welcomeMarker.bindPopup("<b>Welcome to Sheffield!</b><br>Click anywhere on the map to add locations.").openPopup();
-    
     // Event listeners
     document.getElementById('add-location').addEventListener('click', () => {
       showToast('Click on the map to add a location');
+      if (window.innerWidth <= 768 && !sidebar.classList.contains('sidebar-collapsed')) {
+        toggleSidebar(); // Collapse sidebar on mobile when adding location
+      }
     });
     
     document.getElementById('export-data').addEventListener('click', exportLocations);
@@ -773,6 +954,82 @@
     
     // Load saved data from localStorage
     loadFromLocalStorage();
+    
+    // Handle screen resize
+    window.addEventListener('resize', handleResize);
+    
+    // Initial check for mobile/desktop
+    handleResize();
+    
+    function handleResize() {
+      const isMobile = window.innerWidth <= 768;
+      
+      // Update toggle icon orientation based on screen size
+      if (isMobile) {
+        if (sidebar.classList.contains('sidebar-collapsed')) {
+          toggleIcon.className = 'fas fa-chevron-up';
+        } else {
+          toggleIcon.className = 'fas fa-chevron-down';
+        }
+      } else {
+        if (sidebar.classList.contains('sidebar-collapsed')) {
+          toggleIcon.className = 'fas fa-chevron-left';
+        } else {
+          toggleIcon.className = 'fas fa-chevron-right';
+        }
+      }
+      
+      // Reset sidebar position when switching between mobile/desktop
+      if (isMobile && document.documentElement.classList.contains('desktop-mode')) {
+        document.documentElement.classList.remove('desktop-mode');
+        document.documentElement.classList.add('mobile-mode');
+        sidebar.classList.remove('sidebar-collapsed');
+      } else if (!isMobile && document.documentElement.classList.contains('mobile-mode')) {
+        document.documentElement.classList.remove('mobile-mode');
+        document.documentElement.classList.add('desktop-mode');
+        sidebar.classList.remove('sidebar-collapsed');
+      }
+      
+      // Set initial class
+      if (!document.documentElement.classList.contains('desktop-mode') && 
+          !document.documentElement.classList.contains('mobile-mode')) {
+        if (isMobile) {
+          document.documentElement.classList.add('mobile-mode');
+        } else {
+          document.documentElement.classList.add('desktop-mode');
+        }
+      }
+    }
+    
+    // Ensure Leaflet map is properly sized after DOM changes or device orientation changes
+    function resizeMap() {
+      if (map) {
+        map.invalidateSize();
+      }
+    }
+    
+    // Fix map size after resize or orientation change
+    window.addEventListener('resize', function() {
+      setTimeout(resizeMap, 100);
+    });
+    
+    window.addEventListener('orientationchange', function() {
+      setTimeout(resizeMap, 100);
+    });
+    
+    // Also fix map size when sidebar is toggled
+    sidebarToggle.addEventListener('click', function() {
+      setTimeout(resizeMap, 300);
+    });
+    
+    // Fix iOS Safari 100vh issue
+    function fixViewportHeight() {
+      let vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    
+    fixViewportHeight();
+    window.addEventListener('resize', fixViewportHeight);
     
     // Functions
     function handleMapClick(e) {
@@ -1143,10 +1400,20 @@
       sidebar.classList.toggle('sidebar-collapsed');
       sidebarToggle.classList.toggle('sidebar-toggle-collapsed');
       
-      if (sidebar.classList.contains('sidebar-collapsed')) {
-        toggleIcon.className = 'fas fa-chevron-left';
+      if (window.innerWidth <= 768) {
+        // Mobile behavior
+        if (sidebar.classList.contains('sidebar-collapsed')) {
+          toggleIcon.className = 'fas fa-chevron-up';
+        } else {
+          toggleIcon.className = 'fas fa-chevron-down';
+        }
       } else {
-        toggleIcon.className = 'fas fa-chevron-right';
+        // Desktop behavior
+        if (sidebar.classList.contains('sidebar-collapsed')) {
+          toggleIcon.className = 'fas fa-chevron-left';
+        } else {
+          toggleIcon.className = 'fas fa-chevron-right';
+        }
       }
     }
     
