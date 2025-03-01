@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amodo Design - Electrospinner</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Technical Drawing Decorations -->
+    <div class="tech-drawing circle"></div>
+    <div class="tech-drawing crosshairs"></div>
+    
+    <div class="container">
+        <header class="header">
+            <div class="toggle-wrapper">
+                <button class="sidebar-toggle" id="sidebar-toggle">Toggle Sidebar</button>
+            </div>
+            <div class="logo">
+                <img src="https://cdn.prod.website-files.com/650b1df1d17c457f9b527af0/650c37aeba27c328896dac01_logo-white-amodo.svg" alt="Amodo Design Logo">
+            </div>
+        </header>
+        
+        <aside class="sidebar" id="sidebar">
+            <!-- Navigation will be loaded dynamically by JavaScript -->
+        </aside>
+        
+        <main class="content" id="content">
+            <div class="path">
+                ~/projects <span>/</span> <a href="index.html">home</a> <span>/</span> electrospinner
+            </div>
+            
+            <div class="project-card full-article">
+                <div class="project-header">
+                    <div class="project-title">HIGH-VOLTAGE ELECTROSPINNING DEVICE</div>
+                    <div class="project-meta">REF: ENG-2025-02-10 | LEAD: L. BURKE</div>
+                </div>
+                
+                <div class="article-section">
+                    <div class="image-container">
+                        <img src="cabpp_hero.jpg" alt="High-voltage electrospinning device" class="article-image">
+                        <div class="image-caption">Figure 1: Amodo's portable electrospinning device developed with Corryn Biotechnologies</div>
+                    </div>
+                    
+                    <h2>Overview</h2>
+                    <p>Amodo Design partnered with Corryn Biotechnologies to create a novel handheld high-voltage electrospinning device. This groundbreaking product aims to enable clinicians to use electrospinning technology directly at the bedside.</p>
+                    
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">PROJECT SUMMARY</div>
+                        <pre>
+> Industrial Partner:     Corryn Biotechnologies
+> Development Scope:      Lab prototype to MVP
+> Key Challenge:          Safety-critical 10s of kilovolts in handheld form factor
+> Primary Applications:   Bedside medical procedures
+> Technology Readiness:   Minimum Viable Product (MVP)</pre>
+                    </div>
+                
+                    <p>Academic groups have spent decades developing new materials and techniques for electrospinning. By applying 10s of kilovolts to a polymer solution, scientists can create a microfibre or nanofibre mesh - similar to a spider's web, but with much finer threads. This technology is already used on industrial manufacture lines to make everything from respiratory masks to implantable medical devices, but it is yet to reach wide scale adoption in the clinic.</p>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Technical Approach</h2>
+                    
+                    <p>For this project we formed an interdisciplinary team of mechanical, electronic, firmware, and software engineers to work collaboratively on the complex, interlinking requirements of the device.</p>
+                    
+                    <div class="image-container">
+                        <img src="cbapp_spinning.png" alt="Electrospinning Process" class="article-image">
+                        <div class="image-caption">Figure 2: Visualization of the electrospinning process showing fiber formation</div>
+                    </div>
+                    
+                    <p>One bottleneck to medical applications for this technology has been the portability and usability of the electrospinning hardware. Creating a handheld device that can provide 10s of kilovolts is a complex, safety-critical challenge that required our multidisciplinary approach.</p>
+                    
+                    <div class="tags">
+                        <span class="tag">Medtech</span>
+                        <span class="tag">Biotech</span>
+                        <span class="tag">High-Voltage</span>
+                        <span class="tag">Safety-Critical</span>
+                    </div>
+                </div>
+                
+                <div class="article-section">
+                    <h2>High-Voltage Safety Critical Design</h2>
+                    
+                    <p>High voltage electricity introduces complexity throughout the stack; not only are there strict user safety requirements but there are also complex EMI considerations.</p>
+                    
+                    <div class="image-container">
+                        <img src="cbapp1.png" alt="Electrospinner Components" class="article-image">
+                        <div class="image-caption">Figure 3: Detailed view of electrospinner components and safety features</div>
+                    </div>
+                    
+                    <p>At the start of the project we ran comprehensive electrical breakdown tests on all of the possible materials we might use for the device. Characterising how well they insulate from high voltages in the 10s of kilovolts range enabled the mechanical engineers to then proceed with certainty that their designs would prevent electrical breakdown.</p>
+                    
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">SAFETY INNOVATIONS</div>
+                        <pre>
+> Material Testing:       Comprehensive electrical breakdown tests
+> Protective Systems:     Complete grounding shield for user protection
+> Encapsulation:          Critical subsystems potting to prevent electrical breakdown
+> EMI Management:         Careful PCB layout and component selection for noise reduction
+> Verification:           Rigorous testing protocol for high-voltage safety</pre>
+                    </div>
+                    
+                    <p>To further protect users we potted critical subsystems to both prevent electrical breakdown and prevent shorts and designed a complete grounding shield to protect the user.</p>
+                    
+                    <p>Not only does high voltage present a set of complex constraints for user safety, but it also leads to electrical design requirements throughout the electronic systems, in particular it is essential to protect ICs from electrical noise that may interfere with their performance. Careful component selection, PCB layout, and rigorous testing meant that we were able to produce electronic systems that were safe from high voltage noise.</p>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Usability and Form Factor</h2>
+                    
+                    <div class="image-container">
+                        <img src="cbapp2.png" alt="Electrospinner Prototype" class="article-image">
+                        <div class="image-caption">Figure 4: Prototype of the handheld electrospinning device</div>
+                    </div>
+                    
+                    <p>This device brings electrospinning to the bedside. A simple, usable, and compact design was essential. We quickly iterated on designs to reach a system that both met the complex electronic and mechanical requirements, and fit into a small form factor.</p>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Usability Aspect</th>
+                                <th>Requirement</th>
+                                <th>Implementation</th>
+                                <th>Outcome</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Form Factor</td>
+                                <td>Handheld, single-user operation</td>
+                                <td>Ergonomic design with balanced weight distribution</td>
+                                <td>Comfortable extended use in clinical settings</td>
+                            </tr>
+                            <tr>
+                                <td>Interface</td>
+                                <td>Simple, intuitive controls</td>
+                                <td>Minimal button design with clear indicators</td>
+                                <td>Reduced training requirements for clinical staff</td>
+                            </tr>
+                            <tr>
+                                <td>Setup Time</td>
+                                <td>< 2 minutes from case to operation</td>
+                                <td>Quick-connect components and auto-calibration</td>
+                                <td>Immediate availability for emergency procedures</td>
+                            </tr>
+                            <tr>
+                                <td>Safety Feedback</td>
+                                <td>Clear status indication</td>
+                                <td>Multi-color LED system with audible alerts</td>
+                                <td>Enhanced operator confidence and safety</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Rapid Development Approach</h2>
+                    
+                    <div class="image-container">
+                        <img src="cbapp3.png" alt="Device Testing" class="article-image">
+                        <div class="image-caption">Figure 5: Testing the electrospinning device in controlled conditions</div>
+                    </div>
+                    
+                    <p>We developed the MVP system in just three months. To achieve this we brought much of the prototyping in-house. Our team's ability to quickly iterate on designs is essential for rapid product development.</p>
+                    
+                    <p>When working on complex electromechanical systems it is essential that the product design, mechanical design, electronics, firmware, and software all perfectly interface. Small changes in one system can lead to cascading changes through the rest of the product. At Amodo we have all of these capabilities under one roof. This means that we can more quickly and more accurately develop complex products.</p>
+                    
+                    <blockquote class="note-box">
+                        <div class="note-title">CLIENT TESTIMONIAL</div>
+                        <p>"Amodo brought our device from lab-scale prototype to minimum-viable product at great pace. We'd certainly recommend Amodo to other companies looking to bring complex devices out of the laboratory and into the hands of consumers."</p>
+                        <p>— Dr. Luke Burke, CEO - Corryn Biotechnologies</p>
+                    </blockquote>
+                    
+                    <p>Not only does this improve product outcomes but it also reduces the complexity of project management for our clients. Working with a single design group is faster and easier than coordinating work between a set of different suppliers.</p>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Future Developments</h2>
+                    
+                    <p>Following the successful development of the MVP, potential future developments include:</p>
+                    
+                    <ul>
+                        <li>Integration with clinical information systems for procedure documentation</li>
+                        <li>Expanded polymer compatibility for various medical applications</li>
+                        <li>Reduced form factor for specialized surgical applications</li>
+                        <li>Battery life optimization for extended field use</li>
+                    </ul>
+                </div>
+                
+                <div class="tags">
+                    <span class="tag">Product Development</span>
+                    <span class="tag">Electronic Design</span>
+                    <span class="tag">Mechanical Design</span>
+                    <span class="tag">Prototyping</span>
+                </div>
+                
+                <div class="article-nav">
+                    <a href="index.html" class="back-link">← Back to Home</a>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="theme-selector">
+        <div class="theme-option theme-teal" data-theme="teal"></div>
+        <div class="theme-option theme-blue" data-theme="blue"></div>
+        <div class="theme-option theme-purple" data-theme="purple"></div>
+        <div class="theme-option theme-rust" data-theme="rust"></div>
+        <div class="theme-option theme-steel" data-theme="steel"></div>
+    </div>
+    
+    <script src="scripts.js"></script>
+</body>
+</html>

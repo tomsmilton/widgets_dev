@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amodo Design - Engineering Logs</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Technical Drawing Decorations -->
+    <div class="tech-drawing circle"></div>
+    <div class="tech-drawing crosshairs"></div>
+    
+    <div class="container">
+        <header class="header">
+            <div class="toggle-wrapper">
+                <button class="sidebar-toggle" id="sidebar-toggle">Toggle Sidebar</button>
+            </div>
+            <div class="logo">
+                <img src="https://cdn.prod.website-files.com/650b1df1d17c457f9b527af0/650c37aeba27c328896dac01_logo-white-amodo.svg" alt="Amodo Design Logo">
+            </div>
+        </header>
+        
+        <aside class="sidebar" id="sidebar">
+            <!-- Navigation will be loaded dynamically by JavaScript -->
+        </aside>
+        
+        <main class="content" id="content">
+            <div class="path">
+                ~/projects <span>/</span> home
+            </div>
+            
+            <h1>ENGINEERING LOGS</h1>
+            
+            <div class="project-card">
+                <div class="project-header">
+                    <div class="project-title">PROPULSION SYSTEM OPTIMIZATION</div>
+                    <div class="project-meta">REF: ENG-2025-03-01 | LEAD: J. ROBERTS</div>
+                </div>
+                
+                <p>This log documents our experimental approach to optimizing the propulsion system for the A7 prototype. Key focus areas include thermal efficiency, power-to-weight ratio improvements, and reliability under extreme conditions.</p>
+                
+                <div class="tags">
+                    <span class="tag">Propulsion</span>
+                    <span class="tag">Thermal Management</span>
+                    <span class="tag">Prototype A7</span>
+                </div>
+                
+                <div class="read-more">
+                    <a href="propulsion.html">Read More →</a>
+                </div>
+            </div>
+            
+            <div class="project-card">
+                <div class="project-header">
+                    <div class="project-title">HIGH-VOLTAGE ELECTROSPINNING DEVICE</div>
+                    <div class="project-meta">REF: ENG-2025-02-10 | LEAD: L. BURKE</div>
+                </div>
+                
+                <p>Development of a novel handheld high-voltage electrospinning device for Corryn Biotechnologies. This innovative technology enables clinicians to create microfiber and nanofiber meshes directly at the bedside, advancing medical applications of electrospinning.</p>
+                
+                <div class="tags">
+                    <span class="tag">Medtech</span>
+                    <span class="tag">Biotech</span>
+                    <span class="tag">High-Voltage</span>
+                    <span class="tag">Safety-Critical</span>
+                </div>
+                
+                <div class="read-more">
+                    <a href="electrospinner.html">Read More →</a>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="theme-selector">
+        <div class="theme-option theme-teal" data-theme="teal"></div>
+        <div class="theme-option theme-blue" data-theme="blue"></div>
+        <div class="theme-option theme-purple" data-theme="purple"></div>
+        <div class="theme-option theme-rust" data-theme="rust"></div>
+        <div class="theme-option theme-steel" data-theme="steel"></div>
+    </div>
+    
+    <script src="scripts.js"></script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amodo Design - Propulsion System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Technical Drawing Decorations -->
+    <div class="tech-drawing circle"></div>
+    <div class="tech-drawing crosshairs"></div>
+    
+    <div class="container">
+        <header class="header">
+            <div class="toggle-wrapper">
+                <button class="sidebar-toggle" id="sidebar-toggle">Toggle Sidebar</button>
+            </div>
+            <div class="logo">
+                <img src="https://cdn.prod.website-files.com/650b1df1d17c457f9b527af0/650c37aeba27c328896dac01_logo-white-amodo.svg" alt="Amodo Design Logo">
+            </div>
+        </header>
+        
+        <aside class="sidebar" id="sidebar">
+            <!-- Navigation will be loaded dynamically by JavaScript -->
+        </aside>
+        
+        <main class="content" id="content">
+            <div class="path">
+                ~/projects <span>/</span> <a href="index.html">home</a> <span>/</span> propulsion
+            </div>
+            
+            <div class="project-card full-article">
+                <div class="project-header">
+                    <div class="project-title">PROPULSION SYSTEM OPTIMIZATION</div>
+                    <div class="project-meta">REF: ENG-2025-03-01 | LEAD: J. ROBERTS</div>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Overview</h2>
+                    <p>This log documents our experimental approach to optimizing the propulsion system for the A7 prototype. Key focus areas include thermal efficiency, power-to-weight ratio improvements, and reliability under extreme conditions.</p>
+                
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">PERFORMANCE METRICS</div>
+                        <pre>
+> Thermal efficiency:      37.2% → 42.8% (↑ 15.1%)
+> Power-to-weight ratio:   1.35 kW/kg → 1.72 kW/kg
+> Operating temperature:   -40°C to +85°C
+> MTBF:                    16,500 hours
+> Avg. power consumption:  22.7% reduction</pre>
+                    </div>
+                
+                    <p>Initial tests indicate that our modified cooling system design has successfully addressed the thermal runaway issues encountered in previous iterations. Recommendations for further improvements have been documented in the technical specifications section.</p>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Technical Approach</h2>
+                    
+                    <p>Our optimization strategy involved a multi-phase approach:</p>
+                    
+                    <ol>
+                        <li>Computational fluid dynamics (CFD) simulation to identify inefficiencies in the original design</li>
+                        <li>Material substitution for critical components to improve thermal characteristics</li>
+                        <li>Redesigned geometry to optimize flow dynamics and reduce turbulence</li>
+                        <li>Implementation of advanced manufacturing techniques to maintain precise tolerances</li>
+                    </ol>
+                    
+                    <p>The most significant improvements came from redesigning the combustion chamber geometry, which allowed for more complete fuel utilization and reduced hotspots that were causing premature component degradation.</p>
+                    
+                    <div class="image-container">
+                        <img src="example.png" alt="Propulsion System Diagram" class="article-image">
+                        <div class="image-caption">Figure 1: Optimized propulsion system configuration showing improved flow dynamics</div>
+                    </div>
+                    
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">SYSTEM SCHEMATIC</div>
+                        <pre>
+┌────────────────────────────────────────────────┐
+│           PROPULSION SYSTEM SCHEMATIC          │
+└────────────────────────────────────────────────┘
+
+        ┌───────────┐         ┌───────────┐
+        │   Fuel    │         │  Oxidizer │
+        │  System   │         │   System  │
+        └─────┬─────┘         └─────┬─────┘
+              │                     │
+              ▼                     ▼
+        ┌───────────────────────────────┐
+        │                               │
+        │    Injection Control System   │
+        │                               │
+        └───────────────┬───────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────┐
+│                                               │
+│             Combustion Chamber                │
+│            ┌─────────────────┐                │
+│            │  Thermal        │                │
+│            │  Management     │                │
+│            │  System         │                │
+│            └─────────────────┘                │
+│                                               │
+└───────────────────────┬───────────────────────┘
+                        │
+                        ▼
+                ┌───────────────┐
+                │               │
+                │     Nozzle    │
+                │               │
+                └───────────────┘</pre>
+                    </div>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Component Analysis</h2>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Original Material</th>
+                                <th>Optimized Material</th>
+                                <th>Performance Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Combustion Chamber</td>
+                                <td>Inconel 718</td>
+                                <td>CM-7 Composite</td>
+                                <td>+18.5% thermal efficiency</td>
+                            </tr>
+                            <tr>
+                                <td>Fuel Injectors</td>
+                                <td>Titanium Alloy</td>
+                                <td>Titanium-Vanadium</td>
+                                <td>+12.3% flow uniformity</td>
+                            </tr>
+                            <tr>
+                                <td>Nozzle Assembly</td>
+                                <td>Niobium Alloy</td>
+                                <td>Carbon-Carbon Composite</td>
+                                <td>-32.7% weight</td>
+                            </tr>
+                            <tr>
+                                <td>Control Valves</td>
+                                <td>Stainless Steel</td>
+                                <td>Titanium-Niobium</td>
+                                <td>+27.8% response time</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <p>The material substitutions provided significant improvements in system performance while also reducing overall weight. The CM-7 composite material used in the combustion chamber was particularly effective at maintaining structural integrity under extreme thermal conditions.</p>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Future Developments</h2>
+                    
+                    <p>Based on these promising results, we've identified several areas for further optimization:</p>
+                    
+                    <ul>
+                        <li>Integration of ceramic matrix composite materials for critical high-temperature components</li>
+                        <li>Implementation of adaptive control algorithms to optimize performance across the operational envelope</li>
+                        <li>Extended durability testing to validate the projected MTBF improvements</li>
+                    </ul>
+                    
+                    <p>The next phase of development will focus on improving reliability in extreme environmental conditions, with particular emphasis on performance in high-humidity and salt-spray environments.</p>
+                </div>
+                
+                <div class="tags">
+                    <span class="tag">Propulsion</span>
+                    <span class="tag">Thermal Management</span>
+                    <span class="tag">Prototype A7</span>
+                    <span class="tag">Efficiency</span>
+                </div>
+                
+                <div class="article-nav">
+                    <a href="index.html" class="back-link">← Back to Home</a>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="theme-selector">
+        <div class="theme-option theme-teal" data-theme="teal"></div>
+        <div class="theme-option theme-blue" data-theme="blue"></div>
+        <div class="theme-option theme-purple" data-theme="purple"></div>
+        <div class="theme-option theme-rust" data-theme="rust"></div>
+        <div class="theme-option theme-steel" data-theme="steel"></div>
+    </div>
+    
+    <script src="scripts.js"></script>
+</body>
+</html>
