@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amodo Design - Air Filtration System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .article-image {
+            max-height: 45vh;
+            width: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .image-container {
+            text-align: center;
+            margin: 2rem 0;
+            max-height: 50vh;
+            overflow: hidden;
+        }
+        
+        table img {
+            max-height: 20vh;
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Technical Drawing Decorations -->
+    <div class="tech-drawing circle"></div>
+    <div class="tech-drawing crosshairs"></div>
+    
+    <div class="container">
+        <header class="header">
+            <div class="toggle-wrapper">
+                <button class="sidebar-toggle" id="sidebar-toggle">Toggle Sidebar</button>
+            </div>
+            <div class="logo">
+                <img src="https://cdn.prod.website-files.com/650b1df1d17c457f9b527af0/650c37aeba27c328896dac01_logo-white-amodo.svg" alt="Amodo Design Logo">
+            </div>
+        </header>
+        
+        <aside class="sidebar" id="sidebar">
+            <!-- Navigation will be loaded dynamically by JavaScript -->
+        </aside>
+        
+        <main class="content" id="content">
+            <div class="path">
+                ~/home <span>/</span> <a href="air-filtration.html">air-filtration</a>
+            </div>
+            
+            <div class="project-card full-article">
+                <div class="project-header">
+                    <div class="project-title">CUSTOM AIR FILTRATION SYSTEM</div>
+                    <div class="project-meta">REF: ENG-2025-03-02 | ENG: T. GREEN, M. FARROW</div>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Overview</h2>
+                    <p>This log documents our engineering design process for developing a custom air filtration system for office environments. Key focus areas include maximizing air change rates, minimizing noise, optimizing cost-effectiveness, and creating an aesthetically acceptable design.</p>
+                
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">PERFORMANCE METRICS</div>
+                        <pre>
+> Target airflow:           1000 m³/hr (600 CFM)
+> Achieved airflow:         1260 m³/hr (741 CFM)
+> Operating noise level:    < 30 dBA
+> Air changes per hour:     4 ACH (target), 5.25 ACH (achieved)
+> Cost reduction:           > 50% vs. commercial alternatives</pre>
+                        </div>
+                
+                    <p>Our custom-built solution successfully outperformed commercial alternatives in both performance and cost-effectiveness while meeting our specific environmental and aesthetic requirements. This report details our comprehensive engineering process from initial concept to final prototype testing.</p>
+                    </div>
+
+                <div class="article-section">
+                    <h2>Initial Concept Exploration</h2>
+                    
+                    <p>Our investigation began with an analysis of existing solutions, particularly Clean Air Kits designs that use PC cooling fans to power air filtration. We identified several opportunities for improvement:</p>
+                    
+                    <ul>
+                        <li>Using larger fans (140mm vs 120mm) that could operate at lower RPM for the same airflow</li>
+                        <li>Optimizing the fan arrangement to improve performance</li>
+                        <li>Creating a more aesthetically pleasing and office-appropriate design</li>
+                        <li>Reducing overall cost</li>
+                    </ul>
+
+                    <p>Initial CAD concepts were developed based on a box-like structure with multiple PC fans and standard air conditioning filters.</p>
+
+                    <div class="image-container">
+                        <img src="airfilter_images/image.png" alt="Initial CAD concept with PC fans and AC filters" class="article-image" style="max-height: 45vh; width: auto;">
+                        <div class="image-caption">Figure 1: Initial CAD concept with PC fans and AC filters</div>
+                    </div>
+
+                    <p>The Clean Air Kits units use MPR 1900 AC filters, which are readily available at approximately £45 each with a recommended replacement interval of 9 months. These filters provide good filtration area at a reasonable cost.</p>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Technical Analysis</h2>
+                    
+                    <p>To properly select fans and design the system, we needed to understand the pressure-flow relationship of our filters. Testing revealed that our filters followed this pressure curve:</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">FILTER PRESSURE EQUATION</div>
+                        <pre>P = 142 × Q^{1.39}
+
+Where:
+P = pressure in Pascals
+Q = flow rate in m³/s</pre>
+                    </div>
+
+                            <div class="image-container">
+                        <img src="airfilter_images/image%201.png" alt="Filter pressure drop curve" class="article-image">
+                        <div class="image-caption">Figure 2: Filter pressure drop curve</div>
+                    </div>
+
+                    <p>For our target flow rate of 1000m³/hr through a single filter, this would create a pressure loss of approximately 23.9Pa. With two filters in parallel (each handling 500m³/hr), the pressure loss would drop to approximately 9.13Pa per filter.</p>
+                    
+                    <h3>Sound Level Considerations</h3>
+                    
+                    <p>Fan noise increases non-linearly with the number of fans. For n fans, the total sound pressure level can be calculated as:</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">NOISE CALCULATION</div>
+                        <pre>L_{total} = L_{single} + 10log_{10}(n)
+
+Where:
+L_{total} = total noise level (dBA)
+L_{single} = single fan noise level (dBA)
+n = number of fans</pre>
+                    </div>
+
+                    <p>Another important factor is the relationship between fan speed and noise. Testing and literature showed that noise increases with the fifth power of speed:</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">NOISE-SPEED RELATIONSHIP</div>
+                        <pre>Noise = 10 × log_{10}((v/v_{max})^5)
+
+Where:
+v = operating speed
+v_{max} = maximum speed</pre>
+                    </div>
+
+                    <div class="image-container">
+                        <img src="airfilter_images/image%202.png" alt="Noise-speed relationship from HSE data" class="article-image">
+                        <div class="image-caption">Figure 3: Noise-speed relationship from HSE data</div>
+                    </div>
+
+                    <p>This means that running fans at 80% speed instead of 100% reduces noise by approximately 5dB—a substantial improvement in perceived loudness.</p>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Fan Performance Analysis</h2>
+                    
+                    <p>We conducted a detailed analysis of several fan options to determine the optimal choice. For the P14 Max fans, we created visualizations showing the relationship between number of fans, noise level, and flow rate:</p>
+
+                    <div class="image-container">
+                        <img src="airfilter_images/image%203.png" alt="P14 Max fan performance analysis" class="article-image">
+                        <div class="image-caption">Figure 4: P14 Max fan performance analysis</div>
+                    </div>
+
+                    <p>We plotted performance curves for various fans when pulling 1000m³/h through two parallel filters (9.13Pa):</p>
+                    
+                            <div class="image-container">
+                        <img src="airfilter_images/image%205.png" alt="Fan performance comparison for dual filters" class="article-image">
+                        <div class="image-caption">Figure 5: Fan performance comparison for dual filters</div>
+                            </div>
+                            
+                    <p>And for the same flow through just one filter (23.9Pa):</p>
+                            
+                            <div class="image-container">
+                        <img src="airfilter_images/image%206.png" alt="Fan performance comparison for single filter" class="article-image">
+                        <div class="image-caption">Figure 6: Fan performance comparison for single filter</div>
+                            </div>
+                            
+                    <p>The data showed that Arctic F14 PWM fans offered the best combination of performance and value for our application.</p>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Design Concepts</h2>
+
+                    <p>We explored multiple designs, each with strengths and weaknesses:</p>
+                    
+                    <h3>"Radiator" Design Concept</h3>
+
+                    <div class="image-container">
+                        <img src="airfilter_images/image%2022.png" alt="Radiator design concept sketch" class="article-image">
+                        <div class="image-caption">Figure 7: Radiator design concept sketch</div>
+                    </div>
+
+                            <div class="image-container">
+                        <img src="airfilter_images/image%2024.png" alt="Radiator design side view" class="article-image">
+                        <div class="image-caption">Figure 8: Radiator design side view</div>
+                            </div>
+                            
+                    <h3>"Side Cabinet" Design Concept</h3>
+                    
+                            <div class="image-container">
+                        <img src="airfilter_images/image%2025.png" alt="Side cabinet design concept" class="article-image">
+                        <div class="image-caption">Figure 9: Side cabinet design concept</div>
+                            </div>
+                            
+                            <div class="image-container">
+                        <img src="airfilter_images/image%2027.png" alt="Side cabinet design alternate view" class="article-image">
+                        <div class="image-caption">Figure 10: Side cabinet design alternate view</div>
+                            </div>
+                            
+                    <h3>Other Design Concepts</h3>
+                    
+                    <p>We also explored "Coffee Table", "Cylindrical", "Tophat", and "Ice Cream Sandwich" designs:</p>
+                    
+                            <div class="image-container">
+                        <img src="airfilter_images/image%2031.png" alt="Coffee table design full sketch" class="article-image">
+                        <div class="image-caption">Figure 11: Coffee table design concept</div>
+                            </div>
+                            
+                            <div class="image-container">
+                        <img src="airfilter_images/image%2034.png" alt="Tophat design with dimensions" class="article-image">
+                        <div class="image-caption">Figure 12: Tophat design concept</div>
+                        </div>
+                    </div>
+
+                <div class="article-section">
+                    <h2>Material Analysis</h2>
+                    
+                    <h3>Filter Covering Pressure Loss</h3>
+                    
+                    <p>Our investigation into speaker cloth revealed a significant concern: additional pressure loss. Based on analysis, typical speaker cloth could create 15-20Pa of pressure loss, which was even higher than the pressure loss from our filters (9.13Pa)!</p>
+
+                    <div class="image-container">
+                        <img src="airfilter_images/pressure_loss_estimation.png" alt="Speaker cloth pressure loss estimation" class="article-image">
+                        <div class="image-caption">Figure 13: Speaker cloth pressure loss estimation</div>
+                    </div>
+
+                    <p>If using speaker cloth, we would need to increase its surface area and add distance between it and the fans to minimize pressure loss:</p>
+
+                    <div class="image-container">
+                        <img src="airfilter_images/image%2019.png" alt="Speaker cloth arrangement to reduce pressure loss" class="article-image">
+                        <div class="image-caption">Figure 14: Speaker cloth arrangement to reduce pressure loss</div>
+                    </div>
+
+                    <h3>Fabric Options</h3>
+                    
+                    <p>For aesthetic covering, we considered several Camira Cara fabric options:</p>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Option</th>
+                                <th>Image</th>
+                                <th>Characteristics</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Fair Isle</td>
+                                <td><img src="airfilter_images/image%2036.png" alt="Fair Isle fabric" style="width:150px"></td>
+                                <td>Textured pattern, moderate opacity</td>
+                            </tr>
+                            <tr>
+                                <td>Clan</td>
+                                <td><img src="airfilter_images/image%2037.png" alt="Clan fabric" style="width:150px"></td>
+                                <td>Solid color, high opacity</td>
+                            </tr>
+                            <tr>
+                                <td>Easdale</td>
+                                <td><img src="airfilter_images/image%2038.png" alt="Easdale fabric" style="width:150px"></td>
+                                <td>Warm tone, matches MDF</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Optimization Analysis</h2>
+                    
+                    <p>We developed a computational model to optimize for performance per unit cost while maintaining noise constraints below 30dBA. Results were visualized for configurations with and without fabric covering:</p>
+                    
+                            <div class="image-container">
+                        <img src="airfilter_images/image%2042.png" alt="Optimization results with fabric covering" class="article-image">
+                        <div class="image-caption">Figure 15: Optimization results with fabric covering</div>
+                    </div>
+
+                    <div class="image-container">
+                        <img src="airfilter_images/image%2043.png" alt="Optimization results without fabric covering" class="article-image">
+                        <div class="image-caption">Figure 16: Optimization results without fabric covering</div>
+                    </div>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">OPTIMAL CONFIGURATIONS</div>
+                        <pre>
+WITH FABRIC COVERING:
+- 8× Arctic F14 fans at 90% speed: 339 CFM
+- 7× Arctic F14 fans at 90% speed: 313 CFM
+- 6× Arctic F14 fans at 90% speed: 284 CFM
+
+WITHOUT FABRIC COVERING:
+- 9× Arctic F14 fans at 90% speed: 440 CFM
+- 8× Arctic F14 fans at 90% speed: 406 CFM</pre>
+                    </div>
+
+                    <p>Our most significant finding was that multiple smaller units would outperform a single large unit due to the nonlinear relationship between pressure and airflow. This led us to pivot from a single large "radiator" design to two smaller cabinet-style units, each with two filters and 8 fans per unit.</p>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Prototype Performance Testing</h2>
+
+                    <div class="image-container">
+                        <img src="airfilter_images/1000009940.jpg" alt="Prototype performance testing setup" class="article-image">
+                        <div class="image-caption">Figure 17: Prototype performance testing setup</div>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Existing Filter</th>
+                                <th>New Filter<br>With Fabric</th>
+                                <th>New Filter<br>Without Fabric</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Velocity on Filter Centre (m/s)</td>
+                                <td>0.6</td>
+                                <td>0.2</td>
+                                <td>0.7</td>
+                            </tr>
+                            <tr>
+                                <td>On Fan Centre (m/s)</td>
+                                <td>2.9</td>
+                                <td>1.0</td>
+                                <td>1.1</td>
+                            </tr>
+                            <tr>
+                                <td>Volumetric Flow (m³/hr)</td>
+                                <td>1080</td>
+                                <td>360</td>
+                                <td>1260</td>
+                            </tr>
+                            <tr>
+                                <td>CFM</td>
+                                <td>635</td>
+                                <td>211</td>
+                                <td>741</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>These measurements confirmed our predictions:</p>
+                    <ol>
+                        <li>The fabric covering dramatically reduced performance (by approximately 70%)</li>
+                        <li>Without fabric, our new design achieved approximately 741 CFM—well above our 600 CFM target</li>
+                        <li>The new design without fabric outperformed our existing unit when adjusted for the number of fans (8 vs. 7)</li>
+                    </ol>
+                </div>
+                
+                <div class="article-section">
+                    <h2>Comparison with Commercial Products</h2>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>CADR (m³/hr)</th>
+                                <th>Noise (dB)</th>
+                                <th>Filters</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Our Design</td>
+                                <td>1260</td>
+                                <td>< 30</td>
+                                <td>MERV 13 / MPR 1900</td>
+                                <td>£600 total cost</td>
+                            </tr>
+                            <tr>
+                                <td>Coway Airmega 300</td>
+                                <td>575</td>
+                                <td>52 (max)</td>
+                                <td>Pre, Carbon, HEPA</td>
+                                <td>57W power consumption</td>
+                            </tr>
+                            <tr>
+                                <td>Coway Airmega 150</td>
+                                <td>281</td>
+                                <td>52 (max)</td>
+                                <td>Pre, Carbon, HEPA</td>
+                                <td>35W power consumption</td>
+                            </tr>
+                            <tr>
+                                <td>Blue Air Pure 511</td>
+                                <td>191</td>
+                                <td>49</td>
+                                <td>HEPA</td>
+                                <td>£90 unit cost</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <p>All commercial units exhibited the same pattern: they were either very loud at high flow rates or had inadequate flow at quiet operation levels. Our custom design achieved superior performance-to-noise ratio compared to these commercial options.</p>
+                            </div>
+
+                <div class="article-section">
+                    <h2>Conclusions and Future Improvements</h2>
+
+                    <p>Our engineering process led to a highly optimized air filtration system that delivers:</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">KEY ACHIEVEMENTS</div>
+                        <pre>
+✓ Airflow of 741 CFM (1260m³/hr) without fabric covering
+✓ Noise levels under 30dBA at operating speed
+✓ Total cost ~£600 for two units (< 50% of commercial alternatives)
+✓ Easily serviceable design with simple filter replacement
+✓ Modern, minimalist aesthetic appropriate for office environments</pre>
+                    </div>
+
+                    <p>The most significant findings from this project were:</p>
+                    <ol>
+                        <li>Multiple smaller units are more efficient than one large unit due to the nonlinear relationship between pressure and flow</li>
+                        <li>PC cooling fans provide an excellent balance of performance, noise, and cost for this application</li>
+                        <li>Filter covering materials have a dramatically larger impact on performance than initially expected</li>
+                        <li>A systematic, data-driven approach to fan selection and system design produces superior results compared to intuition-based design</li>
+                    </ol>
+                    
+                    <p>Future work should address the Arctic F14 PWM PST fans end-of-life status, which highlights a risk with consumer/gaming-grade components. Future designs should consider industrial components with longer availability guarantees.</p>
+                </div>
+                
+                <div class="tags">
+                    <span class="tag">Air Filtration</span>
+                    <span class="tag">HVAC</span>
+                    <span class="tag">Office Environment</span>
+                    <span class="tag">Efficiency</span>
+                    <span class="tag">Noise Reduction</span>
+                </div>
+                
+                <div class="article-nav">
+                    <a href="index.html" class="back-link">← Back to Home</a>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div class="theme-selector">
+        <div class="theme-option theme-teal" data-theme="teal"></div>
+        <div class="theme-option theme-blue" data-theme="blue"></div>
+        <div class="theme-option theme-purple" data-theme="purple"></div>
+        <div class="theme-option theme-rust" data-theme="rust"></div>
+        <div class="theme-option theme-steel" data-theme="steel"></div>
+    </div>
+    
+    <script src="scripts.js"></script>
+</body>
+</html>
+```

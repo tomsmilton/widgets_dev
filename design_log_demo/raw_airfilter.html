@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amodo Design - Low Cost Recirculating Filtration System</title>
+    <style>
+        /* Base styles */
+        :root {
+            --primary-color: #3a86ff;
+            --secondary-color: #8338ec;
+            --accent-color: #ff006e;
+            --bg-color: #0a0a0a;
+            --bg-light: #1a1a1a;
+            --text-color: #f5f5f5;
+            --text-secondary: #aaaaaa;
+            --border-color: #333333;
+            --code-bg: #1f1f1f;
+            --grid-line: rgba(255, 255, 255, 0.05);
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: 70px 1fr;
+            min-height: 100vh;
+        }
+        
+        /* Technical drawing decorations */
+        .tech-drawing {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.07;
+        }
+        
+        .tech-drawing.circle {
+            width: 600px;
+            height: 600px;
+            border: 1px solid var(--text-color);
+            border-radius: 50%;
+            top: 50%;
+            left: 80%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .tech-drawing.crosshairs {
+            width: 100vw;
+            height: 100vh;
+            background-image: 
+                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        /* Header styles */
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background-color: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 10;
+        }
+        
+        .logo {
+            height: 40px;
+        }
+        
+        .logo img {
+            height: 100%;
+        }
+        
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-toggle {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-toggle:hover {
+            background-color: var(--border-color);
+        }
+        
+        /* Sidebar styles */
+        .sidebar {
+            grid-column: 1;
+            grid-row: 2;
+            background-color: var(--bg-light);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        /* Content styles */
+        .content {
+            grid-column: 2;
+            grid-row: 2;
+            padding: 20px 40px 60px;
+            overflow-y: auto;
+            max-width: 1600px;
+        }
+        
+        .path {
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        
+        .path span {
+            color: var(--accent-color);
+        }
+        
+        .path a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .path a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Project card styles */
+        .project-card {
+            background-color: var(--bg-light);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 40px;
+        }
+        
+        .full-article {
+            padding: 40px;
+        }
+        
+        .project-header {
+            margin-bottom: 30px;
+        }
+        
+        .project-title {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .project-meta {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+        
+        .article-section {
+            margin-bottom: 40px;
+        }
+        
+        .article-section h2 {
+            font-size: 22px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 40px;
+            color: var(--text-color);
+        }
+        
+        .article-section h3 {
+            font-size: 18px;
+            margin-top: 25px;
+            color: var(--text-color);
+        }
+        
+        /* Blueprint section */
+        .blueprint-section {
+            background-color: var(--code-bg);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .blueprint-title {
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .blueprint-section pre {
+            font-family: monospace;
+            margin: 0;
+            white-space: pre-wrap;
+            color: var(--text-color);
+        }
+        
+        /* Data tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+        
+        .data-table th {
+            background-color: rgba(58, 134, 255, 0.1);
+            font-weight: 600;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        
+        /* Images */
+        .image-container {
+            margin: 30px 0;
+        }
+        
+        .article-image {
+            max-width: 100%;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .image-caption {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        /* Code blocks */
+        pre {
+            background-color: var(--code-bg);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: Consolas, Monaco, 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        code {
+            font-family: Consolas, Monaco, 'Courier New', monospace;
+            font-size: 0.9em;
+            background-color: var(--code-bg);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        /* Lists */
+        ul, ol {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        /* Callout boxes */
+        .callout {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background-color: rgba(58, 134, 255, 0.1);
+            border-left: 5px solid var(--primary-color);
+        }
+        
+        .warning {
+            background-color: rgba(255, 170, 0, 0.1);
+            border-left: 5px solid #ffaa00;
+        }
+        
+        .important {
+            background-color: rgba(255, 0, 110, 0.1);
+            border-left: 5px solid var(--accent-color);
+        }
+        
+        .note {
+            background-color: rgba(46, 204, 113, 0.1);
+            border-left: 5px solid #2ecc71;
+        }
+        
+        /* Equation styling */
+        .equation {
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            font-size: 1.2em;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+        }
+        
+        /* Version headers */
+        .version-header {
+            display: flex;
+            align-items: center;
+            background-color: rgba(58, 134, 255, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 40px 0 20px;
+        }
+        
+        .version-details {
+            margin-left: 0px;
+            flex-grow: 1;
+        }
+        
+        .version-details h1 {
+            margin: 0;
+            font-size: 20px;
+            border-bottom: none;
+            padding-bottom: 0;
+            color: var(--primary-color);
+        }
+        
+        .engineer {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .date {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 3px;
+        }
+        
+        /* Column container */
+        .column-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            gap: 20px;
+        }
+        
+        .column {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        /* Tags and footer */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 40px;
+        }
+        
+        .tag {
+            background-color: rgba(58, 134, 255, 0.1);
+            color: var(--primary-color);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .article-nav {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Theme selector */
+        .theme-selector {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .theme-option {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid var(--bg-light);
+            transition: transform 0.2s ease;
+        }
+        
+        .theme-option:hover {
+            transform: scale(1.2);
+        }
+        
+        .theme-teal {
+            background-color: #38bec9;
+        }
+        
+        .theme-blue {
+            background-color: #3a86ff;
+        }
+        
+        .theme-purple {
+            background-color: #8338ec;
+        }
+        
+        .theme-rust {
+            background-color: #ff006e;
+        }
+        
+        .theme-steel {
+            background-color: #7f8c8d;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+                position: fixed;
+                top: 70px;
+                left: 0;
+                height: calc(100vh - 70px);
+                z-index: 100;
+                width: 250px;
+            }
+            
+            .sidebar.active {
+                display: block;
+            }
+            
+            .content {
+                grid-column: 1;
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .full-article {
+                padding: 20px;
+            }
+            
+            .project-title {
+                font-size: 24px;
+            }
+            
+            .data-table {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Technical Drawing Decorations -->
+    <div class="tech-drawing circle"></div>
+    <div class="tech-drawing crosshairs"></div>
+    
+    <div class="container">
+        <header class="header">
+            <div class="toggle-wrapper">
+                <button class="sidebar-toggle" id="sidebar-toggle">Toggle Sidebar</button>
+            </div>
+            <div class="logo">
+                <img src="https://cdn.prod.website-files.com/650b1df1d17c457f9b527af0/650c37aeba27c328896dac01_logo-white-amodo.svg" alt="Amodo Design Logo">
+            </div>
+        </header>
+        
+        <aside class="sidebar" id="sidebar">
+            <!-- Navigation will be loaded dynamically by JavaScript -->
+        </aside>
+        
+        <main class="content" id="content">
+            <div class="path">
+                ~/home <span>/</span> <a href="filtration.html">filtration</a>
+            </div>
+            
+            <div class="project-card full-article">
+                <div class="project-header">
+                    <div class="project-title">LOW COST RECIRCULATING FILTRATION SYSTEM</div>
+                    <div class="project-meta">REF: AIR-2024-10-01 | LEAD: MATT FARROW</div>
+                </div>
+                
+                <div class="article-section">
+                    <p>The objective of this project is to develop a low-cost air filtration unit for our offices to increase room air changes per hour (ACH) without creating disruptive noise.</p>
+                    
+                    <div class="version-header">
+                        <div class="version-details">
+                            <h1>v0.0.0 - Initial Concept</h1>
+                            <div class="engineer">Engineer: Matt Farrow</div>
+                            <div class="date">October 2024</div>
+                        </div>
+                    </div>
+
+                    <h2>Clean Air Kits Review</h2>
+
+                    <p>We began by analyzing the commercially available Clean Air Kits. These units leverage PC fans, which have benefited from extensive R&D to optimize for quiet operation, making them perfect for powering an air filtration device. However:</p>
+
+                    <ul>
+                        <li>The commercial kits are expensive, approximately £1,300 to outfit our office (including postage), and their aesthetic design is suboptimal</li>
+                        <li>Raw cost is approximately £1,000</li>
+                        <li>Replacement filters cost around £300</li>
+                    </ul>
+
+                    <h2>Alternative Approach</h2>
+
+                    <p>I've developed a basic CAD concept that adapts the Clean Air Kits design with several improvements:</p>
+
+                    <ul>
+                        <li>Using the same filter type but with one additional fan and larger fans overall (140mm vs 120mm)</li>
+                        <li>Operating the larger fans at slightly lower RPM to maintain quiet operation while achieving higher flow rates</li>
+                    </ul>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image.png" alt="CAD concept for air filter unit" class="article-image">
+                        <div class="image-caption">Initial CAD concept design</div>
+                    </div>
+
+                    <p>The proposed construction consists of:</p>
+
+                    <ul>
+                        <li>Laser-cut plywood and 3D printed parts that slot together</li>
+                        <li>Electronics (power supply, adapters, PWM fan splitters, fans) costing approximately £70 per unit</li>
+                        <li>Arctic P14 fans, which are well-regarded for quiet operation and good performance against high static pressures - we can acquire 5 units for £33 on Amazon</li>
+                    </ul>
+
+                    <p>While this initial design is functional rather than aesthetic, the final model would have a cleaner appearance.</p>
+
+                    <h2>Filter Selection</h2>
+
+                    <p>I plan to use the same filters as Clean Air Kits:</p>
+
+                    <ul>
+                        <li><a href="https://www.amazon.co.uk/Filtrete-Ultimate-Allergen-Reduction-1-Inches/dp/B00TUDHC0O?th=1">Filtrete Ultimate Allergen Reduction Filters</a></li>
+                    </ul>
+
+                    <p>Alternative filter options with similar specifications are available at a lower cost:</p>
+
+                    <ul>
+                        <li><a href="https://www.amazon.co.uk/Filtrete-EA03-6PK-1E-Air-Filter-White/dp/B07FPB8H31/">Filtrete MERV 13 Filters</a> - These filter slightly smaller particles but are very similar and cost approximately £30 less per unit</li>
+                    </ul>
+
+                    <p>I'm considering adding a 60 mesh (0.25mm aperture) metal filter layer on the outside of the primary filters to improve aesthetics and extend filter life by keeping coarser particles out. Ideally, these outer mesh layers would be removable:</p>
+
+                    <ul>
+                        <li><a href="https://www.inoxia.co.uk/products/mesh/sheets/60-mesh">Inoxia 60 Mesh Stainless Steel</a></li>
+                    </ul>
+
+                    <p>Several filter aspect ratios are available, depending on the selected filter size versus the number of fans. Common filter sizes in inches include:</p>
+
+                    <ul>
+                        <li>14×20</li>
+                        <li>16×20</li>
+                        <li>16×25</li>
+                        <li>18×24</li>
+                        <li>20×20</li>
+                        <li>20×25</li>
+                        <li>20×30</li>
+                        <li>24×30</li>
+                    </ul>
+
+                    <p>To minimize noise, I'll mount the fans on the inner wall of the panel using rubber washers and add sound-dampening foam on the two passive walls.</p>
+
+                    <h2>Filter Analysis</h2>
+
+                    <p>The Clean Air Kits unit uses a MPR 1900 AC filter. These filters cost approximately £45 each and require replacement every 9 months. These AC filters are a good option due to their decent availability and reasonable cost for the filtration area achieved.</p>
+
+                    <p>Future improvements could include adding an activated carbon layer for odor control. The removable metal mesh will extend the life of the primary filter by preventing dust clogging while significantly improving aesthetics.</p>
+
+                    <p>We're targeting 4 air changes per hour (ACH) for our office space. With estimated dimensions of 8×12×2.5m = 240m³, we require approximately 1000m³/hr or 600CFM airflow.</p>
+                </div>
+                
+                <div class="article-section">
+                    <div class="version-header">
+                        <div class="version-details">
+                            <h1>v0.1.0 - Filter Analysis & Fan Selection</h1>
+                            <div class="engineer">Engineer: Tom Green</div>
+                            <div class="date">December 20, 2024</div>
+                        </div>
+                    </div>
+
+                    <p>I've conducted a detailed analysis of 3M's filter ratings to better understand what the MPR/MERV ratings mean for our application.</p>
+
+                    <h2>Filter Pressure-Flow Relationship</h2>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">FILTER PRESSURE-FLOW EQUATION</div>
+                        <pre>P = 142 × Q<sup>1.39</sup>
+
+where:
+P = pressure in pascals
+Q = flow rate in m³/s</pre>
+                    </div>
+
+                    <div class="column-container">
+                        <div class="column">
+                            <p>This power-law relationship means that as we increase flow rate, the pressure drop increases non-linearly, which has significant implications for fan selection.</p>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%201.png" alt="Filter pressure vs flow rate curve" class="article-image">
+                                <div class="image-caption">Filter pressure drop curve</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>Filter Selection Analysis</h2>
+
+                    <p>I've spent considerable time investigating different filter types. The Filtrete panels appear to be the optimal balance between undersized home solutions and large, bulky HVAC bag filters.</p>
+
+                    <p>Standard home HEPA filters claim 1 year of filtration each at around 200m³/hr. In contrast, Filtrete MPR 2200 filters recommend replacement every 3 months with a maximum rating of 3000m³/hr (though they're not true HEPA). The quarter-life at 10x airflow seems reasonable, and these filters still capture PM2.5 particles effectively. We would need to add carbon filtration separately if desired.</p>
+
+                    <p>There are numerous schemes for measuring filter capture efficiency, which complicates comparisons.</p>
+
+                    <div class="callout">
+                        <h3>F7, F8 & F9 Fine Bag Filters</h3>
+                        <p>These are high-grade synthetic bag air filters for ventilation systems requiring a high standard of cleanliness, including offices, schools, hospitals, and shopping centers.</p>
+                        
+                        <p>Where greater dust holding capacity is required than a panel filter can offer, these High Efficiency Bag Filters' large pockets accommodate this while providing lower resistance.</p>
+                        
+                        <p>The High Performance Bag Air Filter design ensures long life between maintenance intervals.</p>
+                    </div>
+
+                    <p>For capturing PM2.5 particles, we'd want a grade F7, F8, or F9 filter. However, many HVAC-oriented filters are designed for pressure drops (100-250Pa) that exceed what PC fans can handle, which is why I'm recommending we stick with Filtrete.</p>
+
+                    <h3>HEPA Filtration Analysis</h3>
+
+                    <p>True HEPA filtration is typically specified for cleanrooms and is likely overkill for our application.</p>
+
+                    <p><a href="https://filtersdirect.uk/product/h13-hepa-filter-150mm-deep-high-capacity-wood-case/">Filters Direct</a> supplies a 24×24×6" filter rated for 1275m³/hr at a pressure loss of 250Pa.</p>
+
+                    <p>Energy calculation:</p>
+                    <ul>
+                        <li>1275m³ × 250Pa = 319kJ</li>
+                        <li>319kJ / 3600 seconds = 88.5W air power</li>
+                        <li>Assuming 50% blower efficiency, we're looking at 170W continuous draw</li>
+                        <li>Over a 3-month filter life, that's 367kWh, approximately £100 in electricity costs</li>
+                    </ul>
+
+                    <p>The filter itself costs £134.75 ex. VAT.</p>
+
+                    <p>Alternatively, <a href="https://bespokefilters.co.uk/products/hepa-laminar-flow-filter-wooden-frame?variant=46251670602022">this filter</a> would require:</p>
+                    <ul>
+                        <li>24×36×5" dimensions</li>
+                        <li>£258 per filter</li>
+                        <li>Airflow rating of 905m³/hr @ 55Pa</li>
+                        <li>49.775kJ/hr = 14W air power, 28W electrical input</li>
+                        <li>60.5kWh; £16.35 electricity cost over a 3-month lifespan</li>
+                    </ul>
+
+                    <p>HEPA filters generally come in two categories - domestic/home and cleanroom grade. If we require true HEPA filtration, we should consider purchasing commercial off-the-shelf units for each room, though these tend to become quite loud at high flow rates.</p>
+
+                    <h2>Sound Level Analysis</h2>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">SOUND LEVEL CALCULATION</div>
+                        <pre>L<sub>total</sub> = L<sub>single</sub> + 10 log<sub>10</sub>(n)
+
+where:
+L<sub>total</sub> = total noise level (dBA)
+L<sub>single</sub> = single fan noise level (dBA)
+n = number of fans</pre>
+                    </div>
+
+                    <p>In our current unit design with 7 Arctic P14 PWM fans rated at 0.3 Sone each (22.50dBA), the total noise output should be 30.95dBA. This calculation helps us determine acceptable combinations of fans, potentially allowing designs with fewer but louder fans if they stay below this threshold.</p>
+
+                    <h3>Noise-Speed Relationship</h3>
+
+                    <p>To determine whether multiple inexpensive fans running at reduced speeds would outperform premium silent fans at full speed, I investigated the relationship between fan speed and noise. While manufacturers rarely publish SPL/speed charts, <a href="https://en.wikipedia.org/wiki/Computer_fan">Wikipedia</a> indicates that noise increases with speed to the fifth power, meaning halving the speed reduces SPL by approximately 15dB. This relationship is derived from <a href="https://www.hse.gov.uk/pubns/top10noise.pdf">HSE guidance</a>.</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%202.png" alt="Fan noise vs speed chart" class="article-image">
+                        <div class="image-caption">Fan noise as a function of speed (Source: HSE)</div>
+                    </div>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">NOISE-SPEED RELATIONSHIP</div>
+                        <pre>Noise = 10 × log<sub>10</sub>((v/v<sub>max</sub>)<sup>5</sup>)</pre>
+                    </div>
+
+                    <h3>Example: P14 Max Speed Reduction Analysis</h3>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%203.png" alt="Arctic P14 fan performance curve" class="article-image">
+                        <div class="image-caption">Performance curve with speed reduction for Arctic P14 Max</div>
+                    </div>
+
+                    <h3>Target Sound Level</h3>
+
+                    <p>We know the 7 Arctic P14 fans sound acceptable at 9V (vs. 12V nominal), and flow rate is approximately linear with voltage. Assuming RPM is also linearly proportional to voltage:</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">TARGET NOISE CALCULATION</div>
+                        <pre>N<sub>desired</sub> = 30.95 + 10log<sub>10</sub>((9/12)<sup>5</sup>) ≈ 24.7dBA</pre>
+                    </div>
+
+                    <p>This gives us our target noise level for design iterations.</p>
+
+                    <h2>Filter Sourcing</h2>
+
+                    <p>The 3M filters have their pressure drop tables printed on them, though this data isn't readily available online. We're using 1900 MPR "Premium Allergen" filters, sized 20×25".</p>
+
+                    <p>Similar filters are available from <a href="https://homeloft.uk/products/futuro-na-pattern-tights-for-women-moderate-compression-1520-mmhg-helps-improve-circulation-to-help-minmize-swelling">Homeloft UK</a>, though they are relatively expensive.</p>
+
+                    <p>Our current cost is approximately £183 for 6 filters, or £30 each.</p>
+
+                    <div class="callout">
+                        <p>Digikey appears to be the optimal supplier for these filters, though they don't necessarily maintain stock. They can import quickly from the United States.</p>
+                    </div>
+
+                    <h2>Filter Pressure Analysis</h2>
+
+                    <p>For our target 4 ACH in a 240m³ office space (requiring ~1000m³/hr or 600CFM):</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">FILTER PRESSURE CALCULATIONS</div>
+                        <pre>P<sub>1 filter, 1000 m³/hr</sub> = 142 × 0.278<sup>1.39</sup> = 23.9 Pa
+
+P<sub>2 filters, 500 m³/hr ea.</sub> = 142 × 0.139<sup>1.39</sup> = 9.13 Pa
+
+P = 142 × Flow<sub>m³/s</sub><sup>1.39</sup> Pa</pre>
+                    </div>
+
+                    <p>The pressure loss is significantly lower with two filters in parallel, which impacts our fan selection and configuration.</p>
+
+                    <h2>Fan Performance Analysis</h2>
+
+                    <h3>Required Fans: Bionix F140</h3>
+                    <p>At 9.4Pa (nearest datapoint to our requirement), each fan delivers 68.6 CFM. We would need 9 fans to achieve the desired flow. These are rated at 37.5dBA each, resulting in a total noise level of 47dBA - quite loud for our application.</p>
+
+                    <h3>Required Fans: P14 Max</h3>
+                    <p>At 9.13Pa (0.93mm H₂O), we expect approximately 78CFM per fan. We would need 8 fans to achieve the desired flow. Total sound level = 43.2 + 10log(8) = 52.2dBA. This exceeds our noise target.</p>
+
+                    <h3>Required Fans: Arctic P14</h3>
+                    <p>Based on the relationship CFM = 73 - 3.04P, at 9.13Pa we get 73 - (3.04×9.13) = 45CFM per fan. We would need 13 of these fans to meet our target flow rate.</p>
+
+                    <h3>Required Fans: Noctua NF-A14 FLX</h3>
+                    <p>From the performance curve, flow at the required pressure is approximately 115m³/hr per fan, meaning we would need about 9 fans. These are rated for 24.8dBA each, resulting in a total noise level of 34dBA - significantly better than other options. However, at approximately £20 each, these are an expensive solution.</p>
+
+                    <h3>Required Fans: Noctua NF-A14 IndustrialPPC 2000RPM</h3>
+                    <p>This is a different model from the 3000RPM version and requires 24V operation. Without a published P/Q curve, I've estimated a linear relationship:</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%204.png" alt="Noctua fan performance estimation" class="article-image">
+                        <div class="image-caption">Estimated performance curve for Noctua IndustrialPPC 2000RPM</div>
+                    </div>
+
+                    <p>Assuming CFM = 107 - 2.6 × P, we get flow rates of 45 and 76CFM at 23.5 and 9.13Pa pressure losses, respectively. This translates to 13 or 7 fans per unit. At their price point, 7 fans is preferable.</p>
+
+                    <p>Sound level = 31.5 + 10log(7) = 39.95dBA, which is quieter than our current design.</p>
+
+                    <p>These fans are available in a case of 44 units for £24.94 each, resulting in approximately £200 per box for fans and £40 for filters. If filters required replacement every 3 months, the £160/year operational cost makes the upfront fan cost more reasonable, though our relatively low flow rates likely mean less frequent filter changes.</p>
+
+                    <h2>Clean Air Kits Analysis</h2>
+
+                    <p>The commercial "Luggables XL" unit claims 5 ACH for a 485 sq.ft. room. Assuming a standard 8' ceiling, that's 19,400 cu.ft. per hour, or 550m³/hr (0.153m³/s).</p>
+
+                    <p>At this flow rate through a single filter panel, we expect a pressure loss of:</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">PRESSURE LOSS CALCULATIONS</div>
+                        <pre>P = 142 × 0.153<sup>1.39</sup> = 10.45 Pa
+
+And for two panels in parallel:
+
+P = 142 × 0.0763<sup>1.39</sup> = 3.97 Pa</pre>
+                    </div>
+
+                    <p>Both values represent relatively low pressure drops.</p>
+
+                    <p>The commercial unit uses 7 Corsair SickleFlow fans with claimed 62CFM no-load flow and 2.5mmH₂O static pressure. Using a linear approximation, the estimated theoretical flow rates are 35.5 and 52 CFM at these pressure points.</p>
+
+                    <p>Seven fans with two panels, as configured in the Luggables XL, should produce about 364CFM or 620m³/hr. That's approximately 13% higher than claimed, validating our calculations.</p>
+
+                    <p>With this verification, I believe it's possible to double this airflow in a similarly sized unit to achieve our desired 1,000m³/hr target.</p>
+
+                    <h2>Fan Comparison</h2>
+
+                    <p>I've plotted multiple fan performance curves for pulling 1000m³/h through two parallel filters (9.13Pa):</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%205.png" alt="Fan comparison at 9.13Pa" class="article-image">
+                        <div class="image-caption">Fan performance comparison at 9.13Pa (two filters in parallel)</div>
+                    </div>
+
+                    <p>For comparison, here's the analysis for the same flow through just one filter (23.9Pa):</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%206.png" alt="Fan comparison at 23.9Pa" class="article-image">
+                        <div class="image-caption">Fan performance comparison at 23.9Pa (single filter)</div>
+                    </div>
+
+                    <p>This higher pressure clearly doesn't suit PC fans, confirming our decision to use larger filter areas with parallel filters.</p>
+
+                    <p>We could theoretically use two fans in series (push-pull configuration), but with 23.9/9.3 = 2.56, we'd see a significant performance penalty for minimal gain.</p>
+
+                    <h3>Code for Fan Performance Analysis</h3>
+
+                    <pre><code class="language-Python">import csv
+from fan import Fan
+from operatingPoint import OperatingPoint
+from matplotlib.widgets import Cursor
+import matplotlib.pyplot as plt
+import mplcursors
+
+desired_flow = 588 #CFM
+desired_pressure = 23.9 #Pa
+
+#Open the data file and convert to Fan object instances
+data = open('fan-data.csv', 'r')
+reader = csv.reader(data)
+fan_data = [row for row in reader]
+data.close()
+
+fans = []
+for row in fan_data:
+    #Create a new Fan instance for each row in the data file
+    fan = Fan(row[0], float(row[1]), float(row[2]), float(row[3]), float(row[4]), float(row[5]), float(row[6]),[])
+    
+    #Find the minimum number of fans needed to meet the desired flow
+    min_qty = round(desired_flow / fan.get_flow(desired_pressure))
+
+    #Reject any fans that are not powerful enough to meet the desired flow
+    if min_qty < 0:
+        print(f"{fan.name}" + " does not generate enough static pressure to meet the desired flow.")
+        continue
+    
+    #Find operating points for various quantities of each fan
+    for numFans in range(min_qty, min_qty*2):
+        fan.operating_points.append(OperatingPoint(numFans, (min_qty/numFans), fan.noise))
+
+    fans.append(fan)
+
+    for fan in fans:
+        if fan.operating_points:
+            print(f"{fan.name} minimum quantity: {fan.operating_points[0].quantity}")
+
+fig, ax = plt.subplots()
+
+# Plot operating point noise against cost for all fans
+for fan in fans:
+    quantities = [op.quantity for op in fan.operating_points]
+    costs = [op.quantity * fan.cost for op in fan.operating_points]
+    noises = [op.noiseTotal for op in fan.operating_points]
+    line = ax.plot(costs, noises, label=fan.name)
+
+# Add cursor
+cursor = mplcursors.cursor(ax.lines, hover=True, highlight=True)
+
+@cursor.connect("add")
+def on_add(sel):
+    artist = sel.artist
+    fanName = artist.get_label()
+    opIndex = round(sel.index)
+    fanIndex = 0
+    for fan in fans:
+        if fan.name == fanName:
+            fanIndex = fans.index(fan)
+            break
+    opPoint = fans[fanIndex].operating_points[opIndex]
+    sel.annotation.set_text(f"{fanName}, \nQty: {opPoint.quantity}\nNoise:{round(opPoint.noiseTotal,1)}dBA\nCost: £{round(opPoint.quantity * fans[fanIndex].cost,1)}\nRunning at:{round(opPoint.speed*100)}%")
+
+plt.xlabel('Cost (£)')
+plt.ylabel('Noise (dBA)')
+plt.title('Noise vs. Cost at 588CFM')
+plt.legend()
+plt.show()</code></pre>
+
+                    <p>Fan class implementation:</p>
+
+                    <pre><code class="language-Python">class Fan:
+    def __init__(self, name, diameter, max_flow, static_pressure, power, noise, cost, operating_points):
+        self.name = name
+        self.diameter = diameter
+        self.max_flow = max_flow
+        self.static_pressure = static_pressure
+        self.power = power
+        self.noise = noise
+        self.cost = cost
+        self.m = -max_flow / static_pressure
+        self.c = max_flow
+        self.operating_points = operating_points
+
+    def get_flow(self, pressure):
+        return self.c + (self.m * pressure)</code></pre>
+
+                    <p>Operating point calculations:</p>
+
+                    <pre><code class="language-Python">import math
+
+class OperatingPoint:
+    def __init__(self, quantity, speed, ratedNoise):
+        self.quantity = quantity
+        self.speed = speed
+        self.ratedNoise = ratedNoise
+        self.noiseEach = getDeratedNoise(self)
+        self.noiseTotal = getTotalNoise(self)
+
+def getDeratedNoise(self):
+    return self.ratedNoise + (10 * math.log10(self.speed**5))
+
+def getTotalNoise(self):
+    return self.noiseEach + (10 * math.log10(self.quantity))</code></pre>
+
+                    <p>Based on this analysis, to achieve our desired flow, we need significantly more fans than initially anticipated - approximately twice the number currently used in the Clean Air Kits design.</p>
+                </div>
+                
+                <div class="article-section">
+                    <div class="version-header">
+                        <div class="version-details">
+                            <h1>v0.1.1 - Design Refinement</h1>
+                            <div class="engineer">Engineer: Tom Green</div>
+                            <div class="date">December 30, 2024</div>
+                        </div>
+                    </div>
+
+                    <h2>SPL Correction</h2>
+
+                    <p>Since Arctic states their sound levels in Sone (with a value of <1), the dBA equivalent depends heavily on the conversion method. The plot below shows the Arctic F14 PWM PST updated from 10.6dBA to 22.5dBA - it still performs very well, outperformed only by the upHere model, which has less trusted specifications and requires twice as many fans, making the physical design unwieldy.</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%207.png" alt="Updated fan noise comparison" class="article-image">
+                        <div class="image-caption">Updated fan noise comparison with corrected SPL values</div>
+                    </div>
+
+                    <h2>Structure & Aesthetics</h2>
+
+                    <p>The existing prototype uses fans in a pull configuration, though they might perform marginally better in push configuration. We could also implement a push-pull setup if higher flow rates are required.</p>
+
+                    <p>The square corners significantly limit the unit's aesthetics. Wood bending would be too complex for our production capabilities, but 3D printing offers numerous options that would be feasible for our limited production needs.</p>
+
+                    <p>3D printed corners could provide multiple benefits:</p>
+                    <ul>
+                        <li>Structural and bracket functionality</li>
+                        <li>Improved aesthetics with rounded corners or more angular design options</li>
+                        <li>Integrated compliant latches to retain filters and cosmetic covers</li>
+                        <li>All-in-one fabrication</li>
+                    </ul>
+
+                    <p>While commercial off-the-shelf brackets are available inexpensively in bulk, we should prioritize ease of assembly. Including screw holes in the laser cutting pattern will facilitate this.</p>
+
+                    <p>We should also optimize MDF panel usage. Standard sheets are 2440×1220mm nominally, but we'll account for a 5mm setup margin, effectively using 2430×1210mm sheets. We'll avoid designs with large 'frames' where most material is removed.</p>
+
+                    <p>Easy filter removal and replacement is a priority; a slot-in filter design would be ideal and would facilitate a mesh cover without frames.</p>
+
+                    <div class="column-container">
+                        <div class="column">
+                            <p>With the large quantities of fans required, an array configuration is tempting, but this necessitates a large sheet of material with most material cut out, which is inefficient. We could stretch a prefilter over this structure.</p>
+                            
+                            <p>This configuration presents challenges for implementing two filters in parallel without creating an excessively large enclosure.</p>
+                            
+                            <p>The sheet material can serve as support for a prefilter if we include one, preventing it from becoming too flexible and potentially fouling the fan blades.</p>
+                            
+                            <p>A side-loading filter design would be user-friendly (no need to open the unit) and aesthetically clean as it completely conceals the filter. This is a common installation style for these filters' intended use case, though it might require more material than other approaches.</p>
+                            
+                            <p>The layout shown here is likely the most efficient in terms of material usage.</p>
+                            
+                            <p>The flow direction indicated puts fans in 'push' rather than 'pull' configuration, which necessitates positive retention of the filters due to the positive pressure. According to research, the push vs. pull argument primarily relates to turbulence when fans are very close to radiators, so the choice here can be based on aesthetics or practicality. In this configuration, we would see the visually appealing side of the fans.</p>
+                            
+                            <p>We could easily add cosmetic covers over the fan-perimeter walls, though any covers over the filters would be unsupported.</p>
+                            
+                            <p>Since the unit is developing a "Swiss cheese" appearance, covers will be important for aesthetics.</p>
+                            
+                            <p>While optimizing material usage is desirable, we should prioritize good design over minimal material consumption. A full sheet of MDF costs ~£10, and the fans for each build will exceed £75. We can fit all components on approximately half a sheet, so material efficiency is a secondary concern to design quality.</p>
+                            
+                            <p>3D printed brackets offer the easiest way to eliminate the "square cornered box" appearance and could also function as feet rather than allowing the box to sit directly on the floor.</p>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%208.png" alt="Fan array configuration" class="article-image">
+                                <div class="image-caption">Fan array configuration concept</div>
+                            </div>
+                            
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%209.png" alt="Side filter concept" class="article-image">
+                                <div class="image-caption">Side filter loading concept</div>
+                            </div>
+                            
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2010.png" alt="Optimized layout" class="article-image">
+                                <div class="image-caption">Optimized component layout</div>
+                            </div>
+                            
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2011.png" alt="Common installation style" class="article-image">
+                                <div class="image-caption">Common filter installation style</div>
+                            </div>
+                            
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2012.png" alt="3D printed corner concept" class="article-image">
+                                <div class="image-caption">3D printed corner bracket concept</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="callout warning">
+                        <p>Length of corner bracket exceeds 256mm Bambu build limit</p>
+                    </div>
+
+                    <p>We could integrate compliant filter retainers into the design at no additional material cost.</p>
+
+                    <p>Speaker cloth like this would significantly improve overall appearance, though it's difficult to determine the resulting pressure loss.</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2013.png" alt="Speaker cloth sample" class="article-image">
+                        <div class="image-caption">Speaker cloth sample for aesthetic enhancement</div>
+                    </div>
+
+                    <p>We could use a lower CPR mesh for pre-filtering to extend the life of the 2200MPR main filters, but this would likely detract from the appearance rather than improve it.</p>
+
+                    <p>There's a risk that the unit might resemble a guitar speaker; lighter colors would help mitigate this perception.</p>
+
+                    <p>If we cover the top surface, we need to prevent objects from being placed on top and potentially blocking airflow. Options include leaving the top fans visible or implementing an angled surface that discourages placement of objects.</p>
+
+                    <p>For sound absorption, we might consider a layout like this, though there's less wrap-around than optimal for acoustic purposes to maintain adequate airflow.</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2014.png" alt="Sound damping concept" class="article-image">
+                        <div class="image-caption">Sound damping concept with internal acoustic treatment</div>
+                    </div>
+
+                    <p>The foam-on-dense-board approach effectively stops pressure waves but might cause turbulence that could reduce flow rates.</p>
+
+                    <h2>Speaker Cloth Pressure Loss</h2>
+
+                    <p>Research indicates that speaker cloth could add 15-20Pa of pressure loss:</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/pressure_loss_estimation.png" alt="Speaker cloth pressure loss estimate" class="article-image">
+                        <div class="image-caption">Speaker cloth pressure loss estimation</div>
+                    </div>
+
+                    <p>This is too high for our fans, exceeding the pressure loss of the filters themselves.</p>
+
+                    <p>Metal mesh presents even higher resistance than speaker cloth:</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/metal_fan_mesh_pressure_loss.png" alt="Metal mesh pressure loss estimate" class="article-image">
+                        <div class="image-caption">Metal mesh pressure loss estimation</div>
+                    </div>
+
+                    <p>Analysis indicates the fundamental differences between these materials:</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/speaker_cloth_vs_metal_mesh.png" alt="Speaker cloth vs metal mesh comparison" class="article-image">
+                        <div class="image-caption">Comparison of speaker cloth vs metal mesh characteristics</div>
+                    </div>
+
+                    <h2>Speaker Cloth Design Considerations</h2>
+
+                    <p>If using speaker cloth, we should increase its surface area and add distance between it and the fans, as well as between the cloth and filters:</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2019.png" alt="Speaker cloth implementation concept" class="article-image">
+                        <div class="image-caption">Speaker cloth implementation with increased surface area</div>
+                    </div>
+
+                    <h2>Additional Design Considerations</h2>
+
+                    <p>We should investigate whether larger diameter fans might be more efficient than multiple smaller fans. This approach could provide better airflow with less noise, though our initial analysis suggests this may not be the case.</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2020.png" alt="Large fan comparison" class="article-image">
+                        <div class="image-caption">Large vs multiple small fan comparison</div>
+                    </div>
+
+                    <h2>Office Integration Considerations</h2>
+
+                    <p>While the new office has central HVAC, we plan to increase ventilation rates for specific areas (e.g., workshop) through different mechanisms than recirculating filtration. Recirculating filtration doesn't lose heat to incoming cold outside air and offers greater flexibility with easily added or removed units.</p>
+
+                    <p>Heat pumps with central air do offer fresh air without significant heat loss, an advantage of American building systems. Ideally, we'd have a 95% efficiency MVHR (Mechanical Ventilation with Heat Recovery) system in an airtight building, but our current facilities are older, leaky structures.</p>
+
+                    <p>We may acquire a purpose-built facility in the future constructed to passivhaus-esque standards, which would significantly improve overall efficiency.</p>
+
+                    <h2>Form Studies</h2>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2021.png" alt="Form studies" class="article-image">
+                        <div class="image-caption">Various form studies for filter unit designs</div>
+                    </div>
+
+                    <h2>Design Priorities</h2>
+
+                    <ol>
+                        <li>Confirm whether large axial fans perform better than PC fans for our application</li>
+                        <li>Determine if we need a frame to maintain clearance from walls/furniture to prevent flow restriction</li>
+                        <li>Decide between intake (negative pressure) or output (positive pressure) configurations</li>
+                        <li>Evaluate options for covering fans and associated performance tradeoffs:
+                            <ul>
+                                <li>Speaker cloth or alternative materials</li>
+                                <li>Partially concealed fan design</li>
+                                <li>Standard fan grilles</li>
+                            </ul>
+                        </li>
+                        <li>Develop visual concepts and construction methodologies</li>
+                    </ol>
+                </div>
+                
+                <div class="article-section">
+                    <div class="version-header">
+                        <div class="version-details">
+                            <h1>v0.1.2 - Configuration Analysis</h1>
+                            <div class="engineer">Engineer: Tom Green</div>
+                            <div class="date">December 30, 2024</div>
+                        </div>
+                    </div>
+
+                    <h2>PC Fans vs. Industrial Axial Fans Analysis</h2>
+
+                    <p>I investigated <a href="https://www.blauberg.co.uk/blauberg-iso-mix-acoustic-low-noise-silent-mixed-flow-in-line-extractor-fan">specialized duct fans with integrated sound dampening</a>. Note that their sound pressure is measured at 3 meters, so the comparable level at 1 meter would be:</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">SOUND PRESSURE ADJUSTMENT</div>
+                        <pre>L<sub>2</sub> = 36dB + 20log<sub>10</sub>(3/1) = 45.5dBA</pre>
+                    </div>
+
+                    <p>The larger 315mm option from the same range running at lower speed is rated around 41dB (at 3m distance). This is comparable to our PC fan arrangement but significantly more expensive.</p>
+
+                    <p><a href="https://buyheliosonline.co.uk/helios-silent-box-fan---sb-200c--200d-149-p.asp">These "silent" commercial fans</a> are also expensive and relatively loud despite their marketing.</p>
+
+                    <p>Most small commercial fans aren't significantly larger than 140mm PC fans (typically around 200mm) and achieve high flow rates by running faster, which increases noise.</p>
+
+                    <div class="callout">
+                        <p><strong>Conclusion</strong>: PC fans provide the optimal balance of performance, noise, and cost for our application.</p>
+                    </div>
+
+                    <h2>Pressure Configuration Analysis</h2>
+
+                    <p>We've decided to implement speaker cloth on the large filter surfaces to function as a prefilter, so we'll use a <em>pull</em> configuration through these surfaces. This aligns with Andy's observation that pull configurations disperse air more effectively into the room.</p>
+
+                    <p>Negative pressure will also prevent speaker fabric from ballooning outward.</p>
+
+                    <div class="callout">
+                        <p><strong>Conclusion</strong>: Pull / Negative pressure configuration is optimal.</p>
+                    </div>
+
+                    <h2>Cover Material Analysis</h2>
+
+                    <p>The flow rate is the primary concern, so we'll maintain large surface areas regardless of the material selected. Flow directly from the fans is too concentrated for a mesh/grille, so a "cover" approach is preferable to attempting to "hide" the fans.</p>
+
+                    <p>The choice between cloth, mesh, or louvres is largely aesthetic if sufficient area is provided. Fan grilles provide adequate protection and have minimal impact on aesthetics.</p>
+
+                    <h2>Fan Selection</h2>
+
+                    <div class="callout">
+                        <p>Arctic F14 PWM PST</p>
+                    </div>
+
+                    <p>We'll use 140mm PC fans, with a minimum of 16 fans (without cloth covering) and a target of 20 fans to compensate for pressure losses from cloths/meshes/grilles.</p>
+
+                    <h2>Design Concepts</h2>
+
+                    <p>Andy's sketches incorporating feet add character to the design. We need to either:</p>
+
+                    <ol type="a">
+                        <li><em>Avoid</em> creating a unit that could function as a seat/coffee table, or</li>
+                        <li><em>Deliberately</em> design it to double as a seat/coffee table</li>
+                    </ol>
+
+                    <p>The large radii in the sketches help soften the designs, though we need to identify an efficient fabrication method for these curves, as they limit airflow if we wrap material around formers.</p>
+
+                    <h1>Concept Sketches</h1>
+
+                    <p>Office desks are approximately 700mm from the floor. Units taller than this will appear disproportionate or impractical due to air blowing onto desk surfaces.</p>
+
+                    <h2>'Radiator' Concept</h2>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2022.png" alt="Radiator concept sketch" class="article-image">
+                        <div class="image-caption">Radiator-style concept sketch</div>
+                    </div>
+
+                    <div class="column-container">
+                        <div class="column">
+                            <p>By default, we can only fit 12 fans in this configuration. By doubling up filters, we could increase this to 16 fans, which would likely provide adequate performance when accounting for the pressure loss through filter cloth.</p>
+                            
+                            <p>Approximate dimensions: 1100mm long × 760mm tall × 200mm thick</p>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2023.png" alt="Radiator concept detail" class="article-image">
+                                <div class="image-caption">Radiator concept - side view</div>
+                            </div>
+                            
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2024.png" alt="Radiator concept front view" class="article-image">
+                                <div class="image-caption">Radiator concept - front view</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>'Side Cabinet' Concept</h2>
+
+                    <div class="column-container">
+                        <div class="column">
+                            <p>For optimal airflow, the yellow sections (fabric/filter surfaces) should have approximately twice the surface area of the filter cross-section. Mathematical analysis:</p>
+                            
+                            <div class="blueprint-section">
+                                <div class="blueprint-title">SURFACE AREA CALCULATIONS</div>
+                                <pre>A<sub>end</sub> = ab
+A<sub>sides</sub> = 2ac + 2bc
+A<sub>end</sub> = A<sub>sides</sub>
+ab = 2(ac+bc) ∴ c = {ab \over 2(a+b)}</pre>
+                            </div>
+                            
+                            <p>For our filter dimensions (630mm long × 500mm wide) with a central section ~300mm thick:</p>
+                            
+                            <div class="blueprint-section">
+                                <div class="blueprint-title">DIMENSION CALCULATION</div>
+                                <pre>c = {630 × 500 \over 2(630 + 500)} ≈ 140mm</pre>
+                            </div>
+                            
+                            <p>Total width: 300 + 2(140) ≈ 600mm</p>
+                            
+                            <p>Fan configuration:</p>
+                            <ul>
+                                <li>8 fans front</li>
+                                <li>8 fans back</li>
+                                <li>≤6 fans underneath</li>
+                                <li>No fans on top</li>
+                            </ul>
+                            
+                            <p>This provides potential for 24 fans total, with side boxes approximately the size of the current prototype unit.</p>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2025.png" alt="Side cabinet concept" class="article-image">
+                                <div class="image-caption">Side cabinet concept</div>
+                            </div>
+                            
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2026.png" alt="Side cabinet front view" class="article-image">
+                                <div class="image-caption">Side cabinet - front view</div>
+                            </div>
+                            
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2027.png" alt="Side cabinet internal view" class="article-image">
+                                <div class="image-caption">Side cabinet - internal layout</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2028.png" alt="Side cabinet sketches" class="article-image">
+                        <div class="image-caption">Side cabinet concept sketches</div>
+                    </div>
+
+                    <h2>'Coffee Table' Concept</h2>
+
+                    <div class="column-container">
+                        <div class="column">
+                            <p>This design could be aesthetically pleasing but presents several practical challenges:</p>
+                            
+                            <p>The side-mounted filters create a large footprint of approximately 800×800mm, which would occupy significant office space and require clearance from walls. This would restrict movement in our current setup.</p>
+                            
+                            <p>This unit would occupy almost the entire space between our existing sofas, and placing it near storage cubes or furniture could restrict airflow.</p>
+                            
+                            <p>With feet added, the unit would be approximately desk height.</p>
+                            
+                            <p>If implemented, we would need to design the top surface to function as an actual table.</p>
+                            
+                            <p>Using smaller filters (20×16") could make this more feasible but would increase filter costs by approximately 30%.</p>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2029.png" alt="Coffee table concept" class="article-image">
+                                <div class="image-caption">Coffee table concept</div>
+                            </div>
+                            
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2030.png" alt="Coffee table top view" class="article-image">
+                                <div class="image-caption">Coffee table - top view</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2031.png" alt="Coffee table sketches" class="article-image">
+                        <div class="image-caption">Coffee table concept sketches</div>
+                    </div>
+
+                    <h2>Cylindrical Concept</h2>
+
+                    <p>This design has anti-suffocation properties (it can't be blocked by placement against a wall), but would require significantly more custom components and complicate filter changes.</p>
+
+                    <p>Note: The airflow direction is incorrectly shown in this sketch.</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2032.png" alt="Cylindrical concept" class="article-image">
+                        <div class="image-caption">Cylindrical concept sketch</div>
+                    </div>
+
+                    <h2>'Tophat' Concept</h2>
+
+                    <p>One concern with this design is that top-mounted fans would blow air over desks. This could be mitigated by using a three-sided approach or inverting the design.</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2033.png" alt="Tophat concept" class="article-image">
+                        <div class="image-caption">Tophat concept sketch</div>
+                    </div>
+
+                    <div class="column-container">
+                        <div class="column">
+                            <p>Approximate dimensions: 320mm deep × 540mm long × 960mm tall</p>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2034.png" alt="Tophat detailed design" class="article-image">
+                                <div class="image-caption">Tophat detailed design</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>'Ice Cream Sandwich' Concept</h2>
+
+                    <p>At approximately 1 meter long, 750mm deep, and 750mm tall, this design would be impractically large, even for our larger office room.</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2035.png" alt="Ice cream sandwich concept" class="article-image">
+                        <div class="image-caption">Ice cream sandwich concept sketch</div>
+                    </div>
+
+                    <h2>Proposed Designs</h2>
+
+                    <p>Based on the analysis, I recommend pursuing the following designs:</p>
+
+                    <div class="column-container">
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2024.png" alt="Radiator style" class="article-image">
+                                <div class="image-caption">Radiator style (could be flat-topped if preferred)</div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2027.png" alt="Cabinet style" class="article-image">
+                                <div class="image-caption">Cabinet style</div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2034.png" alt="Inverted cabinet" class="article-image">
+                                <div class="image-caption">Inverted cabinet style (stretch goal if time permits)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>Materials List</h2>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">COMPONENT REQUIREMENTS</div>
+                        <pre>Fans:
+- 16 fans for radiator design
+- 24 fans for cabinet design
+- 40 total required
+- £6.98 per fan + £10 shipping
+- Total: £290 including VAT
+
+Speaker Cloth:
+- Minimum order: 5 meters of Camira Cara (1.7m wide)
+- Requirements per design:
+  - Radiator: ~1.9m × ~1.3m
+  - Cabinet: ~1m × can fit double width
+  - Tophat: 1.7m
+- Total needed: 4.6m
+- Cost: £87 including shipping and VAT
+
+Additional Materials:
+- Half-round gutter: £50 for 3m (enough for two units)
+- Filters: 6 × £18 = £110
+
+TOTAL ESTIMATED COST: ~£600 (radiator + cabinet designs)
+Additional £180 for tophat design if implemented</pre>
+                    </div>
+
+                    <h3>Fabric Color Options</h3>
+
+                    <div class="column-container">
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2036.png" alt="Fair Isle fabric" class="article-image">
+                                <div class="image-caption">Fair Isle</div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2037.png" alt="Clan fabric" class="article-image">
+                                <div class="image-caption">Clan</div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2038.png" alt="Easdale fabric" class="article-image">
+                                <div class="image-caption">Easdale</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="article-section">
+                    <div class="version-header">
+                        <div class="version-details">
+                            <h1>v0.2.0 - Radiator Design Development</h1>
+                            <div class="engineer">Engineer: Tom Green</div>
+                            <div class="date">January 3, 2025</div>
+                        </div>
+                    </div>
+
+                    <p>I've selected angled legs to enhance the aesthetics, sourcing <a href="https://www.etsy.com/uk/listing/1161773210/4-8-angled-wooden-cone-tapered-furniture?ga_order=most_relevant&ga_search_type=all&ga_view_type=gallery&ga_search_query=angled+legs&ref=sr_gallery-1-1&frs=1&sts=1&content_source=06664a720287c3ad84d5b720b29f3f3b63e89834%253A1161773210&organic_search_click=1&variation0=2479440907&variation1=2479440919">100mm angled legs from Etsy</a>.</p>
+
+                    <div class="column-container">
+                        <div class="column">
+                            <p>I modeled legs in Onshape and positioned them to optimize aesthetics and stability.</p>
+                            
+                            <p>Maintaining airflow to the underside of the unit requires some elevation from the floor.</p>
+                            
+                            <p>Andy requested a rounded base profile, which I'll implement using 3D printed sections instead of the originally planned 200mm guttering (which is relatively expensive). These sections will be split to accommodate 3D printer build volume limitations. While not infinitely scalable, this approach provides significant design flexibility.</p>
+                            
+                            <p>We'll wrap the unit in Easdale fabric, which complements the MDF end boards per Andy's request.</p>
+                            
+                            <p>After further consideration, I determined that the Etsy legs would create awkward protrusions through the fabric. Since they cost approximately the same as wood-fill PLA, we'll 3D print custom legs instead.</p>
+                            
+                            <p>I've increased the overall thickness from 200mm to 240mm to provide more internal space for airflow.</p>
+                        </div>
+                        <div class="column">
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2039.png" alt="Leg positioning in CAD" class="article-image">
+                                <div class="image-caption">Leg positioning in CAD model</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2040.png" alt="Base section with exhaust fans" class="article-image">
+                        <div class="image-caption">Base section with exhaust fans. The slots allow airflow while guiding fabric wrap. These will be slightly visible but hopefully not distracting.</div>
+                    </div>
+
+                    <p>End sections are capped to prevent internal air recirculation instead of proper exhaust.</p>
+
+                    <p>Component materials:</p>
+                    <ul>
+                        <li>Grey plates: MDF</li>
+                        <li>Blue sections: PETG</li>
+                        <li>Legs: PLA</li>
+                    </ul>
+
+                    <div class="version-header">
+                        <div class="version-details">
+                            <h1>v0.2.4 - Design Refinement</h1>
+                            <div class="engineer">Engineer: Tom Green</div>
+                            <div class="date">January 3, 2025</div>
+                        </div>
+                    </div>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2041.png" alt="Updated radiator design" class="article-image">
+                        <div class="image-caption">Updated radiator design with refined components</div>
+                    </div>
+                </div>
+                
+                <div class="article-section">
+                    <div class="version-header">
+                        <div class="version-details">
+                            <h1>v0.3.0 - Design Optimization</h1>
+                            <div class="engineer">Engineer: Tom Green</div>
+                            <div class="date">January 6, 2025</div>
+                        </div>
+                    </div>
+
+                    <h2>Cost Optimization Analysis</h2>
+
+                    <p>To address Matt's feedback on determining the optimal design approach, I've developed code to plot flow/£ for all permutations with noise &lt;30dBA. Previous analysis optimized for a fixed flow rate.</p>
+
+                    <p>I now need to calculate the actual flow rate for various filter and fan combinations by solving:</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">FLOW RATE EQUATION</div>
+                        <pre>mF^k + F = c - mj
+
+where:
+m = fan pressure coefficient
+F = flow rate
+c = no-load fan flow
+j = filter pressure</pre>
+                    </div>
+
+                    <p>I implemented an iterative approach with increasing CFM:</p>
+
+                    <pre><code class="language-Python">#@return: Flow in CFM, to the nearest 1 CFM
+def get_flow(fan:Fan, num_fans:int, speed:float, filter:Filter, num_filters:int):
+    max_flow = fan.max_flow*num_fans
+    pstat = fan.static_pressure
+
+    #Start at low flow, and increase until pressures roughly match
+    flow: float  = 1 #CFM
+
+    #Multiply free-flow and derating (m) coefficients by number of fans
+    cAdj: float = fan.c*num_fans*(speed/100.0)
+    mAdj: float = fan.m*num_fans*(speed/100.0)
+
+    #Increase flow rate until pressures match
+    while(flow < 1e4): #If we hit 1e4, something is wrong!
+
+        #Calculate fan pressure
+        pFan: float = (flow-cAdj) / mAdj
+
+        #Calculate filter pressure
+        pFilt = 2 * ((flow*CFMtoM3s/num_filters)**filter.exponent) * filter.coeff
+
+        #print(f"Flow: {flow}CFM, Fan Pressure: {pFan}Pa, Filter Pressure: {pFilt}Pa")
+
+        if(pFilt > pFan):
+            #Return the *previous* flow, ie. when the ratio was still positive
+            return flow-1
+        
+        #Increase flow
+        flow = flow + 1</code></pre>
+
+                    <h2>Analysis With Fabric</h2>
+
+                    <ul>
+                        <li>Excluded LED and upHere fans due to uncertain specifications</li>
+                        <li>Focused on configurations with 2 filters</li>
+                        <li>Calculated at 200% pressure loss to simulate speaker cloth effect</li>
+                        <li>Used a nominal filter cost of £5 (actual filter costs are fixed regardless of configuration)</li>
+                        <li>Sorted by decreasing value (CFM per £)</li>
+                    </ul>
+
+                    <p>Standout configurations:</p>
+                    <ul>
+                        <li>339 CFM with 8× Arctic F14 fans at 90% speed</li>
+                        <li>313 CFM with 7× Arctic F14 fans at 90% speed</li>
+                        <li>284 CFM with 6× Arctic F14 fans at 90% speed</li>
+                    </ul>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2042.png" alt="Fan optimization with fabric" class="article-image">
+                        <div class="image-caption">Fan optimization analysis with fabric (top 20 configurations shown)</div>
+                    </div>
+
+                    <h2>Analysis Without Fabric</h2>
+
+                    <ul>
+                        <li>Identical parameters to the fabric analysis but with filter pressure at 100% (no additional fabric resistance)</li>
+                        <li>Only ~15% worse value for better aesthetics with fabric is encouraging</li>
+                    </ul>
+
+                    <p>Standout configurations:</p>
+                    <ul>
+                        <li>440 CFM with 9× Arctic F14 fans at 90% speed</li>
+                        <li>406 CFM with 8× Arctic F14 fans at 90% speed</li>
+                    </ul>
+
+                    <p>The optimal number of fans increases without fabric because of the power-law relationship of filter pressure loss.</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2043.png" alt="Fan optimization without fabric" class="article-image">
+                        <div class="image-caption">Fan optimization analysis without fabric (top configurations shown)</div>
+                    </div>
+
+                    <h2>Fan Selection Verification</h2>
+
+                    <p>The Arctic F14 is flow-optimized, while the P14 is pressure-optimized. <a href="https://www.sts-tutorial.com/review/arctic-f14">This review</a> ranks them highly but notes they might not be optimal for filtration applications compared to P14 models. However, our large filter area relative to typical PC applications mitigates this concern.</p>
+
+                    <h2>Design Implications</h2>
+
+                    <p>This analysis suggests that two smaller units with two filters each would be more effective than one large unit. We've also established a 30dB noise limit as a design constraint.</p>
+
+                    <p>The analysis explains why doubling fans, filters, and flow is penalized in our scoring - the higher fan count exceeds our noise threshold.</p>
+
+                    <p>Our previous operating point identified a similar configuration with fans running at higher speeds:</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2044.png" alt="Previous operating point" class="article-image">
+                        <div class="image-caption">Previously identified operating point</div>
+                    </div>
+
+                    <p>The new analysis identifies similar but not identical points:</p>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2045.png" alt="New operating point" class="article-image">
+                        <div class="image-caption">Newly identified operating points</div>
+                    </div>
+
+                    <p>The differences are primarily due to our requirement for 588CFM in the previous analysis, whereas the new approach allows optimization at various flow rates. Both analyses confirm that two filters in parallel is optimal.</p>
+
+                    <h2>Design Direction</h2>
+
+                    <p>Based on this analysis:</p>
+                    <ul>
+                        <li>We should build multiple smaller units rather than a single large unit</li>
+                        <li>This approach provides flexibility for different spaces</li>
+                        <li>The radiator design is less optimal than cabinet-style designs</li>
+                    </ul>
+
+                    <h2>Implementation Plan</h2>
+
+                    <p>A configuration with two filters and 8× Arctic F14 fans scores well in both analyses.</p>
+
+                    <p>This closely resembles Matt's previous prototype, albeit with slightly different fans from the same manufacturer.</p>
+
+                    <p>Continuing with this design allows for easily removable filter fabric as additional modules.</p>
+
+                    <p>Four fans on each side with none on top prevents issues with objects placed on the unit.</p>
+
+                    <h1>Commercial Product Analysis</h1>
+
+                    <p>For comparison, I investigated several commercial air purifiers. A common pattern emerges: they advertise noise levels around 20dB but actually operate at 40-50dB at full speed. Our target of 20-23dB at full operating flow is significantly quieter.</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">COMMERCIAL UNIT COMPARISON</div>
+                        <pre>Coway Airnega 300
+- CADR: 575m³/h
+- Filtration: Pre-filter (washable), carbon filter, HEPA filter
+- Fan type: Centrifugal
+- Advertised noise: 22dB, but 52dB at maximum speed
+- Power consumption: 57W
+
+Coway Airnega 150
+- CADR: 281 m³/hr
+- Maximum noise: 52dB
+- Maximum power: 35W
+- Filtration: Prefilter, carbon and HEPA filters
+- Fan type: Centrifugal
+
+Blue Air Pure 511
+- CADR: 191m³/h
+- Noise: 49dB
+- Cost: £90
+
+IKEA Units
+- Very loud operation or very low flow rates depending on setting</pre>
+                    </div>
+                </div>
+                
+                <div class="article-section">
+                    <div class="version-header">
+                        <div class="version-details">
+                            <h1>v0.3.1 - Component Selection</h1>
+                            <div class="engineer">Engineer: Tom Green</div>
+                            <div class="date">January 7, 2025</div>
+                        </div>
+                    </div>
+
+                    <p>I've identified <a href="https://uk.rs-online.com/web/p/neodymium-magnets/1365467?cm_mmc=UK-PLA-DS3A-_-google-_-CSS_UK_EN_PMAX_Catch+All-_--_-1365467&matchtype=&&gad_source=1&gclid=Cj0KCQiAvvO7BhC-ARIsAGFyToVqJttt-A8HPE1gqp1uf0VDa7acdCSN5esuFK9VDlpUw8cFW9bab7oaAiVNEALw_wcB&gclsrc=aw.ds">these threaded magnets</a> for securing the side panels. They'll allow countersunk screws to be flush-mounted to the MDF, creating a clean appearance while providing strong, removable connections.</p>
+
+                    <div class="version-header">
+                        <div class="version-details">
+                            <h1>v0.3.5 - Performance Testing</h1>
+                            <div class="engineer">Engineer: Tom Green</div>
+                            <div class="date">January 1, 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="image-container">
+                        <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/1000009940.jpg" alt="Test setup" class="article-image">
+                        <div class="image-caption">Performance testing setup</div>
+                    </div>
+
+                    <h2>Performance Testing Results</h2>
+
+                    <ul>
+                        <li>The Camira Cara fabric was thicker than anticipated and likely introduces significant flow restriction</li>
+                        <li>At 12V operation, the sound quality is different from the previous design - lower pitched and blends into background noise more effectively</li>
+                        <li>The flow profile from these fans exhibits greater radial variation than the previous design, appearing more conical and less uniform, which complicates comparative measurements</li>
+                    </ul>
+
+                    <p>Measurements at 12 volts:</p>
+
+                    <p>Note: The new design incorporates 8 fans versus 7 in the previous model. When scaling volumetric flow by this ratio, both units (without fabric) demonstrate virtually identical performance.</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Existing Filter</th>
+                                <th>New Filter<br/>With Fabric</th>
+                                <th>New Filter<br/>Without Fabric</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Velocity on Filter Centre (m/s)</td>
+                                <td>0.6</td>
+                                <td>0.2</td>
+                                <td>0.7</td>
+                            </tr>
+                            <tr>
+                                <td>On Fan Centre (m/s)</td>
+                                <td>2.9</td>
+                                <td>1.0</td>
+                                <td>1.1</td>
+                            </tr>
+                            <tr>
+                                <td>Volumetric Flow (m³/s)</td>
+                                <td>0.3</td>
+                                <td>0.1</td>
+                                <td>0.35</td>
+                            </tr>
+                            <tr>
+                                <td>Volumetric Flow (m³/hr)</td>
+                                <td>1080</td>
+                                <td>360</td>
+                                <td>1260</td>
+                            </tr>
+                            <tr>
+                                <td>CFM</td>
+                                <td>635</td>
+                                <td>211</td>
+                                <td>741</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p><em>Note: Flowmeter measurements have known inaccuracies (approximately 2× 'real' values) but are useful for comparative purposes.</em></p>
+
+                    <h1>Additional Design Considerations</h1>
+
+                    <h2>Fabric Research</h2>
+
+                    <p>Claude 3.7 Sonnet recommended spacer mesh as a potential alternative to the Camira Cara fabric.</p>
+
+                    <p>Andy suggested several cover options:</p>
+                    <ul>
+                        <li>Laser-cut front panel
+                            <div class="image-container">
+                                <img src="Low%20Cost%20Recirc%20Filtration%20(Office%20air%20filter)%20des%20162bf82193ec8038be9cf3042f51a4b9/image%2046.png" alt="Laser-cut panel" class="article-image">
+                                <div class="image-caption">Laser-cut panel concept</div>
+                            </div>
+                        </li>
+                        <li>Mosquito netting</li>
+                        <li>Perforated plastic sheet, such as <a href="https://www.theplasticshop.co.uk/perforated-polypropylene-sheet.html">this option</a></li>
+                    </ul>
+
+                    <h2>Open Area Analysis</h2>
+
+                    <p>I analyzed the square bird mesh currently used for the front grille. The wire is approximately 1.3mm in diameter, and the square openings average 11.5mm. The open area calculation:</p>
+
+                    <div class="blueprint-section">
+                        <div class="blueprint-title">OPEN AREA CALCULATION</div>
+                        <pre>A<sub>open</sub> = {11.5^2 \over (11.5+1.3)^2} = 0.807</pre>
+                    </div>
+
+                    <p>This relatively low open area (80.7%) for such coarse mesh is surprising. It raises questions about whether a finer mesh with equal open area would provide similar visual transparency.</p>
+
+                    <h2>Camira Fabric Resistance Analysis</h2>
+
+                    <p>Since the Camira Cara fabric reduced flow rate by a factor of 3, I calculated its flow resistance:</p>
+
+                    <ul>
+                        <li>Estimated actual flow rate: ~0.05m³/s (370CFM) - approximately half of the meter reading based on previous calibration</li>
+                        <li>This equates to 0.025m³/s per filter</li>
+                        <li>Our calculations predict 8 fans at full speed should deliver 391CFM with the fabric's doubled pressure loss</li>
+                        <li>For Arctic F14 PWM fans, maximum flow is rated at 73CFM with maximum pressure of 15.7Pa</li>
+                        <li>The per-fan flow rate is approximately 46CFM if divided equally</li>
+                        <li>From the P/Q curve, this suggests a pressure drop of 0.8mmH₂O (7.85Pa)</li>
+                        <li>Expected pressure across the filters alone is 0.84Pa</li>
+                        <li>This indicates the fabric introduces approximately 7Pa of pressure loss - nearly 10 times more than the filters themselves</li>
+                    </ul>
+
+                    <div class="callout important">
+                        <p><strong>Arctic F14 PWM PST has already entered End of Life status since ordering two months ago!</strong></p>
+                        <p>This is likely to be a common trend for consumer/gaming grade fans.</p>
+                    </div>
+                </div>
+                
+                <div class="tags">
+                    <span class="tag">Air Filtration</span>
+                    <span class="tag">Office HVAC</span>
+                    <span class="tag">Low-Cost Design</span>
+                    <span class="tag">Noise Optimization</span>
+                    <span class="tag">Prototype</span>
+                </div>
+                
+                <div class="article-nav">
+                    <a href="index.html" class="back-link">← Back to Home</a>
+                </div>
