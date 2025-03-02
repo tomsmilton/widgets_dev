@@ -86,6 +86,13 @@
         .centroid-button:hover {
             background-color: #950606; /* red darker */
         }
+        /* Twitter Bot button style */
+        .twitter-bot-button {
+            background-color: #1DA1F2; /* Twitter blue */
+        }
+        .twitter-bot-button:hover {
+            background-color: #0c7abf; /* Darker Twitter blue */
+        }
         .description {
             font-size: 1em;
             color: black;
@@ -103,6 +110,16 @@
         @media (max-width: 600px) {
             .tool-box {
                 margin: 10px 25px; /* Adds padding for small screens */
+                border-radius: 10px 10px 0 0; /* Ensure rounded corners still work */
+            }
+            .dev-log-box {
+                margin: 0 25px 10px; /* Match left/right margins with tool-box */
+                border-radius: 0 0 10px 10px; /* Ensure rounded corners still work */
+                width: auto; /* Allow box to adapt to screen width */
+                max-width: calc(100% - 50px); /* Account for margins */
+            }
+            .tool-box + .dev-log-box {
+                margin-top: 0; /* Keep connection with tool-box above */
             }
             p {
                 margin: 10px 25px; /* Adds padding for small screens */
@@ -139,9 +156,6 @@
             text-decoration: underline;
         }
         /* Special case for tool-box when followed by dev-log-box */
-        .tool-box + .dev-log-box {
-            margin-top: 0;
-        }
         .tool-box:has(+ .dev-log-box) {
             border-bottom: none;
             border-radius: 10px 10px 0 0;
@@ -150,17 +164,37 @@
 </head>
 <body>
     <h1>Tom's Widgets</h1>
-    <p>This is where I put little tools I made with AI to solve fun problems:</p>
+    <p>Pure vibe coding:</p>
     
+
     <div class="tool-box">
-        <a class="button-link centroid-button" href="centroid.html">
-            Centroid Finder Tool
+        <a class="button-link twitter-bot-button" href="https://x.com/HollybushCrack" target="_blank">
+            Hollybush Crack Bot
             <img src="icons8-mouse.svg" alt="Mouse Icon">
         </a>
-        <p class="description">A tool to calculate the centroid of a set of locations.</p>
+        <p class="description">Every 15 minutes this bot checks Hollybush Crack on UKC to see if there is a new log. If there is then it tweets about it. Uses GitHub Actions for automation.</p>
     </div>
+
+    <div class="tool-box">
+        <a class="button-link centroid-button" href="centroid.html">
+            Centroid Finder
+            <img src="icons8-mouse.svg" alt="Mouse Icon">
+        </a>
+        <p class="description">Calculate the centroid of a set of locations. (Original version made with ChatGPT O1)</p>
+    </div>
+    <!-- ChatGPT transcript box - temporarily disabled
     <div class="dev-log-box">
         <a href="prompt_logs/conversation1.html">View ChatGPT transcript →</a>
+    </div>
+    -->
+
+    <div class="tool-box">
+        <a class="button-link centroid-button" href="centroid_claude_37.html">
+            Centroid Finder V2
+            <img src="icons8-mouse.svg" alt="Mouse Icon">
+        </a>
+        <p class="description">A one shot test for Claude. This includes a find the nearest pub, restaurant cafe to the centroid. (Made with Claude 3.7 Sonnet)</p>
+        
     </div>
 
     <div class="tool-box">
@@ -179,6 +213,7 @@
         </a>
         <p class="description">Ranking the deaneries can be hard. This tool guides you through a pairwise selection to rank your preferences.</p>
     </div>
+
 
 </body>
 </html>
