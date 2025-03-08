@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Battle</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #2c3e50;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+        }
+        #game-canvas {
+            background-color: #34495e;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .player-info {
+            position: absolute;
+            color: white;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+        }
+        #player1-info {
+            top: 10px;
+            left: 10px;
+        }
+        #player2-info {
+            top: 10px;
+            right: 10px;
+        }
+        #game-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .fireball {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffcc00, #ff4500);
+            box-shadow: 0 0 10px #ff8c00, 0 0 20px #ff4500;
+            z-index: 100;
+        }
+        #game-title {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #magic-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.2) 0%, rgba(148, 0, 211, 0.2) 50%, rgba(0, 191, 255, 0.2) 100%);
+            z-index: 50;
+            mix-blend-mode: screen;
+            transition: opacity 0.5s;
+        }
+    </style>
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas" width="800" height="600"></canvas>
+        <div id="magic-overlay"></div>
+        <div id="ui-overlay">
+            <div id="game-title">The Great Game</div>
+            <div id="player1-info" class="player-info">
+                Player 1: <span id="player1-score">0</span>
+                <div>Health: <span id="player1-health">100</span></div>
+                <div id="player1-magic" style="display: none; color: #ffcc00;">MAGIC MODE!</div>
+            </div>
+            <div id="player2-info" class="player-info">
+                Player 2: <span id="player2-score">0</span>
+                <div>Health: <span id="player2-health">100</span></div>
+                <div id="player2-magic" style="display: none; color: #ffcc00;">MAGIC MODE!</div>
+            </div>
+            <div id="game-message"></div>
+            <div id="controls">
+                Player 1: WASD to move, F to attack, E to shoot fireball | Player 2: IJKL to move, Semicolon (;) to attack, O to shoot fireball
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game constants
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 600;
+        const GRID_SIZE = 20;
+        const SNAKE_SPEED = 150; // milliseconds per move
+        const ATTACK_COOLDOWN = 500; // milliseconds
+        const FIREBALL_COOLDOWN = 300; // milliseconds
+        const FIREBALL_SPEED = 8; // pixels per frame
+        const FIREBALL_SIZE = 10; // pixels
+        const MAGIC_FIREBALL_MULTIPLIER = 2; // how much bigger magic fireballs are (changed from 5 to 2)
+        const FIREBALL_DAMAGE = 10;
+        const MAGIC_THRESHOLD = 50; // health threshold for magic mode (changed from 20 to 50)
+        const INITIAL_LENGTH = 5;
+        const HEALTH_DAMAGE = 20;
+
+        // Game variables
+        let canvas, ctx;
+        let gameRunning = false;
+        let lastFrameTime = 0;
+        let player1MoveTimer = 0;
+        let player2MoveTimer = 0;
+        let gameObjects = [];
+        let snakeSegmentImages = {};
+        let backgroundPattern;
+        let grassImage;
+        let fireballs = [];
+        let magicEffectTime = 0;
+
+        // Snake 1 (Player 1)
+        const snake1 = {
+            segments: [],
+            direction: { x: 1, y: 0 },
+            nextDirection: { x: 1, y: 0 },
+            color: '#3498db',
+            score: 0,
+            health: 100,
+            attackCooldown: 0,
+            fireballCooldown: 0,
+            isAttacking: false,
+            lastMoveTime: 0
+        };
+
+        // Snake 2 (Player 2)
+        const snake2 = {
+            segments: [],
+            direction: { x: -1, y: 0 },
+            nextDirection: { x: -1, y: 0 },
+            color: '#e74c3c',
+            score: 0,
+            health: 100,
+            attackCooldown: 0,
+            fireballCooldown: 0,
+            isAttacking: false,
+            lastMoveTime: 0
+        };
+
+        // Keyboard state
+        const keys = {};
+
+        // Initialize the game
+        function init() {
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
+            
+            // Load images and textures
+            loadAssets().then(() => {
+                resetGame();
+                // Start the game loop
+                window.requestAnimationFrame(gameLoop);
+                
+                // Set up event listeners
+                window.addEventListener('keydown', handleKeyDown);
+                window.addEventListener('keyup', handleKeyUp);
+            });
+        }
+
+        // Load game assets
+        async function loadAssets() {
+            // Create grass texture for background
+            grassImage = new Image();
+            grassImage.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzM0ODk1ZSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQwIiBmaWxsPSIjMmQ3ODUzIiBmaWxsLW9wYWNpdHk9IjAuMiIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMzAiIHI9IjIwIiBmaWxsPSIjMmQ3ODUzIiBmaWxsLW9wYWNpdHk9IjAuMSIvPjxjaXJjbGUgY3g9IjgwIiBjeT0iNzAiIHI9IjMwIiBmaWxsPSIjMmQ3ODUzIiBmaWxsLW9wYWNpdHk9IjAuMTUiLz48L3N2Zz4=";
+            await new Promise(resolve => { grassImage.onload = resolve; });
+            
+            // Create snake segment textures
+            await createSnakeTextures();
+            
+            // Set up background pattern
+            backgroundPattern = ctx.createPattern(grassImage, 'repeat');
+        }
+
+        // Create snake texture images for both snakes
+        async function createSnakeTextures() {
+            // Generate snake segment textures
+            function createSegmentImage(bodyColor, patternColor, isHead = false) {
+                const segCanvas = document.createElement('canvas');
+                segCanvas.width = GRID_SIZE;
+                segCanvas.height = GRID_SIZE;
+                const segCtx = segCanvas.getContext('2d');
+                
+                // Draw body
+                segCtx.fillStyle = bodyColor;
+                if (isHead) {
+                    segCtx.beginPath();
+                    segCtx.arc(GRID_SIZE/2, GRID_SIZE/2, GRID_SIZE/2, 0, Math.PI * 2);
+                    segCtx.fill();
+                } else {
+                    segCtx.fillRect(0, 0, GRID_SIZE, GRID_SIZE);
+                    segCtx.fillStyle = patternColor;
+                    segCtx.fillRect(GRID_SIZE * 0.25, GRID_SIZE * 0.25, GRID_SIZE * 0.5, GRID_SIZE * 0.5);
+                }
+                
+                // Add eyes for head
+                if (isHead) {
+                    segCtx.fillStyle = '#fff';
+                    segCtx.beginPath();
+                    segCtx.arc(GRID_SIZE * 0.3, GRID_SIZE * 0.3, GRID_SIZE * 0.15, 0, Math.PI * 2);
+                    segCtx.arc(GRID_SIZE * 0.7, GRID_SIZE * 0.3, GRID_SIZE * 0.15, 0, Math.PI * 2);
+                    segCtx.fill();
+                    
+                    segCtx.fillStyle = '#000';
+                    segCtx.beginPath();
+                    segCtx.arc(GRID_SIZE * 0.3, GRID_SIZE * 0.3, GRID_SIZE * 0.07, 0, Math.PI * 2);
+                    segCtx.arc(GRID_SIZE * 0.7, GRID_SIZE * 0.3, GRID_SIZE * 0.07, 0, Math.PI * 2);
+                    segCtx.fill();
+                }
+                
+                return segCanvas;
+            }
+            
+            // Create head and body segments for both snakes
+            snakeSegmentImages = {
+                snake1Head: createSegmentImage('#3498db', '#2980b9', true),
+                snake1Body: createSegmentImage('#3498db', '#2980b9', false),
+                snake2Head: createSegmentImage('#e74c3c', '#c0392b', true),
+                snake2Body: createSegmentImage('#e74c3c', '#c0392b', false)
+            };
+        }
+
+        // Reset the game state
+        function resetGame() {
+            // Clear game state
+            gameObjects = [];
+            
+            // Reset snake 1
+            snake1.segments = [];
+            snake1.direction = { x: 1, y: 0 };
+            snake1.nextDirection = { x: 1, y: 0 };
+            snake1.score = 0;
+            snake1.health = 100;
+            snake1.attackCooldown = 0;
+            snake1.fireballCooldown = 0;
+            snake1.isAttacking = false;
+            snake1.inMagicMode = false;
+            
+            // Reset snake 2
+            snake2.segments = [];
+            snake2.direction = { x: -1, y: 0 };
+            snake2.nextDirection = { x: -1, y: 0 };
+            snake2.score = 0;
+            snake2.health = 100;
+            snake2.attackCooldown = 0;
+            snake2.fireballCooldown = 0;
+            snake2.isAttacking = false;
+            snake2.inMagicMode = false;
+            
+            // Clear fireballs
+            fireballs = [];
+            
+            // Initialize snake positions
+            for (let i = 0; i < INITIAL_LENGTH; i++) {
+                snake1.segments.push({
+                    x: 5 - i,
+                    y: Math.floor(CANVAS_HEIGHT / GRID_SIZE / 2)
+                });
+                
+                snake2.segments.push({
+                    x: (CANVAS_WIDTH / GRID_SIZE) - 6 + i,
+                    y: Math.floor(CANVAS_HEIGHT / GRID_SIZE / 2)
+                });
+            }
+            
+            // Start game
+            gameRunning = true;
+            hideMessage();
+            updateScoreDisplay();
+        }
+
+        // Game loop
+        function gameLoop(timestamp) {
+            const deltaTime = timestamp - lastFrameTime;
+            lastFrameTime = timestamp;
+            
+            // Update game state
+            update(deltaTime);
+            
+            // Draw the game
+            render();
+            
+            // Schedule next frame
+            window.requestAnimationFrame(gameLoop);
+        }
+
+        // Update game state
+        function update(deltaTime) {
+            if (!gameRunning) return;
+            
+            // Handle input and update directions
+            handleInput();
+            
+            // Update attack cooldowns
+            if (snake1.attackCooldown > 0) {
+                snake1.attackCooldown -= deltaTime;
+                if (snake1.attackCooldown <= 0) {
+                    snake1.isAttacking = false;
+                }
+            }
+            
+            if (snake2.attackCooldown > 0) {
+                snake2.attackCooldown -= deltaTime;
+                if (snake2.attackCooldown <= 0) {
+                    snake2.isAttacking = false;
+                }
+            }
+            
+            // Update fireball cooldowns
+            if (snake1.fireballCooldown > 0) {
+                snake1.fireballCooldown -= deltaTime;
+            }
+            
+            if (snake2.fireballCooldown > 0) {
+                snake2.fireballCooldown -= deltaTime;
+            }
+            
+            // Update magic effect timing
+            magicEffectTime += deltaTime / 1000; // Convert to seconds
+            updateMagicOverlay();
+            
+            // Move snakes
+            player1MoveTimer += deltaTime;
+            player2MoveTimer += deltaTime;
+            
+            if (player1MoveTimer >= SNAKE_SPEED) {
+                moveSnake(snake1);
+                player1MoveTimer = 0;
+            }
+            
+            if (player2MoveTimer >= SNAKE_SPEED) {
+                moveSnake(snake2);
+                player2MoveTimer = 0;
+            }
+            
+            // Update fireballs
+            updateFireballs();
+            
+            // Check collisions
+            checkCollisions();
+        }
+        
+        // Update the magic overlay effect
+        function updateMagicOverlay() {
+            const overlay = document.getElementById('magic-overlay');
+            
+            if (snake1.inMagicMode || snake2.inMagicMode) {
+                // Calculate pulsating opacity based on time
+                const pulsate = 0.5 + 0.3 * Math.sin(magicEffectTime * 4);
+                overlay.style.opacity = pulsate.toString();
+                
+                // Add animated filter to canvas
+                const hueRotate = (magicEffectTime * 20) % 360;
+                canvas.style.filter = `hue-rotate(${hueRotate}deg)`;
+            } else {
+                overlay.style.opacity = '0';
+                canvas.style.filter = 'none';
+            }
+        }
+
+        // Handle keyboard input
+        function handleInput() {
+            // Snake 1 movement (WASD)
+            if (keys['KeyW'] && snake1.direction.y !== 1) {
+                snake1.nextDirection = { x: 0, y: -1 };
+            } else if (keys['KeyS'] && snake1.direction.y !== -1) {
+                snake1.nextDirection = { x: 0, y: 1 };
+            } else if (keys['KeyA'] && snake1.direction.x !== 1) {
+                snake1.nextDirection = { x: -1, y: 0 };
+            } else if (keys['KeyD'] && snake1.direction.x !== -1) {
+                snake1.nextDirection = { x: 1, y: 0 };
+            }
+            
+            // Snake 2 movement (IJKL)
+            if (keys['KeyI'] && snake2.direction.y !== 1) {
+                snake2.nextDirection = { x: 0, y: -1 };
+            } else if (keys['KeyK'] && snake2.direction.y !== -1) {
+                snake2.nextDirection = { x: 0, y: 1 };
+            } else if (keys['KeyJ'] && snake2.direction.x !== 1) {
+                snake2.nextDirection = { x: -1, y: 0 };
+            } else if (keys['KeyL'] && snake2.direction.x !== -1) {
+                snake2.nextDirection = { x: 1, y: 0 };
+            }
+            
+            // Snake 1 attack (F)
+            if (keys['KeyF'] && snake1.attackCooldown <= 0) {
+                snake1.isAttacking = true;
+                snake1.attackCooldown = ATTACK_COOLDOWN;
+            }
+            
+            // Snake 2 attack (Semicolon)
+            if (keys['Semicolon'] && snake2.attackCooldown <= 0) {
+                snake2.isAttacking = true;
+                snake2.attackCooldown = ATTACK_COOLDOWN;
+            }
+            
+            // Snake 1 shoot fireball (E)
+            if (keys['KeyE'] && snake1.fireballCooldown <= 0) {
+                shootFireball(snake1);
+                snake1.fireballCooldown = FIREBALL_COOLDOWN;
+            }
+            
+            // Snake 2 shoot fireball (O)
+            if (keys['KeyO'] && snake2.fireballCooldown <= 0) {
+                shootFireball(snake2);
+                snake2.fireballCooldown = FIREBALL_COOLDOWN;
+            }
+        }
+        
+        // Shoot a fireball
+        function shootFireball(snake) {
+            const head = snake.segments[0];
+            const headX = head.x * GRID_SIZE + GRID_SIZE / 2;
+            const headY = head.y * GRID_SIZE + GRID_SIZE / 2;
+            
+            // Calculate direction vectors
+            let dirX = snake.direction.x;
+            let dirY = snake.direction.y;
+            
+            // Normalize direction vector
+            const length = Math.sqrt(dirX * dirX + dirY * dirY);
+            if (length > 0) {
+                dirX /= length;
+                dirY /= length;
+            }
+            
+            // Determine fireball size based on magic mode
+            const fireballSize = snake.inMagicMode ? 
+                FIREBALL_SIZE * MAGIC_FIREBALL_MULTIPLIER : 
+                FIREBALL_SIZE;
+            
+            fireballs.push({
+                x: headX,
+                y: headY,
+                dirX: dirX,
+                dirY: dirY,
+                speed: FIREBALL_SPEED,
+                size: fireballSize,
+                owner: snake,
+                age: 0,
+                isMagic: snake.inMagicMode
+            });
+        }
+        
+        // Update fireballs
+        function updateFireballs() {
+            for (let i = fireballs.length - 1; i >= 0; i--) {
+                const fireball = fireballs[i];
+                
+                // Move fireball
+                fireball.x += fireball.dirX * fireball.speed;
+                fireball.y += fireball.dirY * fireball.speed;
+                fireball.age++;
+                
+                // Check if fireball is out of bounds or has lived too long
+                if (fireball.x < 0 || fireball.x > CANVAS_WIDTH || 
+                    fireball.y < 0 || fireball.y > CANVAS_HEIGHT ||
+                    (fireball.isEffect && fireball.age > fireball.maxAge) ||
+                    (!fireball.isEffect && fireball.age > 200)) {
+                    fireballs.splice(i, 1);
+                    continue;
+                }
+                
+            // Check for collision with snakes
+                const targetSnake = fireball.owner === snake1 ? snake2 : snake1;
+                
+                for (const segment of targetSnake.segments) {
+                    const segX = segment.x * GRID_SIZE + GRID_SIZE / 2;
+                    const segY = segment.y * GRID_SIZE + GRID_SIZE / 2;
+                    
+                    const dx = fireball.x - segX;
+                    const dy = fireball.y - segY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Adjusted collision distance based on actual fireball size
+                    if (distance < fireball.size + GRID_SIZE / 2) {
+                        // Hit!
+                        targetSnake.health -= FIREBALL_DAMAGE;
+                        fireball.owner.score += 1;
+                        
+                        // Make the snake that hit the other snake grow longer
+                        growSnake(fireball.owner);
+                        
+                        // Remove the fireball
+                        fireballs.splice(i, 1);
+                        
+                        // Update score display
+                        updateScoreDisplay();
+                        
+                        // Check if magic mode should be activated
+                        checkMagicMode();
+                        
+                        // Check if game is over
+                        checkGameOver();
+                        
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Move a snake
+        function moveSnake(snake) {
+            // Update direction
+            snake.direction = { ...snake.nextDirection };
+            
+            // Calculate new head position
+            const head = snake.segments[0];
+            const newHead = {
+                x: head.x + snake.direction.x,
+                y: head.y + snake.direction.y
+            };
+            
+            // Handle wrapping around the screen
+            if (newHead.x < 0) newHead.x = Math.floor(CANVAS_WIDTH / GRID_SIZE) - 1;
+            if (newHead.x >= CANVAS_WIDTH / GRID_SIZE) newHead.x = 0;
+            if (newHead.y < 0) newHead.y = Math.floor(CANVAS_HEIGHT / GRID_SIZE) - 1;
+            if (newHead.y >= CANVAS_HEIGHT / GRID_SIZE) newHead.y = 0;
+            
+            // Add new head
+            snake.segments.unshift(newHead);
+            
+            // Remove tail
+            snake.segments.pop();
+        }
+
+        // Check for collisions
+        function checkCollisions() {
+            // Get snake heads
+            const head1 = snake1.segments[0];
+            const head2 = snake2.segments[0];
+            
+            // Check for head-to-head collision (now just bounces)
+            if (head1.x === head2.x && head1.y === head2.y) {
+                // Reverse directions for both snakes
+                snake1.nextDirection = { x: -snake1.direction.x, y: -snake1.direction.y };
+                snake2.nextDirection = { x: -snake2.direction.x, y: -snake2.direction.y };
+                return;
+            }
+            
+            // Check if snake 1 head hits snake 2 body (now just pushes through)
+            for (let i = 1; i < snake2.segments.length; i++) {
+                const segment = snake2.segments[i];
+                if (head1.x === segment.x && head1.y === segment.y) {
+                    // No damage from collisions, just continue
+                    return;
+                }
+            }
+            
+            // Check if snake 2 head hits snake 1 body (now just pushes through)
+            for (let i = 1; i < snake1.segments.length; i++) {
+                const segment = snake1.segments[i];
+                if (head2.x === segment.x && head2.y === segment.y) {
+                    // No damage from collisions, just continue
+                    return;
+                }
+            }
+            
+            // Check if snake 1 head hits its own body (now just pushes through)
+            for (let i = 1; i < snake1.segments.length; i++) {
+                const segment = snake1.segments[i];
+                if (head1.x === segment.x && head1.y === segment.y) {
+                    // No damage from self-collisions
+                    return;
+                }
+            }
+            
+            // Check if snake 2 head hits its own body (now just pushes through)
+            for (let i = 1; i < snake2.segments.length; i++) {
+                const segment = snake2.segments[i];
+                if (head2.x === segment.x && head2.y === segment.y) {
+                    // No damage from self-collisions
+                    return;
+                }
+            }
+        }
+
+        // Check if the game is over
+        function checkGameOver() {
+            if (snake1.health <= 0 && snake2.health <= 0) {
+                // Both snakes died - it's a tie
+                gameRunning = false;
+                showMessage("It's a tie! Press Space to restart");
+            } else if (snake1.health <= 0) {
+                // Snake 1 died
+                gameRunning = false;
+                showMessage("Player 2 wins! Press Space to restart");
+            } else if (snake2.health <= 0) {
+                // Snake 2 died
+                gameRunning = false;
+                showMessage("Player 1 wins! Press Space to restart");
+            }
+        }
+
+        // Render the game
+        function render() {
+            // Clear canvas
+            ctx.fillStyle = backgroundPattern;
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            
+            // Draw snakes
+            drawSnake(snake1, 'snake1Head', 'snake1Body');
+            drawSnake(snake2, 'snake2Head', 'snake2Body');
+            
+            // Draw attack effects
+            if (snake1.isAttacking) {
+                drawAttackEffect(snake1);
+            }
+            if (snake2.isAttacking) {
+                drawAttackEffect(snake2);
+            }
+            
+            // Draw fireballs
+            drawFireballs();
+        }
+        
+        // Draw fireballs
+        function drawFireballs() {
+            fireballs.forEach(fireball => {
+                // Determine size multiplier for magic fireballs
+                const sizeMultiplier = fireball.isMagic ? MAGIC_FIREBALL_MULTIPLIER : 1;
+                const actualSize = fireball.size;
+                
+                // Draw fire glow
+                const gradient = ctx.createRadialGradient(
+                    fireball.x, fireball.y, actualSize * 0.2,
+                    fireball.x, fireball.y, actualSize * 2
+                );
+                
+                if (fireball.isMagic) {
+                    // Rainbow effect for magic fireballs
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+                    gradient.addColorStop(0.2, 'rgba(255, 255, 0, 0.8)');
+                    gradient.addColorStop(0.4, 'rgba(0, 255, 0, 0.7)');
+                    gradient.addColorStop(0.6, 'rgba(0, 255, 255, 0.6)');
+                    gradient.addColorStop(0.8, 'rgba(255, 0, 255, 0.5)');
+                    gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                } else {
+                    // Normal fireball
+                    gradient.addColorStop(0, 'rgba(255, 255, 0, 0.8)');
+                    gradient.addColorStop(0.5, 'rgba(255, 125, 0, 0.6)');
+                    gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                }
+                
+                ctx.beginPath();
+                ctx.arc(fireball.x, fireball.y, actualSize * 2, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                // Draw fire core
+                ctx.beginPath();
+                ctx.arc(fireball.x, fireball.y, actualSize, 0, Math.PI * 2);
+                
+                if (fireball.isMagic) {
+                    // Pulsating color for magic fireballs based on time
+                    const hue = (Date.now() / 20) % 360;
+                    ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                } else {
+                    ctx.fillStyle = fireball.owner === snake1 ? '#3498db' : '#e74c3c';
+                }
+                
+                ctx.fill();
+                
+                // Draw inner glow
+                ctx.beginPath();
+                ctx.arc(fireball.x, fireball.y, actualSize * 0.6, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fill();
+                
+                // Draw particles
+                const particleCount = fireball.isMagic ? 6 : 3;
+                for (let i = 0; i < particleCount; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * actualSize * 0.8;
+                    
+                    const particleX = fireball.x - fireball.dirX * distance + Math.cos(angle) * distance * 0.5;
+                    const particleY = fireball.y - fireball.dirY * distance + Math.sin(angle) * distance * 0.5;
+                    const particleSize = Math.random() * actualSize * 0.5 + actualSize * 0.2;
+                    
+                    ctx.beginPath();
+                    ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+                    
+                    if (fireball.isMagic) {
+                        // Random colors for magic particles
+                        const hue = Math.random() * 360;
+                        ctx.fillStyle = `hsla(${hue}, 100%, 70%, 0.6)`;
+                    } else {
+                        ctx.fillStyle = 'rgba(255, 200, 0, 0.6)';
+                    }
+                    
+                    ctx.fill();
+                }
+            });
+        }
+
+        // Draw a snake
+        function drawSnake(snake, headImage, bodyImage) {
+            for (let i = 0; i < snake.segments.length; i++) {
+                const segment = snake.segments[i];
+                const x = segment.x * GRID_SIZE;
+                const y = segment.y * GRID_SIZE;
+                
+                if (i === 0) {
+                    // Draw head with rotation
+                    ctx.save();
+                    ctx.translate(x + GRID_SIZE/2, y + GRID_SIZE/2);
+                    
+                    // Determine rotation based on direction
+                    let rotation = 0;
+                    if (snake.direction.x === 1) rotation = 0;
+                    else if (snake.direction.x === -1) rotation = Math.PI;
+                    else if (snake.direction.y === -1) rotation = -Math.PI/2;
+                    else if (snake.direction.y === 1) rotation = Math.PI/2;
+                    
+                    ctx.rotate(rotation);
+                    ctx.drawImage(snakeSegmentImages[headImage], -GRID_SIZE/2, -GRID_SIZE/2, GRID_SIZE, GRID_SIZE);
+                    ctx.restore();
+                } else {
+                    // Draw body segment
+                    ctx.drawImage(snakeSegmentImages[bodyImage], x, y, GRID_SIZE, GRID_SIZE);
+                }
+            }
+        }
+
+        // Draw attack effect
+        function drawAttackEffect(snake) {
+            const head = snake.segments[0];
+            const x = head.x * GRID_SIZE;
+            const y = head.y * GRID_SIZE;
+            
+            // Draw attack aura
+            ctx.beginPath();
+            ctx.arc(x + GRID_SIZE/2, y + GRID_SIZE/2, GRID_SIZE * 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = snake === snake1 ? 'rgba(52, 152, 219, 0.3)' : 'rgba(231, 76, 60, 0.3)';
+            ctx.fill();
+            
+            // Draw attack particles
+            const particleCount = 5;
+            const particleSize = GRID_SIZE / 5;
+            
+            ctx.fillStyle = snake === snake1 ? '#3498db' : '#e74c3c';
+            
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (Math.PI * 2 / particleCount) * i + (Date.now() / 200);
+                const distance = GRID_SIZE * 0.8;
+                
+                const particleX = x + GRID_SIZE/2 + Math.cos(angle) * distance;
+                const particleY = y + GRID_SIZE/2 + Math.sin(angle) * distance;
+                
+                ctx.beginPath();
+                ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Update score display
+        function updateScoreDisplay() {
+            document.getElementById('player1-score').textContent = snake1.score;
+            document.getElementById('player2-score').textContent = snake2.score;
+            document.getElementById('player1-health').textContent = Math.max(0, snake1.health);
+            document.getElementById('player2-health').textContent = Math.max(0, snake2.health);
+            
+            // Update magic mode indicators
+            document.getElementById('player1-magic').style.display = snake1.inMagicMode ? 'block' : 'none';
+            document.getElementById('player2-magic').style.display = snake2.inMagicMode ? 'block' : 'none';
+        }
+        
+        // Check if magic mode should be activated
+        function checkMagicMode() {
+            // Check if snake 1 should enter magic mode
+            if (snake1.health <= MAGIC_THRESHOLD && !snake1.inMagicMode) {
+                snake1.inMagicMode = true;
+                
+                // Add magical particles or effects for transition
+                addMagicTransitionEffect(snake1);
+                
+                updateScoreDisplay();
+            }
+            
+            // Check if snake 2 should enter magic mode
+            if (snake2.health <= MAGIC_THRESHOLD && !snake2.inMagicMode) {
+                snake2.inMagicMode = true;
+                
+                // Add magical particles or effects for transition
+                addMagicTransitionEffect(snake2);
+                
+                updateScoreDisplay();
+            }
+        }
+        
+        // Add magical transition effect when entering magic mode
+        function addMagicTransitionEffect(snake) {
+            // Create burst of particles around the snake head
+            const head = snake.segments[0];
+            const headX = head.x * GRID_SIZE + GRID_SIZE / 2;
+            const headY = head.y * GRID_SIZE + GRID_SIZE / 2;
+            
+            // Create 20 burst particles in random directions
+            for (let i = 0; i < 20; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 5;
+                
+                fireballs.push({
+                    x: headX,
+                    y: headY,
+                    dirX: Math.cos(angle),
+                    dirY: Math.sin(angle),
+                    speed: speed,
+                    size: 5 + Math.random() * 10,
+                    owner: snake,
+                    age: 0,
+                    isMagic: true,
+                    isEffect: true,
+                    maxAge: 30 + Math.floor(Math.random() * 30)
+                });
+            }
+            
+            // Add screen shake effect
+            canvas.style.animation = "shake 0.5s";
+            canvas.style.animationIterationCount = "1";
+            
+            // Create shake keyframes dynamically
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes shake {
+                    0% { transform: translate(0, 0); }
+                    10% { transform: translate(-5px, -5px); }
+                    20% { transform: translate(5px, -5px); }
+                    30% { transform: translate(-5px, 5px); }
+                    40% { transform: translate(5px, 5px); }
+                    50% { transform: translate(-5px, -5px); }
+                    60% { transform: translate(5px, -5px); }
+                    70% { transform: translate(-5px, 5px); }
+                    80% { transform: translate(5px, 5px); }
+                    90% { transform: translate(-5px, 0); }
+                    100% { transform: translate(0, 0); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Remove animation after it completes
+            setTimeout(() => {
+                canvas.style.animation = "";
+            }, 500);
+        }
+        
+        // Make a snake grow longer
+        function growSnake(snake) {
+            // Get the last segment
+            const lastSegment = snake.segments[snake.segments.length - 1];
+            
+            // Add a new segment at the same position as the last segment
+            // It will move in the next update
+            snake.segments.push({
+                x: lastSegment.x,
+                y: lastSegment.y
+            });
+        }
+
+        // Show a message
+        function showMessage(text) {
+            const messageEl = document.getElementById('game-message');
+            messageEl.textContent = text;
+            messageEl.style.display = 'block';
+        }
+
+        // Hide the message
+        function hideMessage() {
+            document.getElementById('game-message').style.display = 'none';
+        }
+
+        // Handle keydown events
+        function handleKeyDown(e) {
+            keys[e.code] = true;
+            
+            // Space to restart
+            if (e.code === 'Space' && !gameRunning) {
+                resetGame();
+            }
+            
+            // Prevent default for game keys to avoid scrolling
+            if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyI', 'KeyJ', 'KeyK', 'KeyL', 'KeyF', 'KeyE', 'KeyO', 'Semicolon', 'Space'].includes(e.code)) {
+                e.preventDefault();
+            }
+        }
+
+        // Handle keyup events
+        function handleKeyUp(e) {
+            keys[e.code] = false;
+        }
+
+        // Start the game when the page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
