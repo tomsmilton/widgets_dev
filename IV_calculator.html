@@ -136,6 +136,8 @@
             margin-bottom: 30px;
             flex-wrap: wrap;
             gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .step {
@@ -146,8 +148,16 @@
             border-radius: 4px;
             margin: 0;
             position: relative;
-            min-width: 100px;
+            min-width: 80px;
             font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .step:active {
+            transform: scale(0.98);
         }
         
         .step.active {
@@ -158,6 +168,11 @@
         .step.completed {
             background: var(--success);
             color: white;
+        }
+        
+        .step.disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
         
         .results {
@@ -288,6 +303,17 @@
                 padding: 15px;
             }
             
+            .steps {
+                padding: 0 5px;
+            }
+            
+            .step {
+                padding: 10px 5px;
+                font-size: 13px;
+                flex: 1 1 auto;
+                width: 30%;
+            }
+            
             .form-group .age-input-field {
                 flex: 1 1 calc(33.33% - 7px);
                 min-width: 80px;
@@ -319,16 +345,6 @@
                 padding: 12px 20px;
                 font-size: 15px;
                 min-width: 90px;
-            }
-            
-            .steps {
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .step {
-                width: 100%;
-                padding: 10px;
             }
             
             .result-item {
@@ -397,9 +413,9 @@
     <h1>Pediatric Fluid Calculator</h1>
     
     <div class="steps">
-        <div class="step active" id="step1-indicator">Patient Info</div>
-        <div class="step" id="step2-indicator">Hydration Status</div>
-        <div class="step" id="step3-indicator">Fluid Recommendation</div>
+        <div class="step active" id="step1-indicator" onclick="goToStep(1)">Patient Info</div>
+        <div class="step disabled" id="step2-indicator" onclick="goToStep(2)">Hydration Status</div>
+        <div class="step disabled" id="step3-indicator" onclick="goToStep(3)">Fluid Recommendation</div>
     </div>
     
     <div class="card">
@@ -502,6 +518,37 @@
         const resultsContainer = document.getElementById('results-container');
         
         // Navigation Functions
+        function goToStep(step) {
+            // Don't allow clicking disabled steps
+            if (document.getElementById('step' + step + '-indicator').classList.contains('disabled')) {
+                return;
+            }
+            
+            switch(step) {
+                case 1:
+                    showScreen(screen1);
+                    step1Indicator.classList.add('active');
+                    step1Indicator.classList.remove('completed');
+                    step2Indicator.classList.remove('active', 'completed');
+                    step3Indicator.classList.remove('active', 'completed');
+                    step2Indicator.classList.add('disabled');
+                    step3Indicator.classList.add('disabled');
+                    break;
+                case 2:
+                    showScreen(screen2);
+                    step1Indicator.classList.remove('active');
+                    step1Indicator.classList.add('completed');
+                    step2Indicator.classList.add('active');
+                    step2Indicator.classList.remove('disabled');
+                    step3Indicator.classList.remove('active', 'completed');
+                    step3Indicator.classList.add('disabled');
+                    break;
+                case 3:
+                    // Only allow going to step 3 via the calculate button
+                    break;
+            }
+        }
+        
         nextToScreen2Button.addEventListener('click', () => {
             // Validate inputs
             const ageYears = parseInt(document.getElementById('age-years').value) || 0;
@@ -524,14 +571,12 @@
             showScreen(screen2);
             step1Indicator.classList.remove('active');
             step1Indicator.classList.add('completed');
+            step2Indicator.classList.remove('disabled');
             step2Indicator.classList.add('active');
         });
         
         backToScreen1Button.addEventListener('click', () => {
-            showScreen(screen1);
-            step2Indicator.classList.remove('active');
-            step1Indicator.classList.remove('completed');
-            step1Indicator.classList.add('active');
+            goToStep(1);
         });
         
         nextToScreen3Button.addEventListener('click', () => {
@@ -541,22 +586,16 @@
             showScreen(screen3);
             step2Indicator.classList.remove('active');
             step2Indicator.classList.add('completed');
+            step3Indicator.classList.remove('disabled');
             step3Indicator.classList.add('active');
         });
         
         backToScreen2Button.addEventListener('click', () => {
-            showScreen(screen2);
-            step3Indicator.classList.remove('active');
-            step2Indicator.classList.remove('completed');
-            step2Indicator.classList.add('active');
+            goToStep(2);
         });
         
         recalculateButton.addEventListener('click', () => {
-            showScreen(screen1);
-            step3Indicator.classList.remove('active');
-            step2Indicator.classList.remove('completed');
-            step1Indicator.classList.remove('completed');
-            step1Indicator.classList.add('active');
+            goToStep(1);
         });
         
         // Helper Functions
