@@ -8,18 +8,20 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 40px 20px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             min-height: 100vh;
+            height: 100vh;
             transition: all 0.5s ease;
+            overflow: hidden;
+            position: relative;
         }
         
         .main-content {
             text-align: center;
-            margin: auto 0;
         }
         
         .next-date {
@@ -28,11 +30,23 @@
             line-height: 1.2;
         }
         
+        .bottom-content {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        
         .additional-info {
             text-align: center;
             opacity: 0.7;
             transition: opacity 0.3s ease;
-            margin-top: 60px;
+            padding-bottom: 80px;
         }
 
         .additional-info:hover {
@@ -41,7 +55,6 @@
         
         .last-updated {
             font-size: 0.8rem;
-            margin-bottom: 10px;
         }
         
         .view-more {
@@ -70,6 +83,9 @@
             max-width: 80%;
             max-height: 80%;
             overflow-y: auto;
+            background: white;
+            color: #333;
+            border-radius: 15px;
         }
         
         .close {
@@ -80,6 +96,7 @@
             opacity: 0.7;
             transition: opacity 0.3s ease;
             margin-bottom: 20px;
+            color: #333;
         }
         
         .close:hover {
@@ -88,12 +105,34 @@
         
         .bin-entry {
             margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .bin-entry-black {
+            background: rgba(10, 10, 10, 0.1);
+        }
+
+        .bin-entry-blue {
+            background: rgba(5, 20, 40, 0.1);
+        }
+
+        .bin-entry-brown {
+            background: rgba(26, 13, 10, 0.1);
         }
         
+        .bin-header {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
         .collection-dates {
             list-style-type: none;
             padding: 0;
             margin: 0;
+            color: #333;
         }
 
         .collection-dates li {
@@ -103,8 +142,16 @@
             transition: opacity 0.3s ease;
         }
 
-        .collection-dates li:hover {
-            opacity: 1;
+        .collection-dates li.next-collection {
+            font-weight: bold;
+            position: relative;
+        }
+
+        .collection-dates li.next-collection::after {
+            content: '(Next collection)';
+            margin-left: 8px;
+            font-weight: normal;
+            opacity: 0.7;
         }
 
         .loading-spinner {
@@ -122,10 +169,6 @@
         }
 
         @media (max-width: 600px) {
-            body {
-                padding: 20px 16px;
-            }
-
             .next-date {
                 font-size: 3rem;
             }
@@ -147,8 +190,9 @@
                 font-size: 1.3rem;
             }
 
-            .additional-info {
-                margin-bottom: 80px;
+            .bottom-content {
+                padding: 16px;
+                padding-bottom: 80px;
             }
         }
 
@@ -179,7 +223,7 @@
         }
 
         body.text-hidden .main-content,
-        body.text-hidden .additional-info,
+        body.text-hidden .bottom-content,
         body.text-hidden .modal {
             opacity: 0;
             pointer-events: none;
@@ -202,7 +246,7 @@
         </div>
     </div>
     
-    <div class="additional-info">
+    <div class="bottom-content">
         <div class="last-updated" id="lastUpdated">Last updated: Loading...</div>
         <div class="view-more" onclick="openModal()">View all collection dates</div>
     </div>
@@ -305,6 +349,20 @@
                     const binEntry = document.createElement('div');
                     binEntry.className = 'bin-entry';
                     
+                    // Add specific bin class for styling
+                    if (bin.bin_color === 'Black Bin') {
+                        binEntry.classList.add('bin-entry-black');
+                    } else if (bin.bin_color === 'Blue Bin') {
+                        binEntry.classList.add('bin-entry-blue');
+                    } else if (bin.bin_color === 'Brown Bin') {
+                        binEntry.classList.add('bin-entry-brown');
+                    }
+
+                    const binHeader = document.createElement('div');
+                    binHeader.className = 'bin-header';
+                    binHeader.textContent = bin.bin_color;
+                    binEntry.appendChild(binHeader);
+                    
                     const datesList = document.createElement('ul');
                     datesList.className = 'collection-dates';
                     
@@ -320,8 +378,7 @@
                         
                         // Highlight next collection date
                         if (collectionDate.getTime() === nextDate.getTime() && bin.bin_color === nextBin) {
-                            dateItem.style.fontWeight = 'bold';
-                            dateItem.textContent += ' (Next collection)';
+                            dateItem.classList.add('next-collection');
                         }
                         
                         datesList.appendChild(dateItem);
