@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next Bin Collection</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            transition: background-color 0.5s ease;
+        }
+        #container {
+            text-align: center;
+        }
+        #bin-date {
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 1rem;
+        }
+        #bin-type {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        #loading {
+            font-size: 1.5rem;
+            color: white;
+        }
+        #error {
+            max-width: 80%;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="loading">Loading your next bin collection...</div>
+        <div id="bin-date"></div>
+        <div id="bin-type"></div>
+    </div>
+    <div id="error"></div>
+
+    <script>
+        // Bin types with their colors
+        const binColors = {
+            "Black": "#333333",
+            "Blue": "#0074D9",
+            "Brown": "#8B4513",
+            "Green": "#2ECC40"
+        };
+
+        // Sheffield bin collection schedule (simulated)
+        // This would ideally be fetched from the Sheffield website, but due to CORS restrictions
+        // we're simulating a schedule based on common collection patterns
+        function generateSchedule() {
+            const today = new Date();
+            const startDate = new Date(today.getFullYear(), 0, 1); // Start from January 1st of current year
+            
+            const schedule = [];
+            let currentDate = new Date(startDate);
+            
+            // Create a simulated schedule for the whole year
+            // Typical pattern: Black bins weekly, others alternate every two weeks
+            const binSequence = ["Black", "Blue", "Black", "Brown", "Black", "Green"];
+            let sequenceIndex = 0;
+            
+            while (currentDate.getFullYear() === today.getFullYear()) {
+                schedule.push({
+                    date: new Date(currentDate),
+                    binType: binSequence[sequenceIndex % binSequence.length]
+                });
+                
+                // Advance by one week
+                currentDate.setDate(currentDate.getDate() + 7);
+                sequenceIndex++;
+            }
+            
+            return schedule;
+        }
+
+        // Get the next bin collection
+        function getNextBinCollection() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Normalize time to start of day
+            
+            const schedule = generateSchedule();
+            
+            // Find the next collection date after today
+            const nextCollection = schedule.find(item => item.date > today);
+            
+            return nextCollection || schedule[0]; // Fallback to first of year if none found
+        }
+
+        // Format date as string
+        function formatDate(date) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-GB', options);
+        }
+
+        // Update the UI with the next bin collection
+        function updateUI(binCollection) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('bin-date').textContent = formatDate(binCollection.date);
+            document.getElementById('bin-type').textContent = binCollection.binType + " Bin";
+            
+            // Set background color based on bin type
+            document.body.style.backgroundColor = binColors[binCollection.binType];
+        }
+
+        // Try to fetch actual data (this will likely fail due to CORS)
+        async function fetchActualData() {
+            try {
+                const response = await fetch('https://wasteservices.sheffield.gov.uk/property/100051062665', {
+                    mode: 'cors' // This probably won't work due to CORS restrictions
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                // If we could get the data, we would parse it here
+                // For now, we'll fall back to our simulated data
+                const nextBin = getNextBinCollection();
+                updateUI(nextBin);
+                
+            } catch (error) {
+                console.log('Fetching from Sheffield website failed:', error);
+                
+                // Show fallback message
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerHTML = 
+                    `<p>Unable to access the Sheffield waste services website directly due to security restrictions.</p>
+                     <p>Using simulated schedule instead. For accurate information, please visit: 
+                     <a href="https://wasteservices.sheffield.gov.uk/property/100051062665" target="_blank">
+                     Sheffield Waste Services</a></p>`;
+                
+                // Use our simulated data
+                const nextBin = getNextBinCollection();
+                updateUI(nextBin);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Try to get the real data first
+            fetchActualData();
+            
+            // Display current date for reference
+            const currentDate = new Date();
+            console.log("Current date:", currentDate.toDateString());
+        });
+    </script>
+</body>
+</html>

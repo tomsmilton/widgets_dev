@@ -1,0 +1,33 @@
+{
+  "last_updated": "2025-03-23T22:58:31.860625",
+  "property_id": "100051062662",
+  "collections": [
+    {
+      "bin_color": "Black Bin",
+      "next_collections": [
+        "24 Mar 2025",
+        "7 Apr 2025",
+        "21 Apr 2025"
+      ],
+      "bin_type": ""
+    },
+    {
+      "bin_color": "Blue Bin",
+      "next_collections": [
+        "31 Mar 2025",
+        "28 Apr 2025",
+        "26 May 2025"
+      ],
+      "bin_type": ""
+    },
+    {
+      "bin_color": "Brown Bin",
+      "next_collections": [
+        "14 Apr 2025",
+        "12 May 2025",
+        "9 Jun 2025"
+      ],
+      "bin_type": ""
+    }
+  ]
+}
