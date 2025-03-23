@@ -59,7 +59,6 @@ The script generates a `bin_days.json` file with this structure:
 ```json
 {
   "last_updated": "2024-03-23T12:00:00.000000",
-  "property_id": "XXXXXXXXXXXXX",
   "collections": [
     {
       "bin_color": "Black Bin",

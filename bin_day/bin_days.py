@@ -67,7 +67,6 @@ def get_bin_days(property_id):
         # Create data structure
         data = {
             "last_updated": datetime.now().isoformat(),
-            "property_id": property_id,
             "collections": collection_dates
         }
         
@@ -97,9 +96,6 @@ def main():
     data = get_bin_days(property_id)
     
     if data:
-        # Remove property_id from the saved data
-        if "property_id" in data:
-            del data["property_id"]
         save_to_file(data)
     else:
         print("Failed to get bin collection data")
