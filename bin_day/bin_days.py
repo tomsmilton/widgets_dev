@@ -22,30 +22,44 @@ def get_bin_days(property_id):
         services_table = soup.find('table', {'class': 'table'})
         
         if not services_table:
+            print("HTML Structure:")
+            print(soup.prettify()[:1000])  # Print first 1000 chars of HTML for debugging
             raise Exception("Could not find services table on the page")
             
         # Find all service rows (excluding detail message rows)
         service_rows = services_table.find_all('tr', class_=lambda x: x and 'service-id-' in x)
+        
+        if not service_rows:
+            print("Found table but no service rows. Table contents:")
+            print(services_table.prettify())
+            raise Exception("No service rows found in the table")
         
         for row in service_rows:
             try:
                 # Get bin color from the h4 tag
                 bin_header = row.find('h4')
                 if not bin_header:
+                    print(f"Row without h4 tag: {row.prettify()}")
                     continue
                     
                 bin_text = bin_header.get_text().strip()
                 if not any(color in bin_text for color in ['Black', 'Blue', 'Brown']):
+                    print(f"Row with unrecognized bin color: {bin_text}")
                     continue
                 
                 # Get next collections from the next-service cell
                 next_service_cell = row.find('td', {'class': 'next-service'})
                 if not next_service_cell:
+                    print(f"Row without next-service cell: {row.prettify()}")
                     continue
                     
                 dates_text = next_service_cell.get_text().strip()
                 # Remove the "Next Collections" label and split by comma
                 dates = [date.strip() for date in dates_text.replace('Next Collections', '').split(',') if date.strip()]
+                
+                if not dates:
+                    print(f"Row with no dates found: {dates_text}")
+                    continue
                 
                 # Get bin type/description from the acceptable-waste cell
                 waste_type_cell = row.find_next_sibling('tr').find('td', {'class': 'acceptable-waste'})
@@ -59,6 +73,7 @@ def get_bin_days(property_id):
                 
             except Exception as e:
                 print(f"Error processing row: {str(e)}")
+                print(f"Problematic row HTML: {row.prettify()}")
                 continue
         
         if not collection_dates:
