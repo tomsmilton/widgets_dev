@@ -7,6 +7,13 @@ import os
 def get_bin_days(property_id):
     url = f"https://wasteservices.sheffield.gov.uk/property/{property_id}"
     
+    # Color configurations matching the HTML
+    color_map = {
+        'Black Bin': '#0a0a0a',
+        'Blue Bin': '#051428',
+        'Brown Bin': '#1a0d0a'
+    }
+
     # Headers to mimic a browser request
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -79,10 +86,27 @@ def get_bin_days(property_id):
         if not collection_dates:
             raise Exception("No collection dates found")
             
+        # Find the next collection date and corresponding bin color
+        today = datetime.now()
+        next_bin = None
+        next_date = None
+        min_days = float('inf')
+
+        for bin_info in collection_dates:
+            for date_str in bin_info['next_collections']:
+                collection_date = datetime.strptime(date_str, '%d %b %Y')
+                days_difference = (collection_date - today).days
+                
+                if days_difference >= 0 and days_difference < min_days:
+                    min_days = days_difference
+                    next_bin = bin_info['bin_color']
+                    next_date = collection_date
+            
         # Create data structure
         data = {
             "last_updated": datetime.now().isoformat(),
-            "collections": collection_dates
+            "collections": collection_dates,
+            "next_color": color_map.get(next_bin, '#555555')  # Add the color code for the next bin
         }
         
         return data
