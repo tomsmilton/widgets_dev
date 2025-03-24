@@ -259,8 +259,8 @@
     </div>
 
     <script>
-        // Load text visibility preference
-        const isTextHidden = localStorage.getItem('hideText') === 'true';
+        // Load text visibility preference, default to hidden (true)
+        const isTextHidden = localStorage.getItem('hideText') !== 'false';
         if (isTextHidden) {
             document.body.classList.add('text-hidden');
         }
