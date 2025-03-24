@@ -24,7 +24,7 @@
             font-family: "Courier New", Courier, monospace;
             text-align: center;
             margin: 0;
-            padding: 0;
+            padding: 0 0 50px 0; /* Added bottom padding */
         }
         h1 {
             font-size: 3em;
@@ -160,6 +160,13 @@
             border-bottom: none;
             border-radius: 10px 10px 0 0;
         }
+        /* Add new style for bins button */
+        .bins-button {
+            background-color: #000000; /* Black */
+        }
+        .bins-button:hover {
+            background-color: #333333; /* Darker black for hover */
+        }
     </style>
 </head>
 <body>
@@ -214,6 +221,13 @@
         <p class="description">Ranking the deaneries can be hard. This tool guides you through a pairwise selection to rank your preferences.</p>
     </div>
 
+    <div class="tool-box">
+        <a class="button-link bins-button" href="floras_bins/floras_bins.html">
+            Flora's Bins
+            <img src="icons8-mouse.svg" alt="Mouse Icon">
+        </a>
+        <p class="description">What is the next bin?</p>
+    </div>
 
 </body>
 </html>
