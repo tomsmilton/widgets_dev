@@ -162,10 +162,10 @@
         }
         /* Add new style for bins button */
         .bins-button {
-            background-color: #000000; /* Black */
+            background-color: #000000; /* Fallback color if fetch fails */
         }
         .bins-button:hover {
-            background-color: #333333; /* Darker black for hover */
+            background-color: #333333;
         }
     </style>
 </head>
@@ -224,10 +224,22 @@
     <div class="tool-box">
         <a class="button-link bins-button" href="bin_day/floras_bins.html">
             Flora's Bins
-            <img src="icons8-mouse.svg" alt="Mouse Icon">
+            <img src="bin_icon.png" alt="Mouse Icon">
         </a>
         <p class="description">What is the next bin?</p>
     </div>
 
+    <!-- Add this script just before the closing body tag -->
+    <script>
+        // Fetch bin color on page load
+        fetch('bin_day/bin_days.json')
+            .then(response => response.json())
+            .then(data => {
+                // Find the bins button and update its color
+                const binsButton = document.querySelector('.bins-button');
+                binsButton.style.backgroundColor = data.next_color;
+            })
+            .catch(error => console.error('Error loading bin data:', error));
+    </script>
 </body>
 </html>

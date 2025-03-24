@@ -10,8 +10,8 @@ def get_bin_days(property_id):
     # Color configurations matching the HTML
     color_map = {
         'Black Bin': '#0a0a0a',
-        'Blue Bin': '#051428',
-        'Brown Bin': '#1a0d0a'
+        'Blue Bin': '#125fc7',
+        'Brown Bin': '#6b3c31'
     }
 
     # Headers to mimic a browser request
