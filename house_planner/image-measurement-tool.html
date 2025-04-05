@@ -4,115 +4,212 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Image Measurement Tool</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <link rel="stylesheet" href="image-measurement-styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Image Measurement Tool</h1>
-    
-    <div class="toolbar">
-      <div class="toolbar-section">
-        <input type="file" id="imageUpload" accept="image/*" class="input-file">
-      </div>
+  <div class="app-container">
+    <header>
+      <h1>Image Measurement Tool</h1>
       
-      <div class="toolbar-section">
-        <button id="referenceBtn" class="btn green">Set Reference Scale</button>
-        <button id="measureBtn" class="btn red" disabled>Measure</button>
-        <button id="rectBtn" class="btn orange" disabled>Draw Rectangle</button>
-        <button id="circleBtn" class="btn blue" disabled>Draw Circle</button>
-        <button id="selectBtn" class="btn indigo" disabled>Select/Edit</button>
-      </div>
-      
-      <div class="toolbar-section">
-        <div class="reference-input">
-          <span>Reference:</span>
-          <input type="number" id="referenceLength" value="10" min="0.1" step="0.1" class="number-input">
-          <select id="referenceUnit" class="select-input">
-            <option value="mm">mm</option>
-            <option value="cm" selected>cm</option>
-            <option value="m">m</option>
-            <option value="in">in</option>
-            <option value="ft">ft</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="toolbar-section">
-        <button id="toggleReferenceBtn" class="btn blue-alt" disabled>Hide Reference</button>
-        <button id="downloadBtn" class="btn purple" disabled>Download Image</button>
-        <button id="clearAllBtn" class="btn red-alt" disabled>Clear All</button>
-      </div>
-    </div>
-    
-    <!-- Edit controls for selected item -->
-    <div id="editControls" class="edit-controls" style="display: none;">
-      <div class="edit-control-group">
-        <button id="deleteBtn" class="btn red-alt">Delete</button>
-        <button id="editReferenceBtn" class="btn green-alt" style="display: none;">Edit Reference</button>
-      </div>
-      
-      <div class="edit-control-group shape-controls" style="display: none;">
-        <div class="control-row">
-          <label for="itemName">Label:</label>
-          <input type="text" id="itemName" placeholder="Label" class="text-input">
-        </div>
+      <!-- Main action buttons - file operations -->
+      <div class="file-actions">
+        <label for="imageUpload" class="file-upload-btn">
+          <i class="fas fa-file-upload"></i>
+          <span>Upload Image</span>
+          <input type="file" id="imageUpload" accept="image/*" hidden>
+        </label>
         
-        <div class="control-row">
-          <label for="itemColor">Color:</label>
-          <input type="color" id="itemColor" class="color-input">
-        </div>
-        
-        <div class="control-row">
-          <label for="itemFill">Fill:</label>
-          <input type="checkbox" id="itemFill" class="checkbox-input">
+        <button id="downloadBtn" class="action-btn" disabled>
+          <i class="fas fa-download"></i>
+          <span>Download</span>
+        </button>
+      </div>
+    </header>
+    
+    <!-- Main workspace -->
+    <div class="workspace">
+      <!-- Left toolbar -->
+      <div class="toolbar">
+        <!-- Reference tools all in one section -->
+        <div class="tool-section">
+          <div class="tool-label">Reference Scale</div>
           
-          <label for="itemOpacity" class="opacity-label">Opacity:</label>
-          <input type="range" id="itemOpacity" min="0" max="100" value="30" class="range-input">
-          <span id="opacityValue">30%</span>
+          <div class="tool-row">
+            <button id="referenceBtn" class="tool-btn" title="Set Reference Scale">
+              <i class="fas fa-ruler"></i>
+            </button>
+            
+            <button id="toggleReferenceBtn" class="tool-btn" title="Toggle Reference Visibility" disabled>
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          
+          <div class="input-group">
+            <input type="number" id="referenceLength" value="10" min="0.1" step="0.1" class="number-input" placeholder="Length">
+            <select id="referenceUnit" class="select-input">
+              <option value="mm">mm</option>
+              <option value="cm" selected>cm</option>
+              <option value="m">m</option>
+              <option value="in">in</option>
+              <option value="ft">ft</option>
+            </select>
+          </div>
         </div>
-      </div>
-    </div>
-    
-    <div class="status" id="status">Upload an image to begin</div>
-    
-    <div class="canvas-container" id="canvasContainer">
-      <canvas id="canvas"></canvas>
-      <div class="placeholder" id="placeholder">Upload an image to begin</div>
-    </div>
-    
-    <!-- Measurements list with expanded functionality -->
-    <div class="measurements" id="measurements" style="display: none;">
-      <div class="measurements-header">
-        <h2>Measurements</h2>
-        <div class="measurements-actions">
-          <button id="collapseAllBtn" class="btn-small gray">Collapse All</button>
-          <button id="expandAllBtn" class="btn-small gray">Expand All</button>
+        
+        <div class="tool-section">
+          <div class="tool-label">Measurement Tools</div>
+          
+          <div class="tool-row">
+            <button id="measureBtn" class="tool-btn" title="Measure Line" disabled>
+              <i class="fas fa-pencil-ruler"></i>
+            </button>
+            
+            <button id="rectBtn" class="tool-btn" title="Draw Rectangle" disabled>
+              <i class="far fa-square"></i>
+            </button>
+            
+            <button id="circleBtn" class="tool-btn" title="Draw Circle" disabled>
+              <i class="far fa-circle"></i>
+            </button>
+            
+            <button id="selectBtn" class="tool-btn" title="Select & Edit" disabled>
+              <i class="fas fa-mouse-pointer"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="tool-section">
+          <div class="tool-label">Actions</div>
+          
+          <button id="clearAllBtn" class="tool-btn danger" title="Clear All Measurements" disabled>
+            <i class="fas fa-trash-alt"></i>
+          </button>
         </div>
       </div>
       
-      <div class="measurement-groups">
-        <div id="linesGroup" class="measurement-group">
-          <div class="measurement-group-header">
-            <h3>Lines</h3>
-            <span id="linesCount" class="count-badge">0</span>
+      <!-- Middle section - canvas -->
+      <div class="canvas-area">
+        <div class="status-bar" id="status">Upload an image to begin</div>
+        
+        <div class="canvas-container" id="canvasContainer">
+          <canvas id="canvas"></canvas>
+          <div class="placeholder" id="placeholder">
+            <i class="fas fa-image fa-4x"></i>
+            <p>Upload an image to begin</p>
           </div>
-          <ul id="linesList" class="measurements-list"></ul>
+        </div>
+      </div>
+      
+      <!-- Right panel - Properties & Measurements -->
+      <div class="right-panel">
+        <!-- Properties panel -->
+        <div id="propertiesPanel" class="properties-panel">
+          <div class="panel-header">
+            <h3>Properties</h3>
+          </div>
+          
+          <div class="panel-content empty-state">
+            <p><i class="fas fa-mouse-pointer"></i> Select an item to edit its properties</p>
+          </div>
+          
+          <div class="panel-content properties-content" style="display: none;">
+            <!-- Delete button -->
+            <div class="property-action-row">
+              <button id="deleteBtn" class="action-btn danger">
+                <i class="fas fa-trash"></i>
+                <span>Delete</span>
+              </button>
+              
+              <button id="editReferenceBtn" class="action-btn" style="display: none;">
+                <i class="fas fa-edit"></i>
+                <span>Edit Reference</span>
+              </button>
+            </div>
+            
+            <!-- Properties -->
+            <div class="properties-form">
+              <div class="form-row">
+                <label for="itemName">Label</label>
+                <input type="text" id="itemName" placeholder="Label" class="form-input">
+              </div>
+              
+              <div class="form-row">
+                <label for="itemColor">Color</label>
+                <input type="color" id="itemColor" class="color-input">
+              </div>
+              
+              <div class="form-row fill-options">
+                <div class="checkbox-row">
+                  <input type="checkbox" id="itemFill" class="form-checkbox">
+                  <label for="itemFill">Fill Shape</label>
+                </div>
+                
+                <div class="slider-row">
+                  <label for="itemOpacity">Opacity</label>
+                  <input type="range" id="itemOpacity" min="0" max="100" value="30" class="slider-input">
+                  <span id="opacityValue">30%</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div id="rectanglesGroup" class="measurement-group">
-          <div class="measurement-group-header">
-            <h3>Rectangles</h3>
-            <span id="rectanglesCount" class="count-badge">0</span>
+        <!-- Measurements panel -->
+        <div id="measurementsPanel" class="measurements-panel">
+          <div class="panel-header">
+            <h3>Measurements</h3>
+            <div class="panel-actions">
+              <button id="collapseAllBtn" class="small-btn" title="Collapse All">
+                <i class="fas fa-compress-alt"></i>
+              </button>
+              <button id="expandAllBtn" class="small-btn" title="Expand All">
+                <i class="fas fa-expand-alt"></i>
+              </button>
+            </div>
           </div>
-          <ul id="rectanglesList" class="measurements-list"></ul>
-        </div>
-        
-        <div id="circlesGroup" class="measurement-group">
-          <div class="measurement-group-header">
-            <h3>Circles</h3>
-            <span id="circlesCount" class="count-badge">0</span>
+          
+          <div class="panel-content">
+            <div class="empty-measurements" id="emptyMeasurements">
+              <i class="fas fa-ruler fa-2x"></i>
+              <p>No measurements yet</p>
+            </div>
+            
+            <div class="measurement-groups" id="measurementGroups" style="display: none;">
+              <div id="linesGroup" class="measurement-group">
+                <div class="measurement-group-header">
+                  <div class="group-title">
+                    <i class="fas fa-pencil-ruler"></i>
+                    <h4>Lines</h4>
+                  </div>
+                  <span id="linesCount" class="count-badge">0</span>
+                </div>
+                <ul id="linesList" class="measurements-list"></ul>
+              </div>
+              
+              <div id="rectanglesGroup" class="measurement-group">
+                <div class="measurement-group-header">
+                  <div class="group-title">
+                    <i class="far fa-square"></i>
+                    <h4>Rectangles</h4>
+                  </div>
+                  <span id="rectanglesCount" class="count-badge">0</span>
+                </div>
+                <ul id="rectanglesList" class="measurements-list"></ul>
+              </div>
+              
+              <div id="circlesGroup" class="measurement-group">
+                <div class="measurement-group-header">
+                  <div class="group-title">
+                    <i class="far fa-circle"></i>
+                    <h4>Circles</h4>
+                  </div>
+                  <span id="circlesCount" class="count-badge">0</span>
+                </div>
+                <ul id="circlesList" class="measurements-list"></ul>
+              </div>
+            </div>
           </div>
-          <ul id="circlesList" class="measurements-list"></ul>
         </div>
       </div>
     </div>
@@ -121,14 +218,26 @@
   <!-- Edit Reference Modal -->
   <div class="modal" id="editReferenceModal">
     <div class="modal-content">
-      <h3>Edit Reference Value</h3>
-      <div class="modal-input">
-        <input type="number" id="editReferenceValue" min="0.1" step="0.1" class="number-input">
-        <span id="editReferenceUnit">cm</span>
+      <div class="modal-header">
+        <h3>Edit Reference Value</h3>
+        <button class="modal-close" id="closeModalBtn">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
-      <div class="modal-buttons">
-        <button id="cancelEditBtn" class="btn gray">Cancel</button>
-        <button id="updateReferenceBtn" class="btn blue">Update</button>
+      
+      <div class="modal-body">
+        <div class="form-row">
+          <label for="editReferenceValue">Value</label>
+          <div class="input-group">
+            <input type="number" id="editReferenceValue" min="0.1" step="0.1" class="form-input">
+            <span id="editReferenceUnit">cm</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button id="cancelEditBtn" class="btn secondary">Cancel</button>
+        <button id="updateReferenceBtn" class="btn primary">Update</button>
       </div>
     </div>
   </div>

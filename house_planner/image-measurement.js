@@ -4,7 +4,11 @@ const ctx = canvas.getContext('2d');
 const canvasContainer = document.getElementById('canvasContainer');
 const placeholder = document.getElementById('placeholder');
 const statusEl = document.getElementById('status');
-const measurementsEl = document.getElementById('measurements');
+const propertiesPanel = document.getElementById('propertiesPanel');
+const propertiesContent = document.querySelector('.properties-content');
+const emptyPropertiesState = document.querySelector('.empty-state');
+const emptyMeasurements = document.getElementById('emptyMeasurements');
+const measurementGroups = document.getElementById('measurementGroups');
 
 // Lists
 const linesList = document.getElementById('linesList');
@@ -33,9 +37,8 @@ const expandAllBtn = document.getElementById('expandAllBtn');
 const referenceLengthInput = document.getElementById('referenceLength');
 const referenceUnitSelect = document.getElementById('referenceUnit');
 
-// Edit controls
-const editControls = document.getElementById('editControls');
-const shapeControls = document.querySelector('.shape-controls');
+// Property inputs
+const fillOptionsContainer = document.querySelector('.fill-options');
 const itemName = document.getElementById('itemName');
 const itemColor = document.getElementById('itemColor');
 const itemFill = document.getElementById('itemFill');
@@ -48,6 +51,7 @@ const editReferenceValue = document.getElementById('editReferenceValue');
 const editReferenceUnit = document.getElementById('editReferenceUnit');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 const updateReferenceBtn = document.getElementById('updateReferenceBtn');
+const closeModalBtn = document.getElementById('closeModalBtn');
 
 // Default colors
 const DEFAULT_COLORS = {
@@ -149,19 +153,64 @@ function hexToRgba(hex, opacity) {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
+// Function to adjust color brightness
+function adjustColor(hex, percent) {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  // Convert to RGB
+  let r = parseInt(hex.substring(0, 2), 16);
+  let g = parseInt(hex.substring(2, 4), 16);
+  let b = parseInt(hex.substring(4, 6), 16);
+  
+  // Adjust brightness
+  r = Math.max(0, Math.min(255, r + percent));
+  g = Math.max(0, Math.min(255, g + percent));
+  b = Math.max(0, Math.min(255, b + percent));
+  
+  // Convert back to hex
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+// Toggle active state for tool buttons
+function setActiveButton(button) {
+  // Remove active class from all buttons
+  [referenceBtn, measureBtn, rectBtn, circleBtn, selectBtn].forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Add active class to the selected button
+  if (button) {
+    button.classList.add('active');
+  }
+}
+
+// Reset all active drawing states
+function resetDrawingStates() {
+  isDrawingReference = false;
+  isDrawingMeasurement = false;
+  isDrawingRectangle = false;
+  isDrawingCircle = false;
+  isSelectMode = false;
+  currentLine = null;
+  currentShape = null;
+  
+  setActiveButton(null);
+}
+
 // Update the opacity display when slider changes
 itemOpacity.addEventListener('input', function() {
   opacityValue.textContent = `${this.value}%`;
 });
 
 // Toggle group collapse/expand
-function toggleGroup(groupHeader, list) {
+function toggleGroup(header, list) {
   if (list.style.display === 'none') {
     list.style.display = 'block';
-    groupHeader.classList.remove('collapsed');
+    header.classList.remove('collapsed');
   } else {
     list.style.display = 'none';
-    groupHeader.classList.add('collapsed');
+    header.classList.add('collapsed');
   }
 }
 
@@ -202,14 +251,26 @@ function updateMeasurementsList() {
   rectanglesList.innerHTML = '';
   circlesList.innerHTML = '';
   
-  // Update counts
+  // Filter out deleted items
   const linesFiltered = measurements.filter(m => !m.deleted);
   const rectanglesFiltered = shapes.filter(s => s.type === 'rectangle' && !s.deleted);
   const circlesFiltered = shapes.filter(s => s.type === 'circle' && !s.deleted);
   
+  // Update counts
   linesCount.textContent = linesFiltered.length;
   rectanglesCount.textContent = rectanglesFiltered.length;
   circlesCount.textContent = circlesFiltered.length;
+  
+  // Show/hide empty state
+  if (linesFiltered.length === 0 && rectanglesFiltered.length === 0 && circlesFiltered.length === 0) {
+    emptyMeasurements.style.display = 'flex';
+    measurementGroups.style.display = 'none';
+    clearAllBtn.disabled = true;
+  } else {
+    emptyMeasurements.style.display = 'none';
+    measurementGroups.style.display = 'block';
+    clearAllBtn.disabled = false;
+  }
   
   // Add lines
   linesFiltered.forEach((line, index) => {
@@ -223,21 +284,22 @@ function updateMeasurementsList() {
     colorPreview.className = 'color-preview';
     colorPreview.style.backgroundColor = line.color || DEFAULT_COLORS.line;
     
-    const label = document.createElement('span');
-    const name = line.name || `Line ${index + 1}`;
-    label.textContent = `${name}: ${line.realDistance} ${line.unit}`;
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'measurement-name';
+    const label = line.name || `Line ${index + 1}`;
+    nameSpan.textContent = `${label}: ${line.realDistance} ${line.unit}`;
     
     const itemInfo = document.createElement('div');
     itemInfo.className = 'measurement-item';
     itemInfo.appendChild(colorPreview);
-    itemInfo.appendChild(label);
+    itemInfo.appendChild(nameSpan);
     
     const actions = document.createElement('div');
-    actions.className = 'measurement-actions';
+    actions.className = 'item-actions';
     
     const deleteAction = document.createElement('button');
-    deleteAction.className = 'action-btn delete';
-    deleteAction.innerHTML = '&times;';
+    deleteAction.className = 'item-btn delete';
+    deleteAction.innerHTML = '<i class="fas fa-times"></i>';
     deleteAction.title = 'Delete';
     deleteAction.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -267,22 +329,27 @@ function updateMeasurementsList() {
     const colorPreview = document.createElement('div');
     colorPreview.className = 'color-preview';
     colorPreview.style.backgroundColor = rect.color || DEFAULT_COLORS.rectangle;
+    if (rect.fill) {
+      colorPreview.style.border = `1px solid ${rect.color || DEFAULT_COLORS.rectangle}`;
+      colorPreview.style.backgroundColor = hexToRgba(rect.color || DEFAULT_COLORS.rectangle, rect.fillOpacity || 0.3);
+    }
     
-    const label = document.createElement('span');
-    const name = rect.name || `Rectangle ${index + 1}`;
-    label.textContent = `${name}: ${rect.realWidth} × ${rect.realHeight} ${rect.unit}`;
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'measurement-name';
+    const label = rect.name || `Rectangle ${index + 1}`;
+    nameSpan.textContent = `${label}: ${rect.realWidth} × ${rect.realHeight} ${rect.unit}`;
     
     const itemInfo = document.createElement('div');
     itemInfo.className = 'measurement-item';
     itemInfo.appendChild(colorPreview);
-    itemInfo.appendChild(label);
+    itemInfo.appendChild(nameSpan);
     
     const actions = document.createElement('div');
-    actions.className = 'measurement-actions';
+    actions.className = 'item-actions';
     
     const deleteAction = document.createElement('button');
-    deleteAction.className = 'action-btn delete';
-    deleteAction.innerHTML = '&times;';
+    deleteAction.className = 'item-btn delete';
+    deleteAction.innerHTML = '<i class="fas fa-times"></i>';
     deleteAction.title = 'Delete';
     deleteAction.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -312,22 +379,28 @@ function updateMeasurementsList() {
     const colorPreview = document.createElement('div');
     colorPreview.className = 'color-preview';
     colorPreview.style.backgroundColor = circle.color || DEFAULT_COLORS.circle;
+    colorPreview.style.borderRadius = '50%';
+    if (circle.fill) {
+      colorPreview.style.border = `1px solid ${circle.color || DEFAULT_COLORS.circle}`;
+      colorPreview.style.backgroundColor = hexToRgba(circle.color || DEFAULT_COLORS.circle, circle.fillOpacity || 0.3);
+    }
     
-    const label = document.createElement('span');
-    const name = circle.name || `Circle ${index + 1}`;
-    label.textContent = `${name}: ⌀ ${circle.realDiameter} ${circle.unit}`;
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'measurement-name';
+    const label = circle.name || `Circle ${index + 1}`;
+    nameSpan.textContent = `${label}: ⌀ ${circle.realDiameter} ${circle.unit}`;
     
     const itemInfo = document.createElement('div');
     itemInfo.className = 'measurement-item';
     itemInfo.appendChild(colorPreview);
-    itemInfo.appendChild(label);
+    itemInfo.appendChild(nameSpan);
     
     const actions = document.createElement('div');
-    actions.className = 'measurement-actions';
+    actions.className = 'item-actions';
     
     const deleteAction = document.createElement('button');
-    deleteAction.className = 'action-btn delete';
-    deleteAction.innerHTML = '&times;';
+    deleteAction.className = 'item-btn delete';
+    deleteAction.innerHTML = '<i class="fas fa-times"></i>';
     deleteAction.title = 'Delete';
     deleteAction.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -345,32 +418,14 @@ function updateMeasurementsList() {
     
     circlesList.appendChild(li);
   });
-  
-  // Show or hide the measurements section
-  if (linesFiltered.length > 0 || rectanglesFiltered.length > 0 || circlesFiltered.length > 0) {
-    measurementsEl.style.display = 'block';
-    clearAllBtn.disabled = false;
-  } else {
-    measurementsEl.style.display = 'none';
-    clearAllBtn.disabled = true;
-  }
 }
 
 // Select a measurement by ID
 function selectMeasurement(type, id) {
   // Exit any drawing mode and enter select mode
-  isDrawingReference = false;
-  isDrawingMeasurement = false;
-  isDrawingRectangle = false;
-  isDrawingCircle = false;
+  resetDrawingStates();
   isSelectMode = true;
-  
-  // Update button states
-  referenceBtn.classList.remove('active');
-  measureBtn.classList.remove('active');
-  rectBtn.classList.remove('active');
-  circleBtn.classList.remove('active');
-  selectBtn.classList.add('active');
+  setActiveButton(selectBtn);
   
   if (type === 'line') {
     const lineIndex = measurements.findIndex(m => m.id === id);
@@ -381,14 +436,15 @@ function selectMeasurement(type, id) {
         index: lineIndex
       };
       
-      // Update edit controls
-      showEditControls(true);
-      shapeControls.style.display = 'block';
+      // Update properties panel
+      showPropertiesPanel();
+      
+      // Update form values
       itemName.value = measurements[lineIndex].name || '';
       itemColor.value = measurements[lineIndex].color || DEFAULT_COLORS.line;
-      itemFill.checked = false;
-      itemFill.disabled = true;
-      itemOpacity.disabled = true;
+      
+      // Hide fill options for lines
+      fillOptionsContainer.classList.remove('visible');
     }
   } else if (type === 'rectangle' || type === 'circle') {
     const shapeIndex = shapes.findIndex(s => s.id === id);
@@ -399,16 +455,19 @@ function selectMeasurement(type, id) {
         index: shapeIndex
       };
       
-      // Update edit controls
-      showEditControls(true);
-      shapeControls.style.display = 'block';
+      // Update properties panel
+      showPropertiesPanel();
+      
+      // Update form values
       itemName.value = shapes[shapeIndex].name || '';
       itemColor.value = shapes[shapeIndex].color || (type === 'rectangle' ? DEFAULT_COLORS.rectangle : DEFAULT_COLORS.circle);
       itemFill.checked = shapes[shapeIndex].fill || false;
-      itemFill.disabled = false;
-      itemOpacity.disabled = !shapes[shapeIndex].fill;
       itemOpacity.value = shapes[shapeIndex].fillOpacity !== undefined ? shapes[shapeIndex].fillOpacity * 100 : 30;
       opacityValue.textContent = `${itemOpacity.value}%`;
+      
+      // Show fill options for shapes
+      fillOptionsContainer.classList.add('visible');
+      itemOpacity.disabled = !itemFill.checked;
     }
   }
   
@@ -426,7 +485,7 @@ function deleteMeasurement(type, id) {
       
       if (selectedItem && selectedItem.type === 'line' && selectedItem.id === id) {
         selectedItem = null;
-        hideEditControls();
+        hidePropertiesPanel();
       }
     }
   } else if (type === 'rectangle' || type === 'circle') {
@@ -437,7 +496,7 @@ function deleteMeasurement(type, id) {
       
       if (selectedItem && selectedItem.type === 'shape' && selectedItem.id === id) {
         selectedItem = null;
-        hideEditControls();
+        hidePropertiesPanel();
       }
     }
   }
@@ -452,28 +511,30 @@ function clearAllMeasurements() {
     measurements = [];
     shapes = [];
     selectedItem = null;
-    hideEditControls();
+    hidePropertiesPanel();
     updateMeasurementsList();
     renderCanvas();
     setStatus('All measurements cleared');
   }
 }
 
-// Show edit controls
-function showEditControls(showShapeControls = false) {
-  editControls.style.display = 'flex';
+// Show properties panel with content
+function showPropertiesPanel() {
+  emptyPropertiesState.style.display = 'none';
+  propertiesContent.style.display = 'block';
+
+  // Show reference edit button if reference is selected
   if (selectedItem && selectedItem.type === 'reference') {
-    editReferenceBtn.style.display = 'inline-block';
-    shapeControls.style.display = 'none';
+    editReferenceBtn.style.display = 'inline-flex';
   } else {
     editReferenceBtn.style.display = 'none';
-    shapeControls.style.display = showShapeControls ? 'block' : 'none';
   }
 }
 
-// Hide edit controls
-function hideEditControls() {
-  editControls.style.display = 'none';
+// Hide properties panel content and show empty state
+function hidePropertiesPanel() {
+  emptyPropertiesState.style.display = 'block';
+  propertiesContent.style.display = 'none';
 }
 
 // Apply style changes to the selected item
@@ -495,15 +556,6 @@ function applyStyleChanges() {
   updateMeasurementsList();
   renderCanvas();
 }
-
-// Event listeners for style controls
-itemName.addEventListener('change', applyStyleChanges);
-itemColor.addEventListener('change', applyStyleChanges);
-itemFill.addEventListener('change', () => {
-  itemOpacity.disabled = !itemFill.checked;
-  applyStyleChanges();
-});
-itemOpacity.addEventListener('change', applyStyleChanges);
 
 // Render the canvas
 function renderCanvas() {
@@ -592,7 +644,15 @@ function renderCanvas() {
     ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
     
     const label = line.name ? `${line.name}: ${line.realDistance} ${line.unit}` : `${line.realDistance} ${line.unit}`;
-    ctx.fillText(label, midX + 5, midY - 5);
+    
+    // Background for text
+    const textWidth = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fillRect(midX + 5, midY - 20, textWidth + 6, 20);
+    
+    // Draw text
+    ctx.fillStyle = isSelected ? adjustColor(lineColor, -30) : lineColor;
+    ctx.fillText(label, midX + 8, midY - 5);
     
     // Draw handles if selected
     if (isSelected) {
@@ -648,14 +708,22 @@ function renderCanvas() {
       // Draw dimensions
       const centerX = (shape.startX + shape.endX) / 2;
       const centerY = (shape.startY + shape.endY) / 2;
-      ctx.fillStyle = isSelected ? adjustColor(rectColor, -30) : rectColor;
-      ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
       
       const label = shape.name ? 
         `${shape.name}: ${shape.realWidth} × ${shape.realHeight} ${shape.unit}` : 
         `${shape.realWidth} × ${shape.realHeight} ${shape.unit}`;
       
-      ctx.fillText(label, centerX, centerY);
+      // Background for text
+      const textWidth = ctx.measureText(label).width;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.fillRect(centerX - textWidth/2 - 3, centerY - 10, textWidth + 6, 20);
+      
+      // Draw text
+      ctx.fillStyle = isSelected ? adjustColor(rectColor, -30) : rectColor;
+      ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, centerX, centerY + 5);
+      ctx.textAlign = 'left'; // Reset alignment
       
       // Draw handles if selected
       if (isSelected) {
@@ -702,15 +770,22 @@ function renderCanvas() {
       ctx.lineWidth = isSelected ? 3 : 2;
       ctx.stroke();
       
-      // Draw diameter
-      ctx.fillStyle = isSelected ? adjustColor(circleColor, -30) : circleColor;
-      ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
-      
+      // Draw diameter text
       const label = shape.name ? 
         `${shape.name}: ⌀ ${shape.realDiameter} ${shape.unit}` : 
         `⌀ ${shape.realDiameter} ${shape.unit}`;
       
-      ctx.fillText(label, shape.centerX, shape.centerY);
+      // Background for text
+      const textWidth = ctx.measureText(label).width;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.fillRect(shape.centerX - textWidth/2 - 3, shape.centerY - 10, textWidth + 6, 20);
+      
+      // Draw text
+      ctx.fillStyle = isSelected ? adjustColor(circleColor, -30) : circleColor;
+      ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, shape.centerX, shape.centerY + 5);
+      ctx.textAlign = 'left'; // Reset alignment
       
       // Draw handles if selected
       if (isSelected) {
@@ -761,9 +836,17 @@ function renderCanvas() {
     
     const midX = (currentLine.startX + currentLine.endX) / 2;
     const midY = (currentLine.startY + currentLine.endY) / 2;
+    
+    // Background for text
+    const label = `${displayDist} ${unit}`;
+    const textWidth = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fillRect(midX + 5, midY - 20, textWidth + 6, 20);
+    
+    // Draw text
     ctx.fillStyle = isDrawingReference ? '#00FF00' : DEFAULT_COLORS.line;
     ctx.font = '14px Arial';
-    ctx.fillText(`${displayDist} ${unit}`, midX + 5, midY - 5);
+    ctx.fillText(label, midX + 8, midY - 5);
   }
   
   // Draw current shape being drawn
@@ -790,13 +873,19 @@ function renderCanvas() {
         const centerX = startX + width / 2;
         const centerY = startY + height / 2;
         
+        const label = `${realWidth} × ${realHeight} ${scale.unit}`;
+        
+        // Background for text
+        const textWidth = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillRect(centerX - textWidth/2 - 3, centerY - 10, textWidth + 6, 20);
+        
+        // Draw text
         ctx.fillStyle = DEFAULT_COLORS.rectangle;
         ctx.font = '14px Arial';
-        ctx.fillText(
-          `${realWidth} × ${realHeight} ${scale.unit}`,
-          centerX,
-          centerY
-        );
+        ctx.textAlign = 'center';
+        ctx.fillText(label, centerX, centerY + 5);
+        ctx.textAlign = 'left'; // Reset alignment
       }
     } else if (currentShape.type === 'circle') {
       // Calculate center and radius
@@ -819,35 +908,22 @@ function renderCanvas() {
       if (scale) {
         const realDiameter = (radius * 2 * scale.ratio).toFixed(2);
         
+        const label = `⌀ ${realDiameter} ${scale.unit}`;
+        
+        // Background for text
+        const textWidth = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillRect(centerX - textWidth/2 - 3, centerY - 10, textWidth + 6, 20);
+        
+        // Draw text
         ctx.fillStyle = DEFAULT_COLORS.circle;
         ctx.font = '14px Arial';
-        ctx.fillText(
-          `⌀ ${realDiameter} ${scale.unit}`,
-          centerX,
-          centerY
-        );
+        ctx.textAlign = 'center';
+        ctx.fillText(label, centerX, centerY + 5);
+        ctx.textAlign = 'left'; // Reset alignment
       }
     }
   }
-}
-
-// Function to adjust color brightness
-function adjustColor(hex, percent) {
-  // Remove # if present
-  hex = hex.replace('#', '');
-  
-  // Convert to RGB
-  let r = parseInt(hex.substring(0, 2), 16);
-  let g = parseInt(hex.substring(2, 4), 16);
-  let b = parseInt(hex.substring(4, 6), 16);
-  
-  // Adjust brightness
-  r = Math.max(0, Math.min(255, r + percent));
-  g = Math.max(0, Math.min(255, g + percent));
-  b = Math.max(0, Math.min(255, b + percent));
-  
-  // Convert back to hex
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
 // Event Handlers
@@ -864,7 +940,7 @@ function handleImageUpload(e) {
       measurements = [];
       shapes = [];
       selectedItem = null;
-      hideEditControls();
+      hidePropertiesPanel();
       
       // Hide placeholder, show canvas
       placeholder.style.display = 'none';
@@ -873,8 +949,11 @@ function handleImageUpload(e) {
       referenceBtn.disabled = false;
       downloadBtn.disabled = false;
       
+      // Reset all drawing states
+      resetDrawingStates();
+      
       // Update UI
-      setStatus('Set reference scale by clicking "Set Reference Scale" button');
+      setStatus('Set a reference scale by clicking the ruler icon');
       renderCanvas();
       updateMeasurementsList();
     };
@@ -886,134 +965,98 @@ function handleImageUpload(e) {
 function startReferenceScale() {
   if (!image) return;
   
+  // Reset all drawing states
+  resetDrawingStates();
+  
   isDrawingReference = true;
-  isDrawingMeasurement = false;
-  isDrawingRectangle = false;
-  isDrawingCircle = false;
-  isSelectMode = false;
-  selectedItem = null;
   currentLine = null;
   currentShape = null;
-  hideEditControls();
+  selectedItem = null;
+  hidePropertiesPanel();
   
   // Update UI
-  setStatus('Click and drag to draw reference line');
-  
-  // Update button states
-  referenceBtn.classList.add('active');
-  measureBtn.classList.remove('active');
-  rectBtn.classList.remove('active');
-  circleBtn.classList.remove('active');
-  selectBtn.classList.remove('active');
+  setStatus('Click and drag to draw a reference line');
+  setActiveButton(referenceBtn);
 }
 
 function startMeasuring() {
   if (!scale) {
-    setStatus('Please set reference scale first');
+    setStatus('Please set a reference scale first');
     return;
   }
   
+  // Reset all drawing states
+  resetDrawingStates();
+  
   isDrawingMeasurement = true;
-  isDrawingReference = false;
-  isDrawingRectangle = false;
-  isDrawingCircle = false;
-  isSelectMode = false;
-  selectedItem = null;
   currentLine = null;
   currentShape = null;
-  hideEditControls();
+  selectedItem = null;
+  hidePropertiesPanel();
   
   // Update UI
-  setStatus('Click and drag to measure');
-  
-  // Update button states
-  referenceBtn.classList.remove('active');
-  measureBtn.classList.add('active');
-  rectBtn.classList.remove('active');
-  circleBtn.classList.remove('active');
-  selectBtn.classList.remove('active');
+  setStatus('Click and drag to measure a distance');
+  setActiveButton(measureBtn);
 }
 
 function startDrawingRectangle() {
   if (!scale) {
-    setStatus('Please set reference scale first');
+    setStatus('Please set a reference scale first');
     return;
   }
   
+  // Reset all drawing states
+  resetDrawingStates();
+  
   isDrawingRectangle = true;
-  isDrawingMeasurement = false;
-  isDrawingReference = false;
-  isDrawingCircle = false;
-  isSelectMode = false;
-  selectedItem = null;
   currentLine = null;
   currentShape = null;
-  hideEditControls();
+  selectedItem = null;
+  hidePropertiesPanel();
   
   // Update UI
   setStatus('Click and drag to draw a rectangle');
-  
-  // Update button states
-  referenceBtn.classList.remove('active');
-  measureBtn.classList.remove('active');
-  rectBtn.classList.add('active');
-  circleBtn.classList.remove('active');
-  selectBtn.classList.remove('active');
+  setActiveButton(rectBtn);
 }
 
 function startDrawingCircle() {
   if (!scale) {
-    setStatus('Please set reference scale first');
+    setStatus('Please set a reference scale first');
     return;
   }
   
+  // Reset all drawing states
+  resetDrawingStates();
+  
   isDrawingCircle = true;
-  isDrawingMeasurement = false;
-  isDrawingReference = false;
-  isDrawingRectangle = false;
-  isSelectMode = false;
-  selectedItem = null;
   currentLine = null;
   currentShape = null;
-  hideEditControls();
+  selectedItem = null;
+  hidePropertiesPanel();
   
   // Update UI
   setStatus('Click and drag to draw a circle');
-  
-  // Update button states
-  referenceBtn.classList.remove('active');
-  measureBtn.classList.remove('active');
-  rectBtn.classList.remove('active');
-  circleBtn.classList.add('active');
-  selectBtn.classList.remove('active');
+  setActiveButton(circleBtn);
 }
 
 function toggleSelectMode() {
+  // Reset all drawing states
+  resetDrawingStates();
+  
   isSelectMode = !isSelectMode;
-  isDrawingReference = false;
-  isDrawingMeasurement = false;
-  isDrawingRectangle = false;
-  isDrawingCircle = false;
-  currentLine = null;
-  currentShape = null;
   
   if (isSelectMode) {
-    selectedItem = null;
-    hideEditControls();
-    setStatus('Select mode activated. Click on an item to select it.');
-    selectBtn.classList.add('active');
+    if (!selectedItem) {
+      hidePropertiesPanel();
+    }
+    setStatus('Click on an item to select and edit it');
+    setActiveButton(selectBtn);
   } else {
     selectedItem = null;
-    hideEditControls();
-    setStatus('Select mode deactivated.');
-    selectBtn.classList.remove('active');
+    hidePropertiesPanel();
+    setStatus('Select a tool to continue');
+    setActiveButton(null);
   }
-  
-  // Update button states
-  referenceBtn.classList.remove('active');
-  measureBtn.classList.remove('active');
-  rectBtn.classList.remove('active');
-  circleBtn.classList.remove('active');
   
   renderCanvas();
   updateMeasurementsList();
@@ -1029,23 +1072,23 @@ function deleteSelectedItem() {
     // Just hide the reference, don't delete it
     showReference = false;
     selectedItem = null;
-    hideEditControls();
-    setStatus('Reference line hidden.');
+    hidePropertiesPanel();
+    setStatus('Reference line hidden');
     
-    // Update toggle button text
-    toggleReferenceBtn.textContent = 'Show Reference';
+    // Update toggle button icon
+    toggleReferenceBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
   } else if (selectedItem.type === 'line') {
     // Mark as deleted
     measurements[selectedItem.index].deleted = true;
     selectedItem = null;
-    hideEditControls();
-    setStatus('Line deleted.');
+    hidePropertiesPanel();
+    setStatus('Line deleted');
   } else if (selectedItem.type === 'shape') {
     // Mark as deleted
     shapes[selectedItem.index].deleted = true;
     selectedItem = null;
-    hideEditControls();
-    setStatus('Shape deleted.');
+    hidePropertiesPanel();
+    setStatus('Shape deleted');
   }
   
   renderCanvas();
@@ -1053,12 +1096,29 @@ function deleteSelectedItem() {
 }
 
 function toggleReferenceVisibility() {
+  if (!scale) return;
+  
   showReference = !showReference;
-  toggleReferenceBtn.textContent = showReference ? 'Hide Reference' : 'Show Reference';
+  
+  // Update button icon
+  toggleReferenceBtn.innerHTML = showReference ? 
+    '<i class="fas fa-eye"></i>' : 
+    '<i class="fas fa-eye-slash"></i>';
+  
+  // Update tooltip
+  toggleReferenceBtn.title = showReference ? 
+    'Hide Reference Scale' : 
+    'Show Reference Scale';
   
   if (selectedItem && selectedItem.type === 'reference') {
     selectedItem = null;
-    hideEditControls();
+    hidePropertiesPanel();
+  }
+  
+  if (showReference) {
+    setStatus('Reference scale visible');
+  } else {
+    setStatus('Reference scale hidden');
   }
   
   renderCanvas();
@@ -1167,8 +1227,10 @@ function handleCanvasMouseDown(e) {
         y: y - (scale.startY + scale.endY) / 2 
       };
       
-      // Show edit controls
-      showEditControls();
+      // Show properties panel with edit reference button
+      showPropertiesPanel();
+      editReferenceBtn.style.display = 'inline-flex';
+      fillOptionsContainer.classList.remove('visible');
       
       found = true;
     }
@@ -1190,15 +1252,15 @@ function handleCanvasMouseDown(e) {
             y: y - (measurements[i].startY + measurements[i].endY) / 2 
           };
           
-          // Show edit controls
-          showEditControls(true);
+          // Show properties panel
+          showPropertiesPanel();
           
-          // Update style controls
+          // Update form values
           itemName.value = measurements[i].name || '';
           itemColor.value = measurements[i].color || DEFAULT_COLORS.line;
-          itemFill.checked = false;
-          itemFill.disabled = true;
-          itemOpacity.disabled = true;
+          
+          // Hide fill options for lines
+          fillOptionsContainer.classList.remove('visible');
           
           found = true;
           break;
@@ -1235,17 +1297,19 @@ function handleCanvasMouseDown(e) {
             };
           }
           
-          // Show edit controls
-          showEditControls(true);
+          // Show properties panel
+          showPropertiesPanel();
           
-          // Update style controls
+          // Update form values
           itemName.value = shape.name || '';
           itemColor.value = shape.color || (shape.type === 'rectangle' ? DEFAULT_COLORS.rectangle : DEFAULT_COLORS.circle);
           itemFill.checked = shape.fill || false;
-          itemFill.disabled = false;
-          itemOpacity.disabled = !shape.fill;
           itemOpacity.value = shape.fillOpacity !== undefined ? shape.fillOpacity * 100 : 30;
           opacityValue.textContent = `${itemOpacity.value}%`;
+          
+          // Show fill options for shapes
+          fillOptionsContainer.classList.add('visible');
+          itemOpacity.disabled = !itemFill.checked;
           
           found = true;
           break;
@@ -1255,7 +1319,7 @@ function handleCanvasMouseDown(e) {
     
     if (!found) {
       selectedItem = null;
-      hideEditControls();
+      hidePropertiesPanel();
     }
     
     updateMeasurementsList();
@@ -1408,14 +1472,15 @@ function handleCanvasMouseUp(e) {
         circleBtn.disabled = false;
         toggleReferenceBtn.disabled = false;
         selectBtn.disabled = false;
+        clearAllBtn.disabled = false;
         
         isDrawingReference = false;
-        referenceBtn.classList.remove('active');
+        setActiveButton(null);
         
         setStatus(`Reference scale set: ${length} ${referenceUnitSelect.value}`);
         
         showReference = true;
-        toggleReferenceBtn.textContent = 'Hide Reference';
+        toggleReferenceBtn.innerHTML = '<i class="fas fa-eye"></i>';
       } else if (isDrawingMeasurement) {
         // Calculate real-world measurement based on scale
         const realDistance = pixelDistance * scale.ratio;
@@ -1525,9 +1590,25 @@ selectBtn.addEventListener('click', toggleSelectMode);
 deleteBtn.addEventListener('click', deleteSelectedItem);
 clearAllBtn.addEventListener('click', clearAllMeasurements);
 editReferenceBtn.addEventListener('click', openEditReferenceModal);
+
+// Modal event listeners
 cancelEditBtn.addEventListener('click', closeEditReferenceModal);
+closeModalBtn.addEventListener('click', closeEditReferenceModal);
 updateReferenceBtn.addEventListener('click', updateReferenceValue);
 
+// Property change listeners
+itemName.addEventListener('input', applyStyleChanges);
+itemColor.addEventListener('input', applyStyleChanges);
+itemFill.addEventListener('change', function() {
+  itemOpacity.disabled = !this.checked;
+  applyStyleChanges();
+});
+itemOpacity.addEventListener('input', function() {
+  opacityValue.textContent = `${this.value}%`;
+});
+itemOpacity.addEventListener('change', applyStyleChanges);
+
+// Canvas event listeners
 canvas.addEventListener('mousedown', handleCanvasMouseDown);
 canvas.addEventListener('mousemove', handleCanvasMouseMove);
 canvas.addEventListener('mouseup', handleCanvasMouseUp);
