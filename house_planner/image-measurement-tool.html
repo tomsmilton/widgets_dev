@@ -139,6 +139,17 @@
                 <input type="color" id="itemColor" class="color-input">
               </div>
               
+              <!-- Dimensions for shapes -->
+              <div class="form-row dimensions-input" style="display: none;">
+                <label id="dimensionsLabel">Dimensions</label>
+                <div class="dimensions-row">
+                  <input type="number" id="widthInput" placeholder="Width" min="0.1" step="0.1" class="form-input">
+                  <span id="dimensionsSeparator" style="display: none;">×</span>
+                  <input type="number" id="heightInput" placeholder="Height" min="0.1" step="0.1" class="form-input" style="display: none;">
+                  <span id="dimensionsUnit">cm</span>
+                </div>
+              </div>
+              
               <div class="form-row fill-options">
                 <div class="checkbox-row">
                   <input type="checkbox" id="itemFill" class="form-checkbox">
