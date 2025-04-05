@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Measurement Tool</title>
+  <link rel="stylesheet" href="image-measurement-styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Image Measurement Tool</h1>
+    
+    <div class="toolbar">
+      <div class="toolbar-section">
+        <input type="file" id="imageUpload" accept="image/*" class="input-file">
+      </div>
+      
+      <div class="toolbar-section">
+        <button id="referenceBtn" class="btn green">Set Reference Scale</button>
+        <button id="measureBtn" class="btn red" disabled>Measure</button>
+        <button id="rectBtn" class="btn orange" disabled>Draw Rectangle</button>
+        <button id="circleBtn" class="btn blue" disabled>Draw Circle</button>
+        <button id="selectBtn" class="btn indigo" disabled>Select/Edit</button>
+      </div>
+      
+      <div class="toolbar-section">
+        <div class="reference-input">
+          <span>Reference:</span>
+          <input type="number" id="referenceLength" value="10" min="0.1" step="0.1" class="number-input">
+          <select id="referenceUnit" class="select-input">
+            <option value="mm">mm</option>
+            <option value="cm" selected>cm</option>
+            <option value="m">m</option>
+            <option value="in">in</option>
+            <option value="ft">ft</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="toolbar-section">
+        <button id="toggleReferenceBtn" class="btn blue-alt" disabled>Hide Reference</button>
+        <button id="downloadBtn" class="btn purple" disabled>Download Image</button>
+        <button id="clearAllBtn" class="btn red-alt" disabled>Clear All</button>
+      </div>
+    </div>
+    
+    <!-- Edit controls for selected item -->
+    <div id="editControls" class="edit-controls" style="display: none;">
+      <div class="edit-control-group">
+        <button id="deleteBtn" class="btn red-alt">Delete</button>
+        <button id="editReferenceBtn" class="btn green-alt" style="display: none;">Edit Reference</button>
+      </div>
+      
+      <div class="edit-control-group shape-controls" style="display: none;">
+        <div class="control-row">
+          <label for="itemName">Label:</label>
+          <input type="text" id="itemName" placeholder="Label" class="text-input">
+        </div>
+        
+        <div class="control-row">
+          <label for="itemColor">Color:</label>
+          <input type="color" id="itemColor" class="color-input">
+        </div>
+        
+        <div class="control-row">
+          <label for="itemFill">Fill:</label>
+          <input type="checkbox" id="itemFill" class="checkbox-input">
+          
+          <label for="itemOpacity" class="opacity-label">Opacity:</label>
+          <input type="range" id="itemOpacity" min="0" max="100" value="30" class="range-input">
+          <span id="opacityValue">30%</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="status" id="status">Upload an image to begin</div>
+    
+    <div class="canvas-container" id="canvasContainer">
+      <canvas id="canvas"></canvas>
+      <div class="placeholder" id="placeholder">Upload an image to begin</div>
+    </div>
+    
+    <!-- Measurements list with expanded functionality -->
+    <div class="measurements" id="measurements" style="display: none;">
+      <div class="measurements-header">
+        <h2>Measurements</h2>
+        <div class="measurements-actions">
+          <button id="collapseAllBtn" class="btn-small gray">Collapse All</button>
+          <button id="expandAllBtn" class="btn-small gray">Expand All</button>
+        </div>
+      </div>
+      
+      <div class="measurement-groups">
+        <div id="linesGroup" class="measurement-group">
+          <div class="measurement-group-header">
+            <h3>Lines</h3>
+            <span id="linesCount" class="count-badge">0</span>
+          </div>
+          <ul id="linesList" class="measurements-list"></ul>
+        </div>
+        
+        <div id="rectanglesGroup" class="measurement-group">
+          <div class="measurement-group-header">
+            <h3>Rectangles</h3>
+            <span id="rectanglesCount" class="count-badge">0</span>
+          </div>
+          <ul id="rectanglesList" class="measurements-list"></ul>
+        </div>
+        
+        <div id="circlesGroup" class="measurement-group">
+          <div class="measurement-group-header">
+            <h3>Circles</h3>
+            <span id="circlesCount" class="count-badge">0</span>
+          </div>
+          <ul id="circlesList" class="measurements-list"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Edit Reference Modal -->
+  <div class="modal" id="editReferenceModal">
+    <div class="modal-content">
+      <h3>Edit Reference Value</h3>
+      <div class="modal-input">
+        <input type="number" id="editReferenceValue" min="0.1" step="0.1" class="number-input">
+        <span id="editReferenceUnit">cm</span>
+      </div>
+      <div class="modal-buttons">
+        <button id="cancelEditBtn" class="btn gray">Cancel</button>
+        <button id="updateReferenceBtn" class="btn blue">Update</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="image-measurement.js"></script>
+</body>
+</html>
