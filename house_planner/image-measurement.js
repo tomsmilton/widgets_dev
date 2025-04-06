@@ -26,7 +26,9 @@ function toggleItemVisibility(type, id) {
   
   renderCanvas();
   updateMeasurementsList();
-}// DOM Elements
+}
+
+// DOM Elements
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const canvasContainer = document.getElementById('canvasContainer');
@@ -73,6 +75,10 @@ const itemFill = document.getElementById('itemFill');
 const itemOpacity = document.getElementById('itemOpacity');
 const opacityValue = document.getElementById('opacityValue');
 
+// Add rotation input
+const itemRotation = document.getElementById('itemRotation');
+const rotationValue = document.getElementById('rotationValue');
+
 // Dimension inputs
 const dimensionsInput = document.querySelector('.dimensions-input');
 const dimensionsLabel = document.getElementById('dimensionsLabel');
@@ -112,6 +118,9 @@ let selectedItem = null;
 let isDragging = false;
 let dragOffset = { x: 0, y: 0 };
 let showReference = true;
+let isRotating = false;
+let showAllText = true; // Global text visibility
+let showAllObjects = true; // Global object visibility
 
 // Utility Functions
 function setStatus(message) {
@@ -509,57 +518,61 @@ circlesFiltered.forEach((circle, index) => {
 
 // Select a measurement by ID
 function selectMeasurement(type, id) {
-// Exit any drawing mode and enter select mode
-resetDrawingStates();
-isSelectMode = true;
-setActiveButton(selectBtn);
+  // Exit any drawing mode and enter select mode
+  resetDrawingStates();
+  isSelectMode = true;
+  setActiveButton(selectBtn);
 
-if (type === 'line') {
-  const lineIndex = measurements.findIndex(m => m.id === id);
-  if (lineIndex !== -1) {
-    selectedItem = {
-      type: 'line',
-      id: id,
-      index: lineIndex
-    };
-    
-    // Update properties panel
-    showPropertiesPanel();
-    
-    // Update form values
-    itemName.value = measurements[lineIndex].name || '';
-    itemColor.value = measurements[lineIndex].color || DEFAULT_COLORS.line;
-    
-    // Hide fill options for lines
-    fillOptionsContainer.classList.remove('visible');
+  if (type === 'line') {
+    const lineIndex = measurements.findIndex(m => m.id === id);
+    if (lineIndex !== -1) {
+      selectedItem = {
+        type: 'line',
+        id: id,
+        index: lineIndex
+      };
+      
+      // Update properties panel
+      showPropertiesPanel();
+      
+      // Update form values
+      itemName.value = measurements[lineIndex].name || '';
+      itemColor.value = measurements[lineIndex].color || DEFAULT_COLORS.line;
+      
+      // Hide fill options for lines
+      fillOptionsContainer.classList.remove('visible');
+    }
+  } else if (type === 'rectangle' || type === 'circle') {
+    const shapeIndex = shapes.findIndex(s => s.id === id);
+    if (shapeIndex !== -1) {
+      selectedItem = {
+        type: 'shape',
+        id: id,
+        index: shapeIndex
+      };
+      
+      // Update properties panel
+      showPropertiesPanel();
+      
+      // Update form values
+      const shape = shapes[shapeIndex];
+      itemName.value = shape.name || '';
+      itemColor.value = shape.color || (type === 'rectangle' ? DEFAULT_COLORS.rectangle : DEFAULT_COLORS.circle);
+      itemFill.checked = shape.fill || false;
+      itemOpacity.value = shape.fillOpacity !== undefined ? shape.fillOpacity * 100 : 30;
+      opacityValue.textContent = `${itemOpacity.value}%`;
+      itemRotation.value = shape.rotation || 0;
+      rotationValue.textContent = `${shape.rotation || 0}°`;
+      itemShowText.checked = shape.showText !== false; // Default to true if not set
+      
+      // Show fill options for shapes
+      fillOptionsContainer.classList.add('visible');
+      itemOpacity.disabled = !itemFill.checked;
+    }
   }
-} else if (type === 'rectangle' || type === 'circle') {
-  const shapeIndex = shapes.findIndex(s => s.id === id);
-  if (shapeIndex !== -1) {
-    selectedItem = {
-      type: 'shape',
-      id: id,
-      index: shapeIndex
-    };
-    
-    // Update properties panel
-    showPropertiesPanel();
-    
-    // Update form values
-    itemName.value = shapes[shapeIndex].name || '';
-    itemColor.value = shapes[shapeIndex].color || (type === 'rectangle' ? DEFAULT_COLORS.rectangle : DEFAULT_COLORS.circle);
-    itemFill.checked = shapes[shapeIndex].fill || false;
-    itemOpacity.value = shapes[shapeIndex].fillOpacity !== undefined ? shapes[shapeIndex].fillOpacity * 100 : 30;
-    opacityValue.textContent = `${itemOpacity.value}%`;
-    
-    // Show fill options for shapes
-    fillOptionsContainer.classList.add('visible');
-    itemOpacity.disabled = !itemFill.checked;
-  }
-}
 
-updateMeasurementsList();
-renderCanvas();
+  updateMeasurementsList();
+  renderCanvas();
 }
 
 // Delete a measurement by ID
@@ -663,6 +676,8 @@ if (selectedItem.type === 'line') {
   shape.color = itemColor.value;
   shape.fill = itemFill.checked;
   shape.fillOpacity = itemFill.checked ? itemOpacity.value / 100 : 0.3;
+  shape.rotation = parseFloat(itemRotation.value) || 0;
+  shape.showText = itemShowText.checked;
 }
 
 updateMeasurementsList();
@@ -791,7 +806,7 @@ if (scale && showReference) {
 // Draw measurement lines
 measurements.forEach((line) => {
   // Skip deleted or hidden measurements
-  if (line.deleted || line.hidden) return;
+  if (line.deleted || line.hidden || !showAllObjects) return;
   
   const isSelected = selectedItem && selectedItem.type === 'line' && selectedItem.id === line.id;
   const lineColor = line.color || DEFAULT_COLORS.line;
@@ -803,22 +818,25 @@ measurements.forEach((line) => {
   ctx.lineWidth = isSelected ? 3 : 2;
   ctx.stroke();
   
-  // Draw measurement label
-  const midX = (line.startX + line.endX) / 2;
-  const midY = (line.startY + line.endY) / 2;
-  ctx.fillStyle = isSelected ? adjustColor(lineColor, -30) : lineColor;
-  ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
-  
-  const label = line.name ? `${line.name}: ${line.realDistance} ${line.unit}` : `${line.realDistance} ${line.unit}`;
-  
-  // Background for text
-  const textWidth = ctx.measureText(label).width;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-  ctx.fillRect(midX + 5, midY - 20, textWidth + 6, 20);
-  
-  // Draw text
-  ctx.fillStyle = isSelected ? adjustColor(lineColor, -30) : lineColor;
-  ctx.fillText(label, midX + 8, midY - 5);
+  // Only draw text if showText is true for this line and global text is visible
+  if (line.showText !== false && showAllText) {
+    // Draw measurement label
+    const midX = (line.startX + line.endX) / 2;
+    const midY = (line.startY + line.endY) / 2;
+    ctx.fillStyle = isSelected ? adjustColor(lineColor, -30) : lineColor;
+    ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
+    
+    const label = line.name ? `${line.name}: ${line.realDistance} ${line.unit}` : `${line.realDistance} ${line.unit}`;
+    
+    // Background for text
+    const textWidth = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fillRect(midX + 5, midY - 20, textWidth + 6, 20);
+    
+    // Draw text
+    ctx.fillStyle = isSelected ? adjustColor(lineColor, -30) : lineColor;
+    ctx.fillText(label, midX + 8, midY - 5);
+  }
   
   // Draw handles if selected
   if (isSelected) {
@@ -839,19 +857,30 @@ measurements.forEach((line) => {
 // Draw shapes
 shapes.forEach((shape) => {
   // Skip deleted or hidden shapes
-  if (shape.deleted || shape.hidden) return;
+  if (shape.deleted || shape.hidden || !showAllObjects) return;
   
   const isSelected = selectedItem && selectedItem.type === 'shape' && selectedItem.id === shape.id;
   
+  // Save the current context state
+  ctx.save();
+  
   if (shape.type === 'rectangle') {
     const rectColor = shape.color || DEFAULT_COLORS.rectangle;
+    
+    // Calculate center point
+    const centerX = (shape.startX + shape.endX) / 2;
+    const centerY = (shape.startY + shape.endY) / 2;
+    
+    // Translate to center and rotate
+    ctx.translate(centerX, centerY);
+    ctx.rotate((shape.rotation || 0) * Math.PI / 180);
     
     // Draw rectangle fill if enabled
     if (shape.fill) {
       ctx.beginPath();
       ctx.rect(
-        shape.startX,
-        shape.startY,
+        -(shape.endX - shape.startX) / 2,
+        -(shape.endY - shape.startY) / 2,
         shape.endX - shape.startX,
         shape.endY - shape.startY
       );
@@ -862,43 +891,57 @@ shapes.forEach((shape) => {
     // Draw rectangle outline
     ctx.beginPath();
     ctx.rect(
-      shape.startX,
-      shape.startY,
+      -(shape.endX - shape.startX) / 2,
+      -(shape.endY - shape.startY) / 2,
       shape.endX - shape.startX,
       shape.endY - shape.startY
     );
-    ctx.strokeStyle = isSelected ? adjustColor(rectColor, -30) : rectColor; // Darker if selected
+    ctx.strokeStyle = isSelected ? adjustColor(rectColor, -30) : rectColor;
     ctx.lineWidth = isSelected ? 3 : 2;
     ctx.stroke();
     
-    // Draw dimensions
-    const centerX = (shape.startX + shape.endX) / 2;
-    const centerY = (shape.startY + shape.endY) / 2;
+    // Draw rotation handle if selected
+    if (isSelected) {
+      ctx.beginPath();
+      ctx.moveTo(0, -(shape.endY - shape.startY) / 2 - 20);
+      ctx.lineTo(0, -(shape.endY - shape.startY) / 2 - 10);
+      ctx.strokeStyle = adjustColor(rectColor, -30);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.arc(0, -(shape.endY - shape.startY) / 2 - 20, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = adjustColor(rectColor, -30);
+      ctx.fill();
+    }
     
-    const label = shape.name ? 
-      `${shape.name}: ${shape.realWidth} × ${shape.realHeight} ${shape.unit}` : 
-      `${shape.realWidth} × ${shape.realHeight} ${shape.unit}`;
-    
-    // Background for text
-    const textWidth = ctx.measureText(label).width;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.fillRect(centerX - textWidth/2 - 3, centerY - 10, textWidth + 6, 20);
-    
-    // Draw text
-    ctx.fillStyle = isSelected ? adjustColor(rectColor, -30) : rectColor;
-    ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(label, centerX, centerY + 5);
-    ctx.textAlign = 'left'; // Reset alignment
+    // Only draw text if showText is true for this shape and global text is visible
+    if (shape.showText !== false && showAllText) {
+      const label = shape.name ? 
+        `${shape.name}: ${shape.realWidth} × ${shape.realHeight} ${shape.unit}` : 
+        `${shape.realWidth} × ${shape.realHeight} ${shape.unit}`;
+      
+      // Background for text
+      const textWidth = ctx.measureText(label).width;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.fillRect(-textWidth/2 - 3, 10, textWidth + 6, 20);
+      
+      // Draw text
+      ctx.fillStyle = isSelected ? adjustColor(rectColor, -30) : rectColor;
+      ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, 0, 25);
+      ctx.textAlign = 'left';
+    }
     
     // Draw handles if selected
     if (isSelected) {
       // Corners
       [
-        [shape.startX, shape.startY], // top-left
-        [shape.endX, shape.startY],   // top-right
-        [shape.startX, shape.endY],   // bottom-left
-        [shape.endX, shape.endY]      // bottom-right
+        [-(shape.endX - shape.startX) / 2, -(shape.endY - shape.startY) / 2], // top-left
+        [(shape.endX - shape.startX) / 2, -(shape.endY - shape.startY) / 2],  // top-right
+        [-(shape.endX - shape.startX) / 2, (shape.endY - shape.startY) / 2],  // bottom-left
+        [(shape.endX - shape.startX) / 2, (shape.endY - shape.startY) / 2]    // bottom-right
       ].forEach(([x, y]) => {
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, 2 * Math.PI);
@@ -912,59 +955,64 @@ shapes.forEach((shape) => {
     // Draw circle fill if enabled
     if (shape.fill) {
       ctx.beginPath();
-      ctx.arc(
-        shape.centerX,
-        shape.centerY,
-        shape.radiusPixels,
-        0,
-        2 * Math.PI
-      );
+      ctx.arc(0, 0, shape.radiusPixels, 0, 2 * Math.PI);
       ctx.fillStyle = hexToRgba(circleColor, shape.fillOpacity || 0.3);
       ctx.fill();
     }
     
     // Draw circle outline
     ctx.beginPath();
-    ctx.arc(
-      shape.centerX,
-      shape.centerY,
-      shape.radiusPixels,
-      0,
-      2 * Math.PI
-    );
-    ctx.strokeStyle = isSelected ? adjustColor(circleColor, -30) : circleColor; // Darker if selected
+    ctx.arc(0, 0, shape.radiusPixels, 0, 2 * Math.PI);
+    ctx.strokeStyle = isSelected ? adjustColor(circleColor, -30) : circleColor;
     ctx.lineWidth = isSelected ? 3 : 2;
     ctx.stroke();
     
-    // Draw diameter text
-    const label = shape.name ? 
-      `${shape.name}: ⌀ ${shape.realDiameter} ${shape.unit}` : 
-      `⌀ ${shape.realDiameter} ${shape.unit}`;
+    // Draw rotation handle if selected
+    if (isSelected) {
+      ctx.beginPath();
+      ctx.moveTo(0, -shape.radiusPixels - 20);
+      ctx.lineTo(0, -shape.radiusPixels - 10);
+      ctx.strokeStyle = adjustColor(circleColor, -30);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.arc(0, -shape.radiusPixels - 20, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = adjustColor(circleColor, -30);
+      ctx.fill();
+    }
     
-    // Background for text
-    const textWidth = ctx.measureText(label).width;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.fillRect(shape.centerX - textWidth/2 - 3, shape.centerY - 10, textWidth + 6, 20);
-    
-    // Draw text
-    ctx.fillStyle = isSelected ? adjustColor(circleColor, -30) : circleColor;
-    ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(label, shape.centerX, shape.centerY + 5);
-    ctx.textAlign = 'left'; // Reset alignment
+    // Only draw text if showText is true for this shape and global text is visible
+    if (shape.showText !== false && showAllText) {
+      const label = shape.name ? 
+        `${shape.name}: ⌀ ${shape.realDiameter} ${shape.unit}` : 
+        `⌀ ${shape.realDiameter} ${shape.unit}`;
+      
+      // Background for text
+      const textWidth = ctx.measureText(label).width;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.fillRect(-textWidth/2 - 3, 10, textWidth + 6, 20);
+      
+      // Draw text
+      ctx.fillStyle = isSelected ? adjustColor(circleColor, -30) : circleColor;
+      ctx.font = isSelected ? 'bold 14px Arial' : '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, 0, 25);
+      ctx.textAlign = 'left';
+    }
     
     // Draw handles if selected
     if (isSelected) {
       // Center point
       ctx.beginPath();
-      ctx.arc(shape.centerX, shape.centerY, 4, 0, 2 * Math.PI);
+      ctx.arc(0, 0, 4, 0, 2 * Math.PI);
       ctx.fillStyle = adjustColor(circleColor, -30);
       ctx.fill();
       
       // Edge points (4 points on the circle)
       [0, Math.PI/2, Math.PI, 3*Math.PI/2].forEach(angle => {
-        const x = shape.centerX + shape.radiusPixels * Math.cos(angle);
-        const y = shape.centerY + shape.radiusPixels * Math.sin(angle);
+        const x = shape.radiusPixels * Math.cos(angle);
+        const y = shape.radiusPixels * Math.sin(angle);
         
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, 2 * Math.PI);
@@ -973,6 +1021,9 @@ shapes.forEach((shape) => {
       });
     }
   }
+  
+  // Restore the context state
+  ctx.restore();
 });
 
 // Draw current line being drawn
@@ -1039,19 +1090,22 @@ if (currentShape) {
       const centerX = startX + width / 2;
       const centerY = startY + height / 2;
       
-      const label = `${realWidth} × ${realHeight} ${scale.unit}`;
-      
-      // Background for text
-      const textWidth = ctx.measureText(label).width;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.fillRect(centerX - textWidth/2 - 3, centerY - 10, textWidth + 6, 20);
-      
-      // Draw text
-      ctx.fillStyle = DEFAULT_COLORS.rectangle;
-      ctx.font = '14px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(label, centerX, centerY + 5);
-      ctx.textAlign = 'left'; // Reset alignment
+      // Only draw text if showText is true for this shape and global text is visible
+      if (currentShape.showText !== false && showAllText) {
+        const label = `${realWidth} × ${realHeight} ${scale.unit}`;
+        
+        // Background for text
+        const textWidth = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillRect(centerX - textWidth/2 - 3, centerY - 10, textWidth + 6, 20);
+        
+        // Draw text
+        ctx.fillStyle = DEFAULT_COLORS.rectangle;
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, centerX, centerY + 5);
+        ctx.textAlign = 'left';
+      }
     }
   } else if (currentShape.type === 'circle') {
     // Calculate center and radius
@@ -1074,19 +1128,22 @@ if (currentShape) {
     if (scale) {
       const realDiameter = (radius * 2 * scale.ratio).toFixed(2);
       
-      const label = `⌀ ${realDiameter} ${scale.unit}`;
-      
-      // Background for text
-      const textWidth = ctx.measureText(label).width;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.fillRect(centerX - textWidth/2 - 3, centerY - 10, textWidth + 6, 20);
-      
-      // Draw text
-      ctx.fillStyle = DEFAULT_COLORS.circle;
-      ctx.font = '14px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(label, centerX, centerY + 5);
-      ctx.textAlign = 'left'; // Reset alignment
+      // Only draw text if showText is true for this shape and global text is visible
+      if (currentShape.showText !== false && showAllText) {
+        const label = `⌀ ${realDiameter} ${scale.unit}`;
+        
+        // Background for text
+        const textWidth = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillRect(centerX - textWidth/2 - 3, centerY - 10, textWidth + 6, 20);
+        
+        // Draw text
+        ctx.fillStyle = DEFAULT_COLORS.circle;
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, centerX, centerY + 5);
+        ctx.textAlign = 'left';
+      }
     }
   }
 }
@@ -1580,6 +1637,24 @@ if (isSelectMode && isDragging && selectedItem) {
   currentShape.endX = x;
   currentShape.endY = y;
   renderCanvas();
+} else if (isRotating && selectedItem && selectedItem.type === 'shape') {
+  const shape = shapes[selectedItem.index];
+  const centerX = shape.type === 'rectangle' ? 
+    (shape.startX + shape.endX) / 2 : 
+    shape.centerX;
+  const centerY = shape.type === 'rectangle' ? 
+    (shape.startY + shape.endY) / 2 : 
+    shape.centerY;
+  
+  // Calculate angle between center and mouse position
+  const angle = Math.atan2(y - centerY, x - centerX) * 180 / Math.PI;
+  shape.rotation = angle;
+  
+  // Update rotation input
+  itemRotation.value = Math.round(angle);
+  rotationValue.textContent = `${Math.round(angle)}°`;
+  
+  renderCanvas();
 }
 }
 
@@ -1744,6 +1819,7 @@ if (currentLine) {
   currentShape = null;
 }
 
+isRotating = false;
 renderCanvas();
 }
 
@@ -1797,3 +1873,57 @@ renderCanvas();
 
 // Initialize the app
 window.addEventListener('resize', renderCanvas);
+
+// Add event listener for show text checkbox
+document.getElementById('itemShowText').addEventListener('change', applyStyleChanges);
+
+// Add global visibility event listeners
+document.getElementById('hideAllTextBtn').addEventListener('click', function() {
+  showAllText = !showAllText;
+  this.classList.toggle('active', !showAllText);
+  renderCanvas();
+});
+
+document.getElementById('hideAllObjectsBtn').addEventListener('click', function() {
+  showAllObjects = !showAllObjects;
+  this.classList.toggle('active', !showAllObjects);
+  
+  // Update all objects' hidden state
+  measurements.forEach(m => {
+    if (!m.deleted) {
+      m.hidden = !showAllObjects;
+    }
+  });
+  
+  shapes.forEach(s => {
+    if (!s.deleted) {
+      s.hidden = !showAllObjects;
+    }
+  });
+  
+  renderCanvas();
+  updateMeasurementsList();
+});
+
+// Add rotation input event listeners
+itemRotation.addEventListener('input', function() {
+  rotationValue.textContent = `${this.value}°`;
+  applyStyleChanges();
+});
+
+// Add 90-degree rotation button event listener
+document.getElementById('rotate90Btn').addEventListener('click', function() {
+  if (!selectedItem || selectedItem.type !== 'shape') return;
+  
+  const shape = shapes[selectedItem.index];
+  shape.rotation = (shape.rotation || 0) + 90;
+  if (shape.rotation >= 360) {
+    shape.rotation -= 360;
+  }
+  
+  // Update rotation input
+  itemRotation.value = shape.rotation;
+  rotationValue.textContent = `${shape.rotation}°`;
+  
+  renderCanvas();
+});

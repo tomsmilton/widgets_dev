@@ -69,8 +69,8 @@
               <i class="far fa-square"></i>
             </button>
             
-            <button id="circleBtn" class="tool-btn" title="Draw Circle" disabled>
-              <i class="far fa-circle"></i>
+            <button id="circleBtn" class="tool-btn" title="Draw Circle">
+              <i class="fas fa-circle"></i>
             </button>
             
             <button id="selectBtn" class="tool-btn" title="Select & Edit" disabled>
@@ -82,9 +82,19 @@
         <div class="tool-section">
           <div class="tool-label">Actions</div>
           
-          <button id="clearAllBtn" class="tool-btn danger" title="Clear All Measurements" disabled>
-            <i class="fas fa-trash-alt"></i>
-          </button>
+          <div class="tool-row">
+            <button id="hideAllTextBtn" class="tool-btn" title="Hide All Text">
+              <i class="fas fa-font"></i>
+            </button>
+            
+            <button id="hideAllObjectsBtn" class="tool-btn" title="Hide All Objects">
+              <i class="fas fa-eye-slash"></i>
+            </button>
+            
+            <button id="clearAllBtn" class="tool-btn danger" title="Clear All Measurements" disabled>
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
         </div>
       </div>
       
@@ -160,6 +170,24 @@
                   <label for="itemOpacity">Opacity</label>
                   <input type="range" id="itemOpacity" min="0" max="100" value="30" class="slider-input">
                   <span id="opacityValue">30%</span>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="checkbox-row">
+                  <input type="checkbox" id="itemShowText" class="form-checkbox" checked>
+                  <label for="itemShowText">Show Text</label>
+                </div>
+              </div>
+              
+              <div class="form-row rotation-input">
+                <label for="itemRotation">Rotation</label>
+                <div class="slider-row">
+                  <input type="range" id="itemRotation" min="0" max="360" value="0" class="slider-input">
+                  <span id="rotationValue">0°</span>
+                  <button id="rotate90Btn" class="small-btn" title="Rotate 90°">
+                    <i class="fas fa-redo"></i>
+                  </button>
                 </div>
               </div>
             </div>
