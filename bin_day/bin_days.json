@@ -1,22 +1,21 @@
 {
-  "last_updated": "2025-03-23T22:58:31.860625",
-  "next_color": "#051428",
+  "last_updated": "2025-04-08T01:03:03.037534",
   "collections": [
     {
       "bin_color": "Black Bin",
       "next_collections": [
-        "24 Mar 2025",
-        "7 Apr 2025",
-        "21 Apr 2025"
+        "21 Apr 2025",
+        "5 May 2025",
+        "19 May 2025"
       ],
       "bin_type": ""
     },
     {
       "bin_color": "Blue Bin",
       "next_collections": [
-        "31 Mar 2025",
         "28 Apr 2025",
-        "26 May 2025"
+        "26 May 2025",
+        "23 Jun 2025"
       ],
       "bin_type": ""
     },
@@ -29,5 +28,6 @@
       ],
       "bin_type": ""
     }
-  ]
+  ],
+  "next_color": "#6b3c31"
 }
