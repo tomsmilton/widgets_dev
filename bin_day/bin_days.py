@@ -124,20 +124,29 @@ def save_to_file(data, filename="bin_days.json"):
         print(f"Error saving data: {str(e)}")
 
 def main():
-    # Get property ID from environment variable
-    property_id = os.getenv("PROPERTY_ID")
+    # Get property IDs from environment variables
+    property_ids = {
+        "flora": os.getenv("FLORA_PROPERTY_ID"),
+        "a": os.getenv("ALEX_PROPERTY_ID")
+    }
     
-    if not property_id:
-        print("Error: PROPERTY_ID environment variable is required")
+    if not any(property_ids.values()):
+        print("Error: At least one property ID environment variable is required")
         exit(1)
     
-    # Get bin collection data
-    data = get_bin_days(property_id)
-    
-    if data:
-        save_to_file(data)
-    else:
-        print("Failed to get bin collection data")
+    # Process each property
+    for name, property_id in property_ids.items():
+        if not property_id:
+            print(f"Skipping {name} - no property ID provided")
+            continue
+            
+        print(f"Processing {name}'s property...")
+        data = get_bin_days(property_id)
+        
+        if data:
+            save_to_file(data, f"{name}_bin_days.json")
+        else:
+            print(f"Failed to get bin collection data for {name}")
 
 if __name__ == "__main__":
     main() 
