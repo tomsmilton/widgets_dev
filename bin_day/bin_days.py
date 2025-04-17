@@ -127,7 +127,7 @@ def main():
     # Get property IDs from environment variables
     property_ids = {
         "flora": os.getenv("FLORA_PROPERTY_ID"),
-        "a": os.getenv("ALEX_PROPERTY_ID")
+        "alex": os.getenv("ALEX_PROPERTY_ID")
     }
     
     if not any(property_ids.values()):
