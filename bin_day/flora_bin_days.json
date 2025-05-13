@@ -1,5 +1,5 @@
 {
-  "last_updated": "2025-05-12T01:09:15.261057",
+  "last_updated": "2025-05-13T01:07:39.065512",
   "collections": [
     {
       "bin_color": "Black Bin",
@@ -13,9 +13,9 @@
     {
       "bin_color": "Brown Bin",
       "next_collections": [
-        "12 May 2025",
         "9 Jun 2025",
-        "7 Jul 2025"
+        "7 Jul 2025",
+        "4 Aug 2025"
       ],
       "bin_type": ""
     },
