@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MZDK7S91L4"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-MZDK7S91L4');
+    </script>
+    
+    <title>Tom's Widgets</title>
+    <link rel="stylesheet" href="tufte-css/tufte.css"/>
+    <style>
+      /* Override some base styles to align with Tufte principles */
+      article {
+        padding: 1rem 0;
+      }
+      
+      h1 {
+        margin-top: 4rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      p.subtitle {
+        margin-top: -1.5rem;
+        margin-bottom: 3rem;
+        font-style: italic;
+      }
+      
+      /* Modify tool boxes to fit Tufte's aesthetic but keep button styling */
+      .tool-box {
+        display: flex;
+        align-items: stretch;
+        justify-content: flex-start;
+        margin: 2.5rem 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      }
+      
+      .button-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #4CAF50; /* Default green */
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.1em;
+        text-align: left;
+        cursor: pointer;
+        border: none;
+        padding: 15px;
+        width: 220px;
+        border-right: 1px solid rgba(0,0,0,0.2);
+        box-sizing: border-box;
+      }
+      
+      .button-link img {
+        margin-left: 10px;
+        width: 30px;
+        height: 30px;
+      }
+      
+      .button-link:hover {
+        background-color: #3e8e41; /* Darker green on hover */
+      }
+      
+      /* Special button styles */
+      .twitter-bot-button {
+        background-color: #1DA1F2; /* Twitter blue */
+      }
+      
+      .twitter-bot-button:hover {
+        background-color: #0c7abf;
+      }
+      
+      .centroid-button {
+        background-color: #FF0000;
+      }
+      
+      .centroid-button:hover {
+        background-color: #950606;
+      }
+      
+      .deanery-button {
+        background-color: #005EB8;
+      }
+      
+      .deanery-button:hover {
+        background-color: #004080;
+      }
+      
+      .bins-button {
+        background-color: #000000;
+      }
+      
+      .bins-button:hover {
+        background-color: #333333;
+      }
+      
+      .measurement-button {
+        background-color: #FF8533;
+      }
+      
+      .measurement-button:hover {
+        background-color: #E66B1A;
+      }
+      
+      .description {
+        font-size: 1rem;
+        text-align: left;
+        padding: 15px 20px;
+        margin: 0;
+        flex-grow: 1;
+        line-height: 1.4;
+      }
+      
+      /* Tufte-style sidenotes for tool descriptions on larger screens */
+      @media (min-width: 1024px) {
+        .tool-box {
+          width: 65%;
+          margin-right: 35%;
+        }
+        
+        .description-container {
+          position: relative;
+        }
+        
+        .sidenote-description {
+          position: absolute;
+          right: -52%;
+          width: 50%;
+          top: 0;
+          padding-left: 1rem;
+          font-size: 0.9rem;
+          color: #111;
+          line-height: 1.4;
+        }
+      }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 760px) {
+        .tool-box {
+          flex-direction: column;
+          width: 100%;
+        }
+        
+        .button-link {
+          width: 100%;
+          border-right: none;
+          border-bottom: 1px solid rgba(0,0,0,0.2);
+        }
+      }
+      
+      /* Footer styling */
+      footer {
+        margin-top: 4rem;
+        padding-bottom: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #efefef;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  
+  <body>
+    <article>
+      <h1>Tom's Widgets</h1>
+      <p class="subtitle">Pure vibe coding</p>
+      
+      <section>
+        <div class="description-container">
+          <div class="tool-box">
+            <a class="button-link twitter-bot-button" href="https://x.com/HollybushCrack" target="_blank">
+              Hollybush Crack Bot
+              <img src="icons8-mouse.svg" alt="Mouse Icon">
+            </a>
+            <p class="description">Every 15 minutes this bot checks Hollybush Crack on UKC to see if there is a new log. If there is then it tweets about it.</p>
+          </div>
+          <p class="sidenote-description">Uses GitHub Actions for automation scheduled with cron jobs.</p>
+        </div>
+        
+        <div class="description-container">
+          <div class="tool-box">
+            <a class="button-link centroid-button" href="centroid.html">
+              Centroid Finder
+              <img src="icons8-mouse.svg" alt="Mouse Icon">
+            </a>
+            <p class="description">Calculate the centroid of a set of locations.</p>
+          </div>
+          <p class="sidenote-description">Original version made with ChatGPT O1.</p>
+        </div>
+        
+        <div class="description-container">
+          <div class="tool-box">
+            <a class="button-link centroid-button" href="centroid_claude_37.html">
+              Centroid Finder V2
+              <img src="icons8-mouse.svg" alt="Mouse Icon">
+            </a>
+            <p class="description">An improved centroid finder that includes finding the nearest pub, restaurant or cafe to the centroid.</p>
+          </div>
+          <p class="sidenote-description">Made with Claude 3.7 Sonnet.</p>
+        </div>
+        
+        <div class="description-container">
+          <div class="tool-box">
+            <a class="button-link" href="job_selector/job_selector.html">
+              Job Selector Tool
+              <img src="icons8-mouse.svg" alt="Mouse Icon">
+            </a>
+            <p class="description">An app that helps medics rank their job preferences starting with a CSV with all the jobs in.</p>
+          </div>
+        </div>
+        
+        <div class="description-container">
+          <div class="tool-box">
+            <a class="button-link deanery-button" href="deanery_ranker.html">
+              Deanery Ranker
+              <img src="icons8-mouse.svg" alt="Mouse Icon">
+            </a>
+            <p class="description">Ranking the deaneries can be hard. This tool guides you through a pairwise selection to rank your preferences.</p>
+          </div>
+        </div>
+        
+        <div class="description-container">
+          <div class="tool-box">
+            <a class="button-link bins-button" href="bin_day/floras_bins.html">
+              Flora's Bins
+              <img src="bin_icon.png" alt="Bin Icon">
+            </a>
+            <p class="description">What is the next bin?</p>
+          </div>
+        </div>
+        
+        <div class="description-container">
+          <div class="tool-box">
+            <a class="button-link measurement-button" href="house_planner/image-measurement-tool.html">
+              Image Measurement Tool
+              <img src="rule.svg" alt="Rule Icon">
+            </a>
+            <p class="description">Upload an image and measure distances, draw shapes, and calculate areas with a reference scale.</p>
+          </div>
+        </div>
+      </section>
+      
+      <footer>
+        <p><small>Tom Milton's collection of web widgets and tools.</small></p>
+      </footer>
+    </article>
+    
+    <!-- Add this script just before the closing body tag -->
+    <script>
+      // Fetch bin color on page load (if needed)
+      fetch('bin_day/bin_days.json')
+        .then(response => response.json())
+        .then(data => {
+          // Do something with the data if needed
+        })
+        .catch(error => console.error('Error loading bin data:', error));
+    </script>
+  </body>
+</html> 

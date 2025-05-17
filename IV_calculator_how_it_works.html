@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How the Pediatric Fluid Calculator Works</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+
+        .code-block {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+        }
+        
+        .note {
+            background-color: #fff3cd;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border: 1px solid #ffeeba;
+        }
+        
+        .warning {
+            background-color: #f8d7da;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>How the Pediatric Fluid Calculator Works</h1>
+
+    <div class="section">
+        <h2>Input Validation</h2>
+        <p>These functions validate the user's input before calculations begin:</p>
+
+        <div class="code-block">
+// Validates the weight input
+function validateWeight(weight) {
+    if (!weight || weight <= 0) {
+        return {
+            isValid: false,
+            message: 'Please enter a valid weight greater than 0 kg.'
+        };
+    }
+    return {
+        isValid: true,
+        message: ''
+    };
+}
+
+// Validates the age input
+function validateAge(years, months) {
+    const totalMonths = (years * 12) + months;
+    if (totalMonths < 3) {
+        return {
+            isValid: false,
+            message: 'This calculator is only for children over 3 months of age.'
+        };
+    }
+    return {
+        isValid: true,
+        message: ''
+    };
+}</div>
+    </div>
+
+    <div class="section">
+        <h2>Maintenance Fluid Calculation</h2>
+        <p>The 4-2-1 rule for calculating maintenance fluids:</p>
+
+        <div class="code-block">
+// Calculates maintenance fluid rate using the 4-2-1 rule
+function calculateMaintenanceFluid(weight) {
+    let maintenanceRate = 0;
+    
+    if (weight <= 10) {
+        maintenanceRate = weight * 4;
+    } else if (weight <= 20) {
+        maintenanceRate = 10 * 4 + (weight - 10) * 2;
+    } else {
+        maintenanceRate = 10 * 4 + 10 * 2 + (weight - 20) * 1;
+    }
+    
+    return maintenanceRate;
+}</div>
+    </div>
+
+    <div class="section">
+        <h2>Dehydration Calculations</h2>
+        <p>Functions for calculating fluid requirements based on dehydration level:</p>
+
+        <div class="code-block">
+// Calculates the deficit amount based on dehydration level
+function calculateDeficit(weight, dehydrationLevel) {
+    switch(dehydrationLevel) {
+        case 'mild':
+            return weight * 0.05 * 1000; // 5% dehydration
+        case 'moderate':
+            return weight * 0.10 * 1000; // 10% dehydration
+        case 'severe':
+            return weight * 0.15 * 1000; // 15% dehydration
+        default:
+            return 0;
+    }
+}
+
+// Calculates the initial bolus based on dehydration level
+function calculateInitialBolus(weight, dehydrationLevel) {
+    switch(dehydrationLevel) {
+        case 'moderate':
+            return weight * 10; // 10 mL/kg bolus
+        case 'severe':
+            return weight * 20; // 20 mL/kg bolus
+        default:
+            return 0;
+    }
+}
+
+// Calculates the deficit replacement rate
+function calculateDeficitReplacementRate(deficitAmount) {
+    return deficitAmount / 24; // Replace deficit over 24 hours
+}
+
+// Main function that calculates all fluid requirements
+function calculateFluidRequirements(weight, dehydrationLevel) {
+    // Calculate maintenance fluid rate
+    const maintenanceRate = calculateMaintenanceFluid(weight);
+    
+    // Calculate deficit and bolus
+    const deficitAmount = calculateDeficit(weight, dehydrationLevel);
+    const initialBolus = calculateInitialBolus(weight, dehydrationLevel);
+    
+    // Calculate deficit replacement rate
+    const deficitReplacementRate = calculateDeficitReplacementRate(deficitAmount);
+    
+    // Calculate total hourly rate
+    const totalHourlyRate = maintenanceRate + deficitReplacementRate;
+    
+    return {
+        maintenanceRate,
+        deficitAmount,
+        initialBolus,
+        deficitReplacementRate,
+        totalHourlyRate
+    };
+}</div>
+    </div>
+
+    <div class="section">
+        <h2>Result Formatting</h2>
+        <p>Functions for formatting and displaying the results:</p>
+
+        <div class="code-block">
+// Formats the rate to 2 decimal places
+function formatRate(rate) {
+    return rate.toFixed(2);
+}
+
+// Creates a summary of the calculations
+function createSummary(weight, ageYears, ageMonths, dehydrationLevel, results) {
+    return {
+        weight: `${weight} kg`,
+        age: `${ageYears} years, ${ageMonths} months`,
+        dehydrationLevel: dehydrationLevel,
+        maintenanceRate: `${formatRate(results.maintenanceRate)} mL/hr`,
+        deficitAmount: `${formatRate(results.deficitAmount)} mL`,
+        initialBolus: results.initialBolus > 0 ? `${formatRate(results.initialBolus)} mL` : 'None',
+        deficitReplacementRate: `${formatRate(results.deficitReplacementRate)} mL/hr`,
+        totalHourlyRate: `${formatRate(results.totalHourlyRate)} mL/hr`
+    };
+}</div>
+    </div>
+
+    <div class="section">
+        <h2>Main Calculation Flow</h2>
+        <p>The main function that ties everything together:</p>
+
+        <div class="code-block">
+// Main function that handles the entire calculation process
+function calculateIVFluids(weight, ageYears, ageMonths, dehydrationLevel) {
+    // Validate inputs
+    const weightValidation = validateWeight(weight);
+    if (!weightValidation.isValid) {
+        return { error: weightValidation.message };
+    }
+
+    const ageValidation = validateAge(ageYears, ageMonths);
+    if (!ageValidation.isValid) {
+        return { error: ageValidation.message };
+    }
+
+    // Calculate fluid requirements
+    const results = calculateFluidRequirements(weight, dehydrationLevel);
+    
+    // Create and return summary
+    return {
+        summary: createSummary(weight, ageYears, ageMonths, dehydrationLevel, results),
+        results: results
+    };
+}</div>
+    </div>
+
+    <div class="section">
+        <h2>Important Notes</h2>
+        
+        <div class="warning">
+            <h3>Emergency Situations</h3>
+            <p>For severe dehydration (>10%):</p>
+            <ul>
+                <li>Give initial bolus over 5-10 minutes</li>
+                <li>Reassess after initial bolus</li>
+                <li>Monitor closely for response</li>
+            </ul>
+        </div>
+
+        <div class="note">
+            <h3>Clinical Judgment</h3>
+            <p>These calculations are guidelines and should be adjusted based on:</p>
+            <ul>
+                <li>Clinical response</li>
+                <li>Vital signs</li>
+                <li>Urine output</li>
+                <li>Other clinical factors</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>References</h2>
+        <ul>
+            <li>Holliday MA, Segar WE. The maintenance need for water in parenteral fluid therapy. Pediatrics. 1957;19(5):823-832.</li>
+            <li>American Academy of Pediatrics. Clinical Practice Guideline: Management of Acute Gastroenteritis in Children. Pediatrics. 2019;144(4):e20183095.</li>
+        </ul>
+    </div>
+</body>
+</html> 

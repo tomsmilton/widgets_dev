@@ -412,61 +412,16 @@
 <body>
     <h1>Pediatric Fluid Calculator</h1>
     
-    <div class="steps">
-        <div class="step active" id="step1-indicator" onclick="goToStep(1)">Patient Info</div>
-        <div class="step disabled" id="step2-indicator" onclick="goToStep(2)">Hydration Status</div>
-        <div class="step disabled" id="step3-indicator" onclick="goToStep(3)">Fluid Recommendation</div>
-    </div>
-    
     <div class="card">
         <div class="alert" id="error-alert"></div>
-        
-        <!-- Screen 1: Patient Info -->
+        <!-- Single Screen: Input -->
         <div class="screen active" id="screen1">
             <h2>Patient Information</h2>
-            
-            <div class="form-group">
-                <label for="age">Age</label>
-                <div class="age-inputs">
-                    <div class="age-input-field">
-                        <input type="number" id="age-years" min="0" placeholder="Years">
-                    </div>
-                    <div class="age-input-field">
-                        <input type="number" id="age-months" min="0" max="11" placeholder="Months">
-                    </div>
-                    <div class="age-input-field">
-                        <input type="number" id="age-weeks" min="0" max="3" placeholder="Weeks">
-                    </div>
-                </div>
-            </div>
-            
+            <div class="warning-text" style="margin-bottom:16px;">This calculator is only for children over 3 months of age.</div>
             <div class="form-group">
                 <label for="weight">Weight (kg)</label>
                 <input type="number" id="weight" min="0" step="0.1" required>
             </div>
-            
-            <div class="form-group">
-                <label>Weight Type</label>
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="weight-type" value="actual" checked> Actual
-                    </label>
-                    <label>
-                        <input type="radio" name="weight-type" value="estimated"> Estimated
-                    </label>
-                </div>
-            </div>
-            
-            <div class="actions">
-                <div></div> <!-- Empty div for spacing -->
-                <button class="btn" id="next-to-screen2">Next</button>
-            </div>
-        </div>
-        
-        <!-- Screen 2: Hydration Status -->
-        <div class="screen" id="screen2">
-            <h2>Hydration Status</h2>
-            
             <div class="form-group">
                 <label for="hydration-status">Select the patient's hydration status:</label>
                 <select id="hydration-status">
@@ -476,199 +431,129 @@
                     <option value="severe">Severe Dehydration (>10%)</option>
                 </select>
             </div>
-            
             <div class="actions">
-                <button class="btn btn-back" id="back-to-screen1">Back</button>
-                <button class="btn" id="next-to-screen3">Calculate</button>
+                <button class="btn" id="calculate">Calculate</button>
             </div>
         </div>
-        
-        <!-- Screen 3: Fluid Recommendation -->
-        <div class="screen" id="screen3">
+        <!-- Results Screen -->
+        <div class="screen" id="screen2">
             <h2>Fluid Recommendation</h2>
-            
-            <div class="results" id="results-container">
-                <!-- Results will be populated here by JavaScript -->
-            </div>
-            
+            <div class="results" id="results-container"></div>
             <div class="actions">
-                <button class="btn btn-back" id="back-to-screen2">Back</button>
                 <button class="btn" id="recalculate">Recalculate</button>
             </div>
         </div>
     </div>
-    
     <script>
-        // DOM Elements
+        // --- Fluid Calculation Helper Functions ---
+
+        /**
+         * Calculate maintenance fluid rate (mL/hr) using the 4-2-1 rule.
+         * @param {number} weight - Weight in kg
+         * @returns {number} Maintenance fluid rate in mL/hr
+         */
+        function getMaintenanceRate(weight) {
+            if (weight <= 10) return weight * 4;
+            if (weight <= 20) return 40 + (weight - 10) * 2;
+            return 60 + (weight - 20) * 1;
+        }
+
+        /**
+         * Calculate fluid deficit (mL) based on dehydration percentage.
+         * @param {number} weight - Weight in kg
+         * @param {number} percent - Dehydration percent (e.g. 0.05 for 5%)
+         * @returns {number} Fluid deficit in mL
+         */
+        function getFluidDeficit(weight, percent) {
+            return weight * percent * 1000;
+        }
+
+        /**
+         * Calculate bolus amount (mL) for a given bolus rate (mL/kg).
+         * @param {number} weight - Weight in kg
+         * @param {number} rate - Bolus rate in mL/kg
+         * @returns {number} Bolus amount in mL
+         */
+        function getBolusAmount(weight, rate) {
+            return weight * rate;
+        }
+
+        /**
+         * Get the breakdown of the 4-2-1 rule for display.
+         * @param {number} weight
+         * @returns {string} HTML string of breakdown
+         */
+        function get421Breakdown(weight) {
+            let html = '';
+            if (weight > 0) {
+                html += `<p>First 10 kg: ${Math.min(weight, 10)} kg × 4 mL/kg/hr = ${Math.min(weight, 10) * 4} mL/hr</p>`;
+            }
+            if (weight > 10) {
+                html += `<p>Next ${Math.min(weight - 10, 10)} kg: ${Math.min(weight - 10, 10)} kg × 2 mL/kg/hr = ${Math.min(weight - 10, 10) * 2} mL/hr</p>`;
+            }
+            if (weight > 20) {
+                html += `<p>Remaining ${weight - 20} kg: ${weight - 20} kg × 1 mL/kg/hr = ${(weight - 20) * 1} mL/hr</p>`;
+            }
+            return html;
+        }
+
+        /**
+         * Get deficit per hour (mL/hr) over 24 hours.
+         * @param {number} deficit - Total deficit in mL
+         * @returns {number} Deficit per hour in mL/hr
+         */
+        function getDeficitPerHour(deficit) {
+            return deficit / 24;
+        }
+
+        // --- DOM Elements ---
         const screen1 = document.getElementById('screen1');
         const screen2 = document.getElementById('screen2');
-        const screen3 = document.getElementById('screen3');
-        
-        const step1Indicator = document.getElementById('step1-indicator');
-        const step2Indicator = document.getElementById('step2-indicator');
-        const step3Indicator = document.getElementById('step3-indicator');
-        
-        const nextToScreen2Button = document.getElementById('next-to-screen2');
-        const backToScreen1Button = document.getElementById('back-to-screen1');
-        const nextToScreen3Button = document.getElementById('next-to-screen3');
-        const backToScreen2Button = document.getElementById('back-to-screen2');
+        const calculateButton = document.getElementById('calculate');
         const recalculateButton = document.getElementById('recalculate');
-        
         const errorAlert = document.getElementById('error-alert');
         const resultsContainer = document.getElementById('results-container');
-        
-        // Navigation Functions
-        function goToStep(step) {
-            // Don't allow clicking disabled steps
-            if (document.getElementById('step' + step + '-indicator').classList.contains('disabled')) {
-                return;
-            }
-            
-            switch(step) {
-                case 1:
-                    showScreen(screen1);
-                    step1Indicator.classList.add('active');
-                    step1Indicator.classList.remove('completed');
-                    step2Indicator.classList.remove('active', 'completed');
-                    step3Indicator.classList.remove('active', 'completed');
-                    step2Indicator.classList.add('disabled');
-                    step3Indicator.classList.add('disabled');
-                    break;
-                case 2:
-                    showScreen(screen2);
-                    step1Indicator.classList.remove('active');
-                    step1Indicator.classList.add('completed');
-                    step2Indicator.classList.add('active');
-                    step2Indicator.classList.remove('disabled');
-                    step3Indicator.classList.remove('active', 'completed');
-                    step3Indicator.classList.add('disabled');
-                    break;
-                case 3:
-                    // Only allow going to step 3 via the calculate button
-                    break;
-            }
-        }
-        
-        nextToScreen2Button.addEventListener('click', () => {
-            // Validate inputs
-            const ageYears = parseInt(document.getElementById('age-years').value) || 0;
-            const ageMonths = parseInt(document.getElementById('age-months').value) || 0;
-            const ageWeeks = parseInt(document.getElementById('age-weeks').value) || 0;
-            const weight = parseFloat(document.getElementById('weight').value);
-            
-            if (!weight || weight <= 0) {
-                showError('Please enter a valid weight greater than 0 kg.');
-                return;
-            }
-            
-            if (ageYears === 0 && ageMonths === 0 && ageWeeks === 0) {
-                showError('Please enter a valid age.');
-                return;
-            }
-            
-            // All good, proceed to screen 2
-            hideError();
-            showScreen(screen2);
-            step1Indicator.classList.remove('active');
-            step1Indicator.classList.add('completed');
-            step2Indicator.classList.remove('disabled');
-            step2Indicator.classList.add('active');
-        });
-        
-        backToScreen1Button.addEventListener('click', () => {
-            goToStep(1);
-        });
-        
-        nextToScreen3Button.addEventListener('click', () => {
-            // Calculate and show results
-            calculateFluidRecommendation();
-            
-            showScreen(screen3);
-            step2Indicator.classList.remove('active');
-            step2Indicator.classList.add('completed');
-            step3Indicator.classList.remove('disabled');
-            step3Indicator.classList.add('active');
-        });
-        
-        backToScreen2Button.addEventListener('click', () => {
-            goToStep(2);
-        });
-        
-        recalculateButton.addEventListener('click', () => {
-            goToStep(1);
-        });
-        
-        // Helper Functions
+
+        // --- Navigation Functions ---
         function showScreen(screen) {
-            // Hide all screens
             screen1.classList.remove('active');
             screen2.classList.remove('active');
-            screen3.classList.remove('active');
-            
-            // Show the requested screen
             screen.classList.add('active');
         }
-        
+
+        // --- Error Functions ---
         function showError(message) {
             errorAlert.textContent = message;
             errorAlert.style.display = 'block';
         }
-        
         function hideError() {
             errorAlert.style.display = 'none';
         }
-        
-        // Calculation Functions
-        function calculateMaintenanceFluid(weight) {
-            let maintenanceRate = 0;
-            
-            if (weight <= 10) {
-                maintenanceRate = weight * 4;
-            } else if (weight <= 20) {
-                maintenanceRate = 10 * 4 + (weight - 10) * 2;
-            } else {
-                maintenanceRate = 10 * 4 + 10 * 2 + (weight - 20) * 1;
-            }
-            
-            return maintenanceRate;
-        }
-        
+
+        // --- Main Calculation Function ---
         function calculateFluidRecommendation() {
-            // Get all inputs
-            const ageYears = parseInt(document.getElementById('age-years').value) || 0;
-            const ageMonths = parseInt(document.getElementById('age-months').value) || 0;
-            const ageWeeks = parseInt(document.getElementById('age-weeks').value) || 0;
             const weight = parseFloat(document.getElementById('weight').value);
-            const weightType = document.querySelector('input[name="weight-type"]:checked').value;
             const hydrationStatus = document.getElementById('hydration-status').value;
-            
-            // Calculate maintenance fluid rate
-            const maintenanceRate = calculateMaintenanceFluid(weight);
-            
-            // Initialize results with input summary
+            if (!weight || weight <= 0) {
+                showError('Please enter a valid weight greater than 0 kg.');
+                return;
+            }
+            hideError();
+            const maintenanceRate = getMaintenanceRate(weight);
             let results = `
                 <div class="result-item">
                     <h3>Input Summary</h3>
-                    <p>Age: ${ageYears} years, ${ageMonths} months, ${ageWeeks} weeks</p>
-                    <p>Weight: ${weight} kg (${weightType})</p>
+                    <p>Weight: ${weight} kg</p>
                     <p>Hydration Status: ${hydrationStatus.charAt(0).toUpperCase() + hydrationStatus.slice(1)} Dehydration</p>
                 </div>
             `;
-            
-            let bolusNeeded = false;
-            let bolusAmount = 0;
-            let deficitAmount = 0;
-            
-            // Calculate based on hydration status
             if (hydrationStatus === 'normal') {
                 results += `
                     <div class="result-item">
                         <h3>Maintenance Fluid Rate</h3>
                         <div class="calculation-steps">
                             <p>Using 4-2-1 rule:</p>
-                            <p>First 10 kg: ${Math.min(weight, 10)} kg × 4 mL/kg/hr = ${Math.min(weight, 10) * 4} mL/hr</p>
-                            ${weight > 10 ? `<p>Next ${Math.min(weight - 10, 10)} kg: ${Math.min(weight - 10, 10)} kg × 2 mL/kg/hr = ${Math.min(weight - 10, 10) * 2} mL/hr</p>` : ''}
-                            ${weight > 20 ? `<p>Remaining ${weight - 20} kg: ${weight - 20} kg × 1 mL/kg/hr = ${(weight - 20) * 1} mL/hr</p>` : ''}
+                            ${get421Breakdown(weight)}
                         </div>
                         <div class="final-result">
                             Total fluids required:
@@ -677,38 +562,33 @@
                     </div>
                 `;
             } else if (hydrationStatus === 'mild') {
-                deficitAmount = 0.05 * weight * 1000;
-                const deficitPerHour = deficitAmount / 24;
-                
+                const deficit = getFluidDeficit(weight, 0.05);
+                const deficitPerHour = getDeficitPerHour(deficit);
                 results += `
                     <div class="result-item">
                         <h3>Maintenance Fluid Rate</h3>
                         <div class="calculation-steps">
                             <p>Using 4-2-1 rule:</p>
-                            <p>First 10 kg: ${Math.min(weight, 10)} kg × 4 mL/kg/hr = ${Math.min(weight, 10) * 4} mL/hr</p>
-                            ${weight > 10 ? `<p>Next ${Math.min(weight - 10, 10)} kg: ${Math.min(weight - 10, 10)} kg × 2 mL/kg/hr = ${Math.min(weight - 10, 10) * 2} mL/hr</p>` : ''}
-                            ${weight > 20 ? `<p>Remaining ${weight - 20} kg: ${weight - 20} kg × 1 mL/kg/hr = ${(weight - 20) * 1} mL/hr</p>` : ''}
+                            ${get421Breakdown(weight)}
                         </div>
                         <div class="intermediate-result">
                             Maintenance rate:
                             <strong>${Math.round(maintenanceRate)} mL/hr</strong>
                         </div>
                     </div>
-                    
                     <div class="result-item">
                         <h3>Fluid Deficit</h3>
                         <div class="calculation-steps">
                             <p>5% of body weight in mL:</p>
-                            <p>${weight} kg × 0.05 × 1000 mL = ${Math.round(deficitAmount)} mL</p>
-                            <p>Per kg: ${Math.round(deficitAmount / weight)} mL/kg</p>
-                            <p>Deficit replacement rate: ${Math.round(deficitAmount)} mL ÷ 24 = ${Math.round(deficitPerHour)} mL/hr</p>
+                            <p>${weight} kg × 0.05 × 1000 mL = ${Math.round(deficit)} mL</p>
+                            <p>Per kg: ${Math.round(deficit / weight)} mL/kg</p>
+                            <p>Deficit replacement rate: ${Math.round(deficit)} mL ÷ 24 = ${Math.round(deficitPerHour)} mL/hr</p>
                         </div>
                         <div class="intermediate-result">
                             Deficit replacement rate:
                             <strong>${Math.round(deficitPerHour)} mL/hr</strong>
                         </div>
                     </div>
-                    
                     <div class="result-item">
                         <h3>Total Hourly Rate</h3>
                         <div class="calculation-steps">
@@ -722,51 +602,45 @@
                     </div>
                 `;
             } else if (hydrationStatus === 'moderate') {
-                deficitAmount = 0.1 * weight * 1000;
-                const deficitPerHour = deficitAmount / 24;
-                bolusAmount = 10 * weight;
-                
+                const deficit = getFluidDeficit(weight, 0.10);
+                const deficitPerHour = getDeficitPerHour(deficit);
+                const bolus = getBolusAmount(weight, 10);
                 results += `
                     <div class="result-item">
                         <h3>Initial Bolus</h3>
                         <div class="calculation-steps">
                             <p>10 mL/kg bolus:</p>
-                            <p>${weight} kg × 10 mL/kg = ${Math.round(bolusAmount)} mL</p>
+                            <p>${weight} kg × 10 mL/kg = ${Math.round(bolus)} mL</p>
                         </div>
                         <div class="final-result">
                             Give bolus now:
-                            <strong>${Math.round(bolusAmount)} mL over 20 minutes</strong>
+                            <strong>${Math.round(bolus)} mL over 20 minutes</strong>
                         </div>
                     </div>
-                    
                     <div class="result-item">
                         <h3>Maintenance Fluid Rate</h3>
                         <div class="calculation-steps">
                             <p>Using 4-2-1 rule:</p>
-                            <p>First 10 kg: ${Math.min(weight, 10)} kg × 4 mL/kg/hr = ${Math.min(weight, 10) * 4} mL/hr</p>
-                            ${weight > 10 ? `<p>Next ${Math.min(weight - 10, 10)} kg: ${Math.min(weight - 10, 10)} kg × 2 mL/kg/hr = ${Math.min(weight - 10, 10) * 2} mL/hr</p>` : ''}
-                            ${weight > 20 ? `<p>Remaining ${weight - 20} kg: ${weight - 20} kg × 1 mL/kg/hr = ${(weight - 20) * 1} mL/hr</p>` : ''}
+                            ${get421Breakdown(weight)}
                         </div>
                         <div class="intermediate-result">
                             Maintenance rate:
                             <strong>${Math.round(maintenanceRate)} mL/hr</strong>
                         </div>
                     </div>
-                    
                     <div class="result-item">
                         <h3>Fluid Deficit</h3>
                         <div class="calculation-steps">
                             <p>10% of body weight in mL:</p>
-                            <p>${weight} kg × 0.10 × 1000 mL = ${Math.round(deficitAmount)} mL</p>
-                            <p>Per kg: ${Math.round(deficitAmount / weight)} mL/kg</p>
-                            <p>Deficit replacement rate: ${Math.round(deficitAmount)} mL ÷ 24 = ${Math.round(deficitPerHour)} mL/hr</p>
+                            <p>${weight} kg × 0.10 × 1000 mL = ${Math.round(deficit)} mL</p>
+                            <p>Per kg: ${Math.round(deficit / weight)} mL/kg</p>
+                            <p>Deficit replacement rate: ${Math.round(deficit)} mL ÷ 24 = ${Math.round(deficitPerHour)} mL/hr</p>
                         </div>
                         <div class="intermediate-result">
                             Deficit replacement rate:
                             <strong>${Math.round(deficitPerHour)} mL/hr</strong>
                         </div>
                     </div>
-                    
                     <div class="result-item">
                         <h3>Total Hourly Rate (After Bolus)</h3>
                         <div class="calculation-steps">
@@ -780,52 +654,46 @@
                     </div>
                 `;
             } else if (hydrationStatus === 'severe') {
-                deficitAmount = 0.15 * weight * 1000;
-                const deficitPerHour = deficitAmount / 24;
-                bolusAmount = 20 * weight;
-                
+                const deficit = getFluidDeficit(weight, 0.15);
+                const deficitPerHour = getDeficitPerHour(deficit);
+                const bolus = getBolusAmount(weight, 20);
                 results += `
                     <div class="result-item">
                         <h3>Emergency Bolus</h3>
                         <div class="calculation-steps">
                             <p>20 mL/kg bolus:</p>
-                            <p>${weight} kg × 20 mL/kg = ${Math.round(bolusAmount)} mL</p>
+                            <p>${weight} kg × 20 mL/kg = ${Math.round(bolus)} mL</p>
                         </div>
                         <div class="final-result">
                             Give emergency bolus now:
-                            <strong>${Math.round(bolusAmount)} mL over 5-10 minutes</strong>
+                            <strong>${Math.round(bolus)} mL over 5-10 minutes</strong>
                         </div>
                         <p class="warning-text">URGENT: Reassess after initial bolus</p>
                     </div>
-                    
                     <div class="result-item">
                         <h3>Maintenance Fluid Rate</h3>
                         <div class="calculation-steps">
                             <p>Using 4-2-1 rule:</p>
-                            <p>First 10 kg: ${Math.min(weight, 10)} kg × 4 mL/kg/hr = ${Math.min(weight, 10) * 4} mL/hr</p>
-                            ${weight > 10 ? `<p>Next ${Math.min(weight - 10, 10)} kg: ${Math.min(weight - 10, 10)} kg × 2 mL/kg/hr = ${Math.min(weight - 10, 10) * 2} mL/hr</p>` : ''}
-                            ${weight > 20 ? `<p>Remaining ${weight - 20} kg: ${weight - 20} kg × 1 mL/kg/hr = ${(weight - 20) * 1} mL/hr</p>` : ''}
+                            ${get421Breakdown(weight)}
                         </div>
                         <div class="intermediate-result">
                             Maintenance rate:
                             <strong>${Math.round(maintenanceRate)} mL/hr</strong>
                         </div>
                     </div>
-                    
                     <div class="result-item">
                         <h3>Fluid Deficit</h3>
                         <div class="calculation-steps">
                             <p>15% of body weight in mL:</p>
-                            <p>${weight} kg × 0.15 × 1000 mL = ${Math.round(deficitAmount)} mL</p>
-                            <p>Per kg: ${Math.round(deficitAmount / weight)} mL/kg</p>
-                            <p>Deficit replacement rate: ${Math.round(deficitAmount)} mL ÷ 24 = ${Math.round(deficitPerHour)} mL/hr</p>
+                            <p>${weight} kg × 0.15 × 1000 mL = ${Math.round(deficit)} mL</p>
+                            <p>Per kg: ${Math.round(deficit / weight)} mL/kg</p>
+                            <p>Deficit replacement rate: ${Math.round(deficit)} mL ÷ 24 = ${Math.round(deficitPerHour)} mL/hr</p>
                         </div>
                         <div class="intermediate-result">
                             Deficit replacement rate:
                             <strong>${Math.round(deficitPerHour)} mL/hr</strong>
                         </div>
                     </div>
-                    
                     <div class="result-item">
                         <h3>Total Hourly Rate (After Bolus)</h3>
                         <div class="calculation-steps">
@@ -837,16 +705,18 @@
                             <strong>${Math.round(maintenanceRate + deficitPerHour)} mL/hr</strong>
                         </div>
                     </div>
-                    
                     <div class="result-item">
                         <p class="warning-text">Note: Severe dehydration requires close monitoring and possible adjustment of fluid therapy based on clinical response.</p>
                     </div>
                 `;
             }
-            
-            // Display results
             resultsContainer.innerHTML = results;
+            showScreen(screen2);
         }
+        calculateButton.addEventListener('click', calculateFluidRecommendation);
+        recalculateButton.addEventListener('click', () => {
+            showScreen(screen1);
+        });
     </script>
     <script>
         function toggleCalculation(button) {
