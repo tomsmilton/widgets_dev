@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Combiner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #preview {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CSV Combiner</h1>
+        
+        <div class="input-group">
+            <input type="text" id="person" placeholder="Enter person name">
+            <input type="text" id="maskType" placeholder="Enter mask type">
+        </div>
+
+        <div class="input-group">
+            <input type="file" id="csvFiles" multiple accept=".csv">
+        </div>
+
+        <div class="input-group">
+            <button id="processBtn" disabled>Process Files</button>
+            <button id="downloadBtn" disabled>Download Combined CSV</button>
+        </div>
+
+        <div id="preview" class="hidden">
+            <h2>Preview</h2>
+            <div id="tableContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let combinedData = null;
+
+        // Enable/disable process button based on file selection
+        document.getElementById('csvFiles').addEventListener('change', function(e) {
+            document.getElementById('processBtn').disabled = e.target.files.length === 0;
+        });
+
+        // Process button click handler
+        document.getElementById('processBtn').addEventListener('click', async function() {
+            const files = document.getElementById('csvFiles').files;
+            if (files.length === 0) return;
+
+            const allData = [];
+            
+            for (const file of files) {
+                const text = await file.text();
+                const rows = text.split('\n');
+                // Robust header parsing: trim and lowercase
+                const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+                
+                // Find required column indices (case-insensitive)
+                const requiredColumns = ['fitfactor', 'ambconc', 'maskconc', 'notes'];
+                const missingColumns = requiredColumns.filter(col => headers.indexOf(col) === -1);
+                
+                if (missingColumns.length > 0) {
+                    alert(`File ${file.name} is missing required columns: ${missingColumns.join(', ')}`);
+                    continue;
+                }
+                const fitFactorIndex = headers.indexOf('fitfactor');
+                const ambConcIndex = headers.indexOf('ambconc');
+                const maskConcIndex = headers.indexOf('maskconc');
+                const notesIndex = headers.indexOf('notes');
+                
+                // Get notes value from first data row
+                const notesValue = rows[1].split(',')[notesIndex].replace(/"/g, '');
+                
+                // Process data rows
+                const data = rows.slice(1).filter(row => row.trim()).map(row => {
+                    const values = row.split(',');
+                    return {
+                        [`${notesValue}_FitFactor`]: values[fitFactorIndex],
+                        [`${notesValue}_AmbConc`]: values[ambConcIndex],
+                        [`${notesValue}_MaskConc`]: values[maskConcIndex]
+                    };
+                });
+
+                allData.push(data);
+            }
+
+            // Combine all data
+            const maxRows = Math.max(...allData.map(data => data.length));
+            combinedData = Array(maxRows).fill().map((_, rowIndex) => {
+                const row = {};
+                allData.forEach(data => {
+                    if (data[rowIndex]) {
+                        Object.assign(row, data[rowIndex]);
+                    }
+                });
+                return row;
+            });
+
+            // Sort columns
+            const columns = Object.keys(combinedData[0] || {});
+            columns.sort((a, b) => {
+                if (a.startsWith('a_') && !b.startsWith('a_')) return -1;
+                if (!a.startsWith('a_') && b.startsWith('a_')) return 1;
+                return a.localeCompare(b);
+            });
+
+            // Create table
+            const table = document.createElement('table');
+            
+            // Add headers
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Add data rows
+            const tbody = document.createElement('tbody');
+            combinedData.forEach(row => {
+                const tr = document.createElement('tr');
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.textContent = row[col] || '';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+
+            // Display table
+            const container = document.getElementById('tableContainer');
+            container.innerHTML = '';
+            container.appendChild(table);
+            document.getElementById('preview').classList.remove('hidden');
+            document.getElementById('downloadBtn').disabled = false;
+        });
+
+        // Download button click handler
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            if (!combinedData) return;
+
+            const person = document.getElementById('person').value || 'unknown';
+            const maskType = document.getElementById('maskType').value || 'unknown';
+            
+            // Get all columns
+            const columns = Object.keys(combinedData[0] || {});
+            columns.sort((a, b) => {
+                if (a.startsWith('a_') && !b.startsWith('a_')) return -1;
+                if (!a.startsWith('a_') && b.startsWith('a_')) return 1;
+                return a.localeCompare(b);
+            });
+
+            // Create CSV content
+            const csvContent = [
+                columns.join(','),
+                ...combinedData.map(row => 
+                    columns.map(col => row[col] || '').join(',')
+                )
+            ].join('\n');
+
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${person}_${maskType}_combined.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html> 
