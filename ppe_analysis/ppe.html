@@ -601,6 +601,11 @@
         </div>
     </div>
 
+    <!-- Footer with commit SHA -->
+    <footer style="text-align: center; padding: 20px; color: #666; font-size: 12px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; margin-top: 20px;">
+        <div id="commitInfo">Loading commit info...</div>
+    </footer>
+
     <script>
         let charts = [];
         let currentChartIndex = 0;
@@ -2326,6 +2331,45 @@
                 chart.update();
             }
         }
+        
+        // Start the application when the page loads
+        window.addEventListener('load', init);
+        
+        // Load commit information from git_commit.json
+        async function loadCommitInfo() {
+            try {
+                const response = await fetch('git_commit.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const commitData = await response.json();
+                
+                const commitInfoDiv = document.getElementById('commitInfo');
+                if (commitData.commit && commitData.commit.sha) {
+                    const fullSha = commitData.commit.sha;
+                    const timestamp = commitData.commit.timestamp ? new Date(commitData.commit.timestamp).toLocaleString() : '';
+                    
+                    commitInfoDiv.innerHTML = `
+                        <div>
+                            <strong>SHA:</strong> <code style="background-color: #e9ecef; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 11px;">${fullSha}</code>
+                            ${timestamp ? `<span style="margin-left: 15px;"><strong>Updated:</strong> ${timestamp}</span>` : ''}
+                        </div>
+                    `;
+                } else {
+                    commitInfoDiv.textContent = 'Commit information not available';
+                }
+            } catch (error) {
+                console.error('Error loading commit info:', error);
+                const commitInfoDiv = document.getElementById('commitInfo');
+                commitInfoDiv.textContent = 'Unable to load commit information';
+            }
+        }
+        
+        // Initialize application and commit info loading
+        window.addEventListener('load', function() {
+            init();
+            loadCommitInfo();
+        });
     </script>
 </body>
 </html> 
