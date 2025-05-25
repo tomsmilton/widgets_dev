@@ -19,40 +19,35 @@ jobs:
           # Use a personal access token or GITHUB_TOKEN with write permissions
           token: ${{ secrets.GITHUB_TOKEN }}
           
-      - name: Get commit information
-        id: commit_info
-        run: |
-          echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-          echo "short_sha=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
-          echo "author=${{ github.event.head_commit.author.name }}" >> $GITHUB_OUTPUT
-          echo "timestamp=${{ github.event.head_commit.timestamp }}" >> $GITHUB_OUTPUT
-          echo "message=$(echo '${{ github.event.head_commit.message }}' | jq -Rs .)" >> $GITHUB_OUTPUT
-          echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          echo "repository=${{ github.repository }}" >> $GITHUB_OUTPUT
-          
       - name: Create or update git_commit.json
         run: |
-          # Create JSON content
-          cat > git_commit.json << EOF
-          {
-            "commit": {
-              "sha": "${{ steps.commit_info.outputs.sha }}",
-              "short_sha": "${{ steps.commit_info.outputs.short_sha }}",
-              "author": {
-                "name": "${{ steps.commit_info.outputs.author }}",
+          # Create JSON content using jq to ensure proper escaping
+          jq -n \
+            --arg sha "${{ github.sha }}" \
+            --arg short_sha "$(echo ${{ github.sha }} | cut -c1-7)" \
+            --arg author_name "${{ github.event.head_commit.author.name }}" \
+            --arg author_email "${{ github.event.head_commit.author.email }}" \
+            --arg timestamp "${{ github.event.head_commit.timestamp }}" \
+            --arg message "${{ github.event.head_commit.message }}" \
+            --arg branch "${{ github.ref_name }}" \
+            --arg repository "${{ github.repository }}" \
+            --arg updated_at "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+            '{
+              commit: {
+                sha: $sha,
+                short_sha: $short_sha,
+                author: {
+                  name: $author_name,
+                  email: $author_email
+                },
+                timestamp: $timestamp,
+                message: $message,
+                url: ("https://github.com/" + $repository + "/commit/" + $sha)
               },
-              "timestamp": "${{ steps.commit_info.outputs.timestamp }}",
-              "message": ${{ steps.commit_info.outputs.message }},
-              "url": "https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
-            },
-            "branch": "${{ steps.commit_info.outputs.branch }}",
-            "repository": "${{ steps.commit_info.outputs.repository }}",
-            "updated_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-          }
-          EOF
-          
-          # Pretty print the JSON
-          jq . git_commit.json > git_commit.json.tmp && mv git_commit.json.tmp git_commit.json
+              branch: $branch,
+              repository: $repository,
+              updated_at: $updated_at
+            }' > git_commit.json
           
       - name: Commit and push changes
         run: |
