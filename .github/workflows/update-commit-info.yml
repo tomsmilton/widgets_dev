@@ -1,0 +1,69 @@
+name: Update Commit Info
+
+on:
+  push:
+    branches:
+      - '**'  # Runs on push to any branch
+
+jobs:
+  update-commit-info:
+    runs-on: ubuntu-latest
+    
+    # Only run if the push is not from the bot itself (to avoid infinite loops)
+    if: github.actor != 'github-actions[bot]'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Use a personal access token or GITHUB_TOKEN with write permissions
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Get commit information
+        id: commit_info
+        run: |
+          echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "short_sha=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+          echo "author=${{ github.event.head_commit.author.name }}" >> $GITHUB_OUTPUT
+          echo "timestamp=${{ github.event.head_commit.timestamp }}" >> $GITHUB_OUTPUT
+          echo "message=$(echo '${{ github.event.head_commit.message }}' | jq -Rs .)" >> $GITHUB_OUTPUT
+          echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "repository=${{ github.repository }}" >> $GITHUB_OUTPUT
+          
+      - name: Create or update git_commit.json
+        run: |
+          # Create JSON content
+          cat > git_commit.json << EOF
+          {
+            "commit": {
+              "sha": "${{ steps.commit_info.outputs.sha }}",
+              "short_sha": "${{ steps.commit_info.outputs.short_sha }}",
+              "author": {
+                "name": "${{ steps.commit_info.outputs.author }}",
+              },
+              "timestamp": "${{ steps.commit_info.outputs.timestamp }}",
+              "message": ${{ steps.commit_info.outputs.message }},
+              "url": "https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+            },
+            "branch": "${{ steps.commit_info.outputs.branch }}",
+            "repository": "${{ steps.commit_info.outputs.repository }}",
+            "updated_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          }
+          EOF
+          
+          # Pretty print the JSON
+          jq . git_commit.json > git_commit.json.tmp && mv git_commit.json.tmp git_commit.json
+          
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # Check if file has changed
+          if git diff --quiet git_commit.json; then
+            echo "No changes to commit"
+          else
+            git add git_commit.json
+            git commit -m "Update git_commit.json with latest commit info [skip ci]"
+            git push
+          fi
