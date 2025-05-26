@@ -2040,7 +2040,7 @@
         // Load commit information from git_commit.json
         async function loadCommitInfo() {
             try {
-                const response = await fetch('git_commit.json');
+                const response = await fetch('../git_commit.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
