@@ -610,6 +610,7 @@
         let charts = [];
         let currentChartIndex = 0;
         let availableFiles = [];
+        let commitInfo = null;
         let chartColors = [
             '#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336',
             '#00BCD4', '#FFEB3B', '#795548', '#607D8B', '#E91E63'
@@ -1044,7 +1045,9 @@
                         plugins: {
                             title: {
                                 display: true,
-                                text: `PPE Fit Factor Analysis - Plot ${newChartIndex + 1}`,
+                                text: getChartSubtitle() ? 
+                                    [`PPE Fit Factor Analysis - Plot ${newChartIndex + 1}`, getChartSubtitle()] :
+                                    `PPE Fit Factor Analysis - Plot ${newChartIndex + 1}`,
                                 font: {
                                     size: 16
                                 }
@@ -1155,7 +1158,9 @@
                         plugins: {
                             title: {
                                 display: true,
-                                text: `PPE Fit Factor Analysis - Plot ${index + 1}`,
+                                text: getChartSubtitle() ? 
+                                    [`PPE Fit Factor Analysis - Plot ${index + 1}`, getChartSubtitle()] :
+                                    `PPE Fit Factor Analysis - Plot ${index + 1}`,
                                 font: {
                                     size: 16
                                 }
@@ -1602,368 +1607,63 @@
             newTab.document.write('<!DOCTYPE html>');
             newTab.document.write('<html lang="en">');
             newTab.document.write('<head>');
-            newTab.document.write('<meta charset="UTF-8">');
-            newTab.document.write('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
-            newTab.document.write('<title>PPE Fit Factor Analysis - Plot ' + (chartIndex + 1) + '</title>');
-            newTab.document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>');
-            newTab.document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"><\/script>');
+            newTab.document.write('    <meta charset="UTF-8">');
+            newTab.document.write('    <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+            newTab.document.write('    <title>PPE Fit Factor Analysis - Plot ' + (chartIndex + 1) + '</title>');
             
-            // Add comprehensive CSS
-            newTab.document.write('<style>');
-            newTab.document.write('body{margin:0;padding:20px;font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;background-color:#f5f5f5}');
-            newTab.document.write('.container{width:100%;height:calc(100vh - 40px);background-color:white;border-radius:10px;box-shadow:0 4px 6px rgba(0,0,0,0.1);padding:30px;box-sizing:border-box}');
-            newTab.document.write('.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}');
-            newTab.document.write('h1{color:#333;margin:0}');
-            newTab.document.write('.controls{display:flex;gap:10px}');
-            newTab.document.write('.btn{padding:8px 16px;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;transition:background-color 0.3s}');
-            newTab.document.write('.btn-success{background-color:#28a745;color:white}.btn-success:hover{background-color:#218838}');
-            newTab.document.write('.btn-secondary{background-color:#6c757d;color:white}.btn-secondary:hover{background-color:#5a6268}');
-            newTab.document.write('.btn-info{background-color:#17a2b8;color:white}.btn-info:hover{background-color:#138496}');
-            newTab.document.write('.btn-danger{background-color:#dc3545;color:white}.btn-danger:hover{background-color:#c82333}');
-            newTab.document.write('.chart-container{width:100%;height:calc(100% - 80px);position:relative}');
+            // Dynamically create and append script elements for Chart.js
+            const chartJsScript = newTab.document.createElement('script');
+            chartJsScript.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+            newTab.document.head.appendChild(chartJsScript);
             
-            // Modal CSS
-            newTab.document.write('.modal{display:none;position:fixed;z-index:2000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.5);backdrop-filter:blur(3px)}');
-            newTab.document.write('.modal-content{background-color:white;margin:5% auto;padding:30px;border-radius:12px;width:90%;max-width:700px;max-height:80vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.3);position:relative}');
-            newTab.document.write('.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e9ecef}');
-            newTab.document.write('.modal-title{font-size:1.5em;font-weight:bold;color:#333}');
-            newTab.document.write('.modal-close{background:none;border:none;font-size:30px;color:#999;cursor:pointer;padding:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all 0.3s}.modal-close:hover{background-color:#f8f9fa;color:#333}');
-            newTab.document.write('.modal-section{margin-bottom:25px}.modal-section h4{margin:0 0 15px 0;color:#555;font-size:1.1em}');
-            newTab.document.write('.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:20px}');
-            newTab.document.write('.control-group{display:flex;flex-direction:column;align-items:center;background-color:white;padding:15px;border-radius:8px;border:1px solid #dee2e6}');
-            newTab.document.write('.select-all-btn{background-color:#17a2b8;color:white;padding:4px 8px;border:none;border-radius:3px;cursor:pointer;font-size:11px;font-weight:bold;margin-bottom:8px;transition:background-color 0.3s}.select-all-btn:hover{background-color:#138496}');
-            newTab.document.write('label{font-weight:bold;margin-bottom:8px;color:#555;font-size:14px}');
-            newTab.document.write('select{padding:8px;border:2px solid #ddd;border-radius:5px;font-size:14px;width:100%;max-width:180px;background-color:white;min-height:100px}');
-            newTab.document.write('select[multiple]{min-height:120px}select option:checked{background-color:#4CAF50;color:white}');
-            newTab.document.write('.current-lines-list{max-height:200px;overflow-y:auto;border:1px solid #e9ecef;border-radius:8px;padding:10px;background-color:#f8f9fa}');
-            newTab.document.write('.current-line-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;margin:4px 0;background-color:white;border-radius:6px;border-left:4px solid;font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.1);flex-wrap:wrap;gap:8px}');
-            newTab.document.write('.current-line-label{flex-grow:1;margin-right:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:200px}');
-            newTab.document.write('.current-line-remove{background-color:#dc3545;color:white;border:none;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;flex-shrink:0;transition:background-color 0.3s}.current-line-remove:hover{background-color:#c82333}');
-            newTab.document.write('.empty-lines{text-align:center;color:#999;font-style:italic;padding:20px}');
-            newTab.document.write('kbd{background-color:#f9f9f9;border:1px solid #ccc;border-radius:3px;box-shadow:0 1px 1px rgba(0,0,0,0.2);color:#333;display:inline-block;font-family:Arial,sans-serif;font-size:0.85em;font-weight:bold;line-height:1;padding:2px 4px;white-space:nowrap}');
-            newTab.document.write('.control-row{display:flex;align-items:center;gap:15px;margin-bottom:15px;flex-wrap:wrap;justify-content:center}');
-            newTab.document.write('</style>');
-            
+            // Minimal CSS for full-screen plot
+            newTab.document.write('    <style>');
+            newTab.document.write('        body { margin: 0; padding: 20px; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; }');
+            newTab.document.write('        .container { width: 100%; height: calc(100vh - 40px); background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 30px; box-sizing: border-box; }');
+            newTab.document.write('        .chart-container { width: 100%; height: 100%; position: relative; }');
+            newTab.document.write('        h1 { color: #333; margin: 0 0 20px 0; text-align: center; }');
+            newTab.document.write('    </style>');
             newTab.document.write('</head>');
             newTab.document.write('<body>');
-            newTab.document.write('<div class="container">');
-            newTab.document.write('<div class="header">');
-            newTab.document.write('<h1>PPE Fit Factor Analysis - Plot ' + (chartIndex + 1) + '</h1>');
-            newTab.document.write('<div class="controls">');
-            newTab.document.write('<button class="btn btn-success" onclick="downloadChart()" title="Download Chart">⬇ Download</button>');
-            newTab.document.write('<button class="btn btn-secondary" onclick="openEditModal()" title="Edit Plot">✏️ Edit</button>');
-            newTab.document.write('</div>');
-            newTab.document.write('</div>');
-            newTab.document.write('<div class="chart-container">');
-            newTab.document.write('<canvas id="fullScreenChart"></canvas>');
-            newTab.document.write('</div>');
-            newTab.document.write('</div>');
+            newTab.document.write('    <div class="container">');
+            newTab.document.write('        <h1>PPE Fit Factor Analysis - Plot ' + (chartIndex + 1) + '</h1>');
+            newTab.document.write('        <div class="chart-container">');
+            newTab.document.write('            <canvas id="fullScreenChart"></canvas>');
+            newTab.document.write('        </div>');
+            newTab.document.write('    </div>');
             
-            // Add modal HTML
-            newTab.document.write('<div id="editModal" class="modal">');
-            newTab.document.write('<div class="modal-content">');
-            newTab.document.write('<div class="modal-header">');
-            newTab.document.write('<div class="modal-title">Edit Plot ' + (chartIndex + 1) + '</div>');
-            newTab.document.write('<button class="modal-close" onclick="closeEditModal()">&times;</button>');
-            newTab.document.write('</div>');
-            newTab.document.write('<div class="modal-section">');
-            newTab.document.write('<h4>Current Lines</h4>');
-            newTab.document.write('<div class="current-lines-list" id="currentLinesList">');
-            newTab.document.write('<div class="empty-lines">No lines in this plot</div>');
-            newTab.document.write('</div>');
-            newTab.document.write('</div>');
-            newTab.document.write('<div class="modal-section">');
-            newTab.document.write('<h4>Add New Lines</h4>');
-            newTab.document.write('<div style="background-color: #e8f4fd; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #2196F3;">');
-            newTab.document.write('<p style="margin: 0; font-size: 14px; color: #1976D2;">');
-            newTab.document.write('<strong>💡 How to select multiple items:</strong><br>');
-            newTab.document.write('• Hold <kbd>Ctrl</kbd> (Windows/Linux) or <kbd>Cmd</kbd> (Mac) and click to select multiple individual items<br>');
-            newTab.document.write('• Use "Select All" buttons for quick selection of all options<br>');
-            newTab.document.write('• You can mix and match selections from different categories');
-            newTab.document.write('</p>');
-            newTab.document.write('</div>');
-            newTab.document.write('<div class="controls">');
-            newTab.document.write('<div class="control-group">');
-            newTab.document.write('<button class="select-all-btn" onclick="selectAllPersons()">Select All Persons</button>');
-            newTab.document.write('<label for="modalPersonSelect">Person:</label>');
-            newTab.document.write('<select id="modalPersonSelect" multiple>');
-            newTab.document.write('<option value="">Select Person</option>');
-            newTab.document.write('</select>');
-            newTab.document.write('</div>');
-            newTab.document.write('<div class="control-group">');
-            newTab.document.write('<button class="select-all-btn" onclick="selectAllMasks()">Select All Masks</button>');
-            newTab.document.write('<label for="modalMaskSelect">Mask:</label>');
-            newTab.document.write('<select id="modalMaskSelect" multiple>');
-            newTab.document.write('<option value="">Select Mask</option>');
-            newTab.document.write('</select>');
-            newTab.document.write('</div>');
-            newTab.document.write('<div class="control-group">');
-            newTab.document.write('<button class="select-all-btn" onclick="selectAllActions()">Select All Actions</button>');
-            newTab.document.write('<label for="modalActionSelect">Action:</label>');
-            newTab.document.write('<select id="modalActionSelect" multiple>');
-            newTab.document.write('<option value="">Select Action</option>');
-            newTab.document.write('</select>');
-            newTab.document.write('</div>');
-            newTab.document.write('</div>');
-            newTab.document.write('<div class="control-row">');
-            newTab.document.write('<button id="modalActionButton" onclick="addLineToPlot()" disabled>Add Lines to Plot</button>');
-            newTab.document.write('</div>');
-            newTab.document.write('</div>');
-            newTab.document.write('</div>');
-            newTab.document.write('</div>');
-            
-            // Add comprehensive JavaScript
-            newTab.document.write('<script>');
-            newTab.document.write('const chartData = ' + JSON.stringify(cleanChartData) + ';');
-            newTab.document.write('let fullScreenChart;');
-            newTab.document.write('let availableFiles = ' + JSON.stringify(availableFiles) + ';');
-            newTab.document.write('let chartColors = ["#4CAF50", "#2196F3", "#FF9800", "#9C27B0", "#F44336", "#00BCD4", "#FFEB3B", "#795548", "#607D8B", "#E91E63"];');
-            
-            // Chart initialization
-            newTab.document.write('document.addEventListener("DOMContentLoaded", function() {');
-            newTab.document.write('try {');
-            newTab.document.write('const ctx = document.getElementById("fullScreenChart").getContext("2d");');
-            newTab.document.write('let actualMaxLength = 0;');
-            newTab.document.write('chartData.datasets.forEach(dataset => {');
-            newTab.document.write('if (dataset.data && dataset.data.length > actualMaxLength) {');
-            newTab.document.write('actualMaxLength = dataset.data.length;');
-            newTab.document.write('}');
-            newTab.document.write('});');
-            newTab.document.write('chartData.labels = Array.from({length: actualMaxLength}, (_, i) => i + 1);');
-            newTab.document.write('fullScreenChart = new Chart(ctx, {');
-            newTab.document.write('type: "line",');
-            newTab.document.write('data: chartData,');
-            newTab.document.write('options: {');
-            newTab.document.write('responsive: true,');
-            newTab.document.write('maintainAspectRatio: false,');
-            newTab.document.write('scales: {');
-            newTab.document.write('x: { title: { display: true, text: "Data Point" } },');
-            newTab.document.write('y: { type: "logarithmic", title: { display: true, text: "Fit Factor (Log Scale)" }, min: 1, ticks: { callback: function(value) { if (value === 1 || value === 10 || value === 100 || value === 1000) return value; if (value >= 1 && value < 10) return Math.round(value * 10) / 10; if (value >= 10 && value < 100) return Math.round(value); return value; } } }');
-            newTab.document.write('},');
-            newTab.document.write('plugins: {');
-            newTab.document.write('title: { display: true, text: "PPE Fit Factor Analysis - Plot ' + (chartIndex + 1) + '", font: { size: 20 } },');
-            newTab.document.write('legend: { display: true }');
-            newTab.document.write('}');
-            newTab.document.write('}');
-            newTab.document.write('});');
-            newTab.document.write('} catch (error) {');
-            newTab.document.write('console.error("Error creating chart:", error);');
-            newTab.document.write('document.getElementById("fullScreenChart").parentElement.innerHTML = "<p>Error loading chart: " + error.message + "</p>";');
-            newTab.document.write('}');
-            newTab.document.write('});');
-            
-            // Add all necessary functions
-            newTab.document.write('function downloadChart() {');
-            newTab.document.write('const url = fullScreenChart.toBase64Image("image/png", 1.0);');
-            newTab.document.write('const link = document.createElement("a");');
-            newTab.document.write('link.download = "ppe_plot_' + (chartIndex + 1) + '.png";');
-            newTab.document.write('link.href = url;');
-            newTab.document.write('document.body.appendChild(link);');
-            newTab.document.write('link.click();');
-            newTab.document.write('document.body.removeChild(link);');
-            newTab.document.write('}');
-            
-            // Modal functions
-            newTab.document.write('function openEditModal() {');
-            newTab.document.write('const modal = document.getElementById("editModal");');
-            newTab.document.write('populateModalDropdowns();');
-            newTab.document.write('updateModalLinesList();');
-            newTab.document.write('modal.style.display = "block";');
-            newTab.document.write('clearModalSelections();');
-            newTab.document.write('checkModalButtons();');
-            newTab.document.write('}');
-            
-            newTab.document.write('function closeEditModal() {');
-            newTab.document.write('const modal = document.getElementById("editModal");');
-            newTab.document.write('modal.style.display = "none";');
-            newTab.document.write('}');
-            
-            // CSV loading function
-            newTab.document.write('async function loadCSVData(filename) {');
-            newTab.document.write('try {');
-            newTab.document.write('const response = await fetch("Data/" + filename);');
-            newTab.document.write('if (!response.ok) throw new Error("HTTP error! status: " + response.status);');
-            newTab.document.write('const csvText = await response.text();');
-            newTab.document.write('return new Promise((resolve, reject) => {');
-            newTab.document.write('Papa.parse(csvText, {');
-            newTab.document.write('header: true,');
-            newTab.document.write('skipEmptyLines: true,');
-            newTab.document.write('complete: function(results) { resolve(results.data); },');
-            newTab.document.write('error: function(error) { reject(error); }');
-            newTab.document.write('});');
-            newTab.document.write('});');
-            newTab.document.write('} catch (error) {');
-            newTab.document.write('console.error("Error loading CSV:", error);');
-            newTab.document.write('throw error;');
-            newTab.document.write('}');
-            newTab.document.write('}');
-            
-            // Dropdown population
-            newTab.document.write('function populateModalDropdowns() {');
-            newTab.document.write('const persons = [...new Set(availableFiles.map(f => f.person))];');
-            newTab.document.write('const masks = [...new Set(availableFiles.map(f => f.mask))];');
-            newTab.document.write('const actions = [...new Set(availableFiles.map(f => f.action))];');
-            newTab.document.write('populateModalSelect("modalPersonSelect", persons);');
-            newTab.document.write('populateModalSelect("modalMaskSelect", masks);');
-            newTab.document.write('populateModalSelect("modalActionSelect", actions);');
-            newTab.document.write('}');
-            
-            newTab.document.write('function populateModalSelect(selectId, options) {');
-            newTab.document.write('const select = document.getElementById(selectId);');
-            newTab.document.write('while (select.children.length > 1) select.removeChild(select.lastChild);');
-            newTab.document.write('options.forEach(option => {');
-            newTab.document.write('const optionElement = document.createElement("option");');
-            newTab.document.write('optionElement.value = option;');
-            newTab.document.write('optionElement.textContent = option;');
-            newTab.document.write('select.appendChild(optionElement);');
-            newTab.document.write('});');
-            newTab.document.write('}');
-            
-            // Modal helper functions
-            newTab.document.write('function clearModalSelections() {');
-            newTab.document.write('document.getElementById("modalPersonSelect").selectedIndex = -1;');
-            newTab.document.write('document.getElementById("modalMaskSelect").selectedIndex = -1;');
-            newTab.document.write('document.getElementById("modalActionSelect").selectedIndex = -1;');
-            newTab.document.write('}');
-            
-            newTab.document.write('function updateModalLinesList() {');
-            newTab.document.write('const linesList = document.getElementById("currentLinesList");');
-            newTab.document.write('linesList.innerHTML = "";');
-            newTab.document.write('if (fullScreenChart.data.datasets.length === 0) {');
-            newTab.document.write('linesList.innerHTML = \'<div class="empty-lines">No lines in this plot</div>\';');
-            newTab.document.write('return;');
-            newTab.document.write('}');
-            newTab.document.write('fullScreenChart.data.datasets.forEach((dataset, datasetIndex) => {');
-            newTab.document.write('const lineItem = document.createElement("div");');
-            newTab.document.write('lineItem.className = "current-line-item";');
-            newTab.document.write('lineItem.style.borderLeftColor = dataset.borderColor;');
-            newTab.document.write('lineItem.innerHTML = `<div class="current-line-label" title="${dataset.label}">${dataset.label}</div><button class="current-line-remove" onclick="removeLineFromModal(${datasetIndex})">Remove</button>`;');
-            newTab.document.write('linesList.appendChild(lineItem);');
-            newTab.document.write('});');
-            newTab.document.write('}');
-            
-            newTab.document.write('function removeLineFromModal(datasetIndex) {');
-            newTab.document.write('if (datasetIndex < 0 || datasetIndex >= fullScreenChart.data.datasets.length) return;');
-            newTab.document.write('fullScreenChart.data.datasets.splice(datasetIndex, 1);');
-            newTab.document.write('fullScreenChart.update();');
-            newTab.document.write('updateChartLabels(fullScreenChart);');
-            newTab.document.write('updateModalLinesList();');
-            newTab.document.write('clearModalSelections();');
-            newTab.document.write('checkModalButtons();');
-            newTab.document.write('}');
-            
-            newTab.document.write('function updateChartLabels(chart) {');
-            newTab.document.write('if (!chart || !chart.data || !chart.data.datasets) return;');
-            newTab.document.write('let actualMaxLength = 0;');
-            newTab.document.write('chart.data.datasets.forEach(dataset => {');
-            newTab.document.write('if (dataset.data && dataset.data.length > actualMaxLength) {');
-            newTab.document.write('actualMaxLength = dataset.data.length;');
-            newTab.document.write('}');
-            newTab.document.write('});');
-            newTab.document.write('if (actualMaxLength > 0) {');
-            newTab.document.write('chart.data.labels = Array.from({length: actualMaxLength}, (_, i) => i + 1);');
-            newTab.document.write('chart.update();');
-            newTab.document.write('}');
-            newTab.document.write('}');
-            
-            newTab.document.write('function checkModalButtons() {');
-            newTab.document.write('const persons = Array.from(document.getElementById("modalPersonSelect").selectedOptions).map(o => o.value).filter(v => v);');
-            newTab.document.write('const masks = Array.from(document.getElementById("modalMaskSelect").selectedOptions).map(o => o.value).filter(v => v);');
-            newTab.document.write('const actions = Array.from(document.getElementById("modalActionSelect").selectedOptions).map(o => o.value).filter(v => v);');
-            newTab.document.write('const isDataSelected = persons.length > 0 && masks.length > 0 && actions.length > 0;');
-            newTab.document.write('document.getElementById("modalActionButton").disabled = !isDataSelected;');
-            newTab.document.write('}');
-            
-            newTab.document.write('function getModalSelectedValues(selectId) {');
-            newTab.document.write('const select = document.getElementById(selectId);');
-            newTab.document.write('return Array.from(select.selectedOptions).map(option => option.value).filter(value => value);');
-            newTab.document.write('}');
-            
-            // Select all functions
-            newTab.document.write('function selectAllPersons() {');
-            newTab.document.write('const select = document.getElementById("modalPersonSelect");');
-            newTab.document.write('const persons = [...new Set(availableFiles.map(f => f.person))];');
-            newTab.document.write('for (let option of select.options) option.selected = false;');
-            newTab.document.write('for (let option of select.options) { if (persons.includes(option.value)) option.selected = true; }');
-            newTab.document.write('checkModalButtons();');
-            newTab.document.write('}');
-            
-            newTab.document.write('function selectAllMasks() {');
-            newTab.document.write('const select = document.getElementById("modalMaskSelect");');
-            newTab.document.write('const masks = [...new Set(availableFiles.map(f => f.mask))];');
-            newTab.document.write('for (let option of select.options) option.selected = false;');
-            newTab.document.write('for (let option of select.options) { if (masks.includes(option.value)) option.selected = true; }');
-            newTab.document.write('checkModalButtons();');
-            newTab.document.write('}');
-            
-            newTab.document.write('function selectAllActions() {');
-            newTab.document.write('const select = document.getElementById("modalActionSelect");');
-            newTab.document.write('const actions = [...new Set(availableFiles.map(f => f.action))];');
-            newTab.document.write('for (let option of select.options) option.selected = false;');
-            newTab.document.write('for (let option of select.options) { if (actions.includes(option.value)) option.selected = true; }');
-            newTab.document.write('checkModalButtons();');
-            newTab.document.write('}');
-            
-            // Add line to plot function
-            newTab.document.write('async function addLineToPlot() {');
-            newTab.document.write('try {');
-            newTab.document.write('const persons = getModalSelectedValues("modalPersonSelect");');
-            newTab.document.write('const masks = getModalSelectedValues("modalMaskSelect");');
-            newTab.document.write('const actions = getModalSelectedValues("modalActionSelect");');
-            newTab.document.write('for (const person of persons) {');
-            newTab.document.write('for (const mask of masks) {');
-            newTab.document.write('for (const action of actions) {');
-            newTab.document.write('const file = availableFiles.find(f => f.person === person && f.mask === mask && f.action === action);');
-            newTab.document.write('if (file) {');
-            newTab.document.write('try {');
-            newTab.document.write('const data = await loadCSVData(file.filename);');
-            newTab.document.write('const fitFactorValues = data.map(row => {');
-            newTab.document.write('let fitFactorValue = row.FitFactor || row["Fit Factor"] || row.fitfactor;');
-            newTab.document.write('if (typeof fitFactorValue === "string") fitFactorValue = fitFactorValue.trim();');
-            newTab.document.write('const numValue = parseFloat(fitFactorValue);');
-            newTab.document.write('return isNaN(numValue) ? null : numValue;');
-            newTab.document.write('}).filter(val => val !== null);');
-            newTab.document.write('if (fitFactorValues.length > 0) {');
-            newTab.document.write('const colorIndex = fullScreenChart.data.datasets.length % chartColors.length;');
-            newTab.document.write('const dataset = {');
-            newTab.document.write('label: `${person} / ${mask} / Action ${action}`,');
-            newTab.document.write('data: fitFactorValues,');
-            newTab.document.write('borderColor: chartColors[colorIndex],');
-            newTab.document.write('backgroundColor: chartColors[colorIndex] + "20",');
-            newTab.document.write('borderWidth: 2,');
-            newTab.document.write('fill: false,');
-            newTab.document.write('tension: 0.1');
-            newTab.document.write('};');
-            newTab.document.write('fullScreenChart.data.datasets.push(dataset);');
-            newTab.document.write('}');
-            newTab.document.write('} catch (error) {');
-            newTab.document.write('console.error(`Error loading data for ${person}/${mask}/${action}:`, error);');
-            newTab.document.write('}');
-            newTab.document.write('}');
-            newTab.document.write('}');
-            newTab.document.write('fullScreenChart.update();');
-            newTab.document.write('updateChartLabels(fullScreenChart);');
-            newTab.document.write('updateModalLinesList();');
-            newTab.document.write('clearModalSelections();');
-            newTab.document.write('checkModalButtons();');
-            newTab.document.write('} catch (error) {');
-            newTab.document.write('console.error("Error adding lines to plot:", error);');
-            newTab.document.write('alert("Error adding lines to plot: " + error.message);');
-            newTab.document.write('}');
-            newTab.document.write('}');
-            
-            // Event listeners
-            newTab.document.write('document.getElementById("modalPersonSelect").addEventListener("change", checkModalButtons);');
-            newTab.document.write('document.getElementById("modalMaskSelect").addEventListener("change", checkModalButtons);');
-            newTab.document.write('document.getElementById("modalActionSelect").addEventListener("change", checkModalButtons);');
-            
-            // Close modal when clicking outside
-            newTab.document.write('window.onclick = function(event) {');
-            newTab.document.write('const editModal = document.getElementById("editModal");');
-            newTab.document.write('if (event.target === editModal) closeEditModal();');
-            newTab.document.write('};');
-            
-            newTab.document.write('<\/script>');
+            // Essential JavaScript for rendering the chart
+            newTab.document.write('    <script>');
+            newTab.document.write('        const chartData = ' + JSON.stringify(cleanChartData).replace(/<\//g, '<\\/') + ';');
+            newTab.document.write('        let commitInfo = ' + JSON.stringify(commitInfo).replace(/<\//g, '<\\/') + ';');
+            newTab.document.write('        ');
+            newTab.document.write('        function getChartSubtitle() {');
+            newTab.document.write('            try { if (commitInfo && typeof commitInfo.commit === \'object\' && commitInfo.commit && commitInfo.commit.sha) { const shortSha = commitInfo.commit.short_sha || commitInfo.commit.sha.substring(0, 7); const timestamp = commitInfo.commit.timestamp ? new Date(commitInfo.commit.timestamp).toLocaleString() : \"\"; return \"SHA: \" + shortSha + \" | Updated: \" + timestamp; } } catch (e) { console.error(\"Error in getChartSubtitle:\", e); } return \"\";');
+            newTab.document.write('        }');
+            newTab.document.write('        ');
+            newTab.document.write('        window.addEventListener("load", function() {');
+            newTab.document.write('            console.log("Chart data for full screen view:", chartData);');
+            newTab.document.write('            try {');
+            newTab.document.write('                const ctx = document.getElementById("fullScreenChart").getContext("2d");');
+            newTab.document.write('                let actualMaxLength = 0;');
+            newTab.document.write('                chartData.datasets.forEach(dataset => { if (dataset.data && dataset.data.length > actualMaxLength) { actualMaxLength = dataset.data.length; } });');
+            newTab.document.write('                chartData.labels = Array.from({length: actualMaxLength}, (_, i) => i + 1);');
+            newTab.document.write('                new Chart(ctx, {');
+            newTab.document.write('                    type: "line",');
+            newTab.document.write('                    data: chartData,');
+            newTab.document.write('                    options: {');
+            newTab.document.write('                        responsive: true,');
+            newTab.document.write('                        maintainAspectRatio: false,');
+            newTab.document.write('                        scales: { x: { title: { display: true, text: "Data Point" } }, y: { type: "logarithmic", title: { display: true, text: "Fit Factor (Log Scale)" }, min: 1, ticks: { callback: function(value) { if (value === 1 || value === 10 || value === 100 || value === 1000) return value; if (value >= 1 && value < 10) return Math.round(value * 10) / 10; if (value >= 10 && value < 100) return Math.round(value); return value; } } } },');
+            newTab.document.write('                        plugins: { title: { display: true, text: getChartSubtitle() ? ["PPE Fit Factor Analysis - Plot ' + (chartIndex + 1) + '", getChartSubtitle()] : "PPE Fit Factor Analysis - Plot ' + (chartIndex + 1) + '", font: { size: 16 } }, legend: { display: true } }');
+            newTab.document.write('                    }');
+            newTab.document.write('                });');
+            newTab.document.write('            } catch (error) {');
+            newTab.document.write('                console.error("Error creating chart:", error);');
+            newTab.document.write('                document.getElementById("fullScreenChart").parentElement.innerHTML = "<p>Error loading chart: " + error.message + "</p>";');
+            newTab.document.write('            }');
+            newTab.document.write('        });');
+            newTab.document.write('    <\/script>');
             newTab.document.write('</body>');
             newTab.document.write('</html>');
             newTab.document.close();
@@ -2287,7 +1987,9 @@
                         plugins: {
                             title: {
                                 display: true,
-                                text: `PPE Fit Factor Analysis - Plot ${newChartIndex + 1}`,
+                                text: getChartSubtitle() ? 
+                                    [`PPE Fit Factor Analysis - Plot ${newChartIndex + 1}`, getChartSubtitle()] :
+                                    `PPE Fit Factor Analysis - Plot ${newChartIndex + 1}`,
                                 font: {
                                     size: 16
                                 }
@@ -2344,6 +2046,9 @@
                 }
                 const commitData = await response.json();
                 
+                // Store commit info globally
+                commitInfo = commitData;
+                
                 const commitInfoDiv = document.getElementById('commitInfo');
                 if (commitData.commit && commitData.commit.sha) {
                     const fullSha = commitData.commit.sha;
@@ -2355,6 +2060,9 @@
                             ${timestamp ? `<span style="margin-left: 15px;"><strong>Updated:</strong> ${timestamp}</span>` : ''}
                         </div>
                     `;
+                    
+                    // Update existing charts with commit info
+                    refreshAllChartsWithCommitInfo();
                 } else {
                     commitInfoDiv.textContent = 'Commit information not available';
                 }
@@ -2370,6 +2078,37 @@
             init();
             loadCommitInfo();
         });
+        
+        // Generate chart subtitle with commit info
+        function getChartSubtitle() {
+            if (commitInfo && commitInfo.commit && commitInfo.commit.sha) {
+                const shortSha = commitInfo.commit.short_sha || commitInfo.commit.sha.substring(0, 7);
+                const timestamp = commitInfo.commit.timestamp ? new Date(commitInfo.commit.timestamp).toLocaleString() : '';
+                return `SHA: ${shortSha} | Updated: ${timestamp}`;
+            }
+            return '';
+        }
+        
+        // Refresh all existing charts with commit info
+        function refreshAllChartsWithCommitInfo() {
+            charts.forEach((chart, index) => {
+                if (chart && chart.options && chart.options.plugins) {
+                    const subtitle = getChartSubtitle();
+                    if (subtitle) {
+                        // Update the chart title to include subtitle information
+                        const originalTitle = `PPE Fit Factor Analysis - Plot ${index + 1}`;
+                        chart.options.plugins.title = {
+                            display: true,
+                            text: [originalTitle, subtitle],
+                            font: {
+                                size: 16
+                            }
+                        };
+                        chart.update();
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html> 

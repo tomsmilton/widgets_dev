@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPE Testing Summary</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        h1 {
+            color: #333;
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        
+        .plotter-link {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .plotter-link:hover {
+            background-color: #45a049;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .download-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .file-card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .file-card:hover {
+            background-color: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-info {
+            flex-grow: 1;
+        }
+        
+        .file-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .file-details {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .download-btn {
+            background-color: #17a2b8;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .download-btn:hover {
+            background-color: #138496;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+        
+        .stats-summary {
+            background-color: #e8f5e8;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2e7d32;
+            display: block;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            margin-top: 20px;
+            border-radius: 0 0 10px 10px;
+            margin-left: -30px;
+            margin-right: -30px;
+            margin-bottom: -30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <h1>PPE Testing Summary</h1>
+            <a href="ppe.html" class="plotter-link">
+                📊 Open Data Plotter
+            </a>
+        </div>
+        
+        <div class="section">
+            <div class="stats-summary">
+                <h2>📈 Dataset Overview</h2>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalFiles">-</span>
+                        <span class="stat-label">Total Files</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalPersons">-</span>
+                        <span class="stat-label">Test Subjects</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalMasks">-</span>
+                        <span class="stat-label">Mask Types</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="totalActions">-</span>
+                        <span class="stat-label">Action Types</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📁 Data Files</h2>
+            <div class="download-controls">
+                <button class="btn btn-primary" onclick="downloadAllFiles()">
+                    📦 Download All Files
+                </button>
+                <button class="btn btn-success" onclick="refreshFileList()">
+                    🔄 Refresh List
+                </button>
+            </div>
+            
+            <div id="filesContainer">
+                <div class="loading">Loading files...</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div id="commitInfo">Loading commit info...</div>
+        </div>
+    </div>
+
+    <script>
+        let availableFiles = [];
+        
+        // Parse filename to extract person, mask, and action
+        function parseFilename(filename) {
+            const name = filename.replace('.csv', '');
+            const parts = name.split('_');
+            
+            if (parts.length >= 4) {
+                const person = parts[0];
+                const mask = parts[1].replace('.', '');
+                const action = parts[3];
+                return { person, mask, action };
+            }
+            return null;
+        }
+        
+        // Get list of available CSV files
+        async function getAvailableFiles() {
+            try {
+                const response = await fetch('Data/');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = doc.querySelectorAll('a');
+                
+                const files = [];
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href.endsWith('.csv')) {
+                        files.push(href);
+                    }
+                });
+                
+                return files.map(file => {
+                    const parsed = parseFilename(file);
+                    return {
+                        filename: file,
+                        ...parsed
+                    };
+                }).filter(item => item.person);
+                
+            } catch (error) {
+                console.error('Error fetching file list:', error);
+                return [];
+            }
+        }
+        
+        // Download a single file
+        function downloadFile(filename) {
+            const link = document.createElement('a');
+            link.href = `Data/${filename}`;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Download all files as a zip
+        async function downloadAllFiles() {
+            if (availableFiles.length === 0) {
+                alert('No files available to download');
+                return;
+            }
+            
+            const zip = new JSZip();
+            const button = document.querySelector('[onclick="downloadAllFiles()"]');
+            const originalText = button.innerHTML;
+            
+            try {
+                button.innerHTML = '⏳ Preparing download...';
+                button.disabled = true;
+                
+                // Add each file to the zip
+                for (const file of availableFiles) {
+                    try {
+                        const response = await fetch(`Data/${file.filename}`);
+                        if (response.ok) {
+                            const content = await response.text();
+                            zip.file(file.filename, content);
+                        }
+                    } catch (error) {
+                        console.error(`Error adding ${file.filename} to zip:`, error);
+                    }
+                }
+                
+                // Generate and download the zip
+                button.innerHTML = '📦 Generating zip...';
+                const content = await zip.generateAsync({type: 'blob'});
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                saveAs(content, `ppe_data_${timestamp}.zip`);
+                
+            } catch (error) {
+                console.error('Error creating zip file:', error);
+                alert('Error creating download: ' + error.message);
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+        
+        // Render the files list
+        function renderFilesList() {
+            const container = document.getElementById('filesContainer');
+            
+            if (availableFiles.length === 0) {
+                container.innerHTML = '<div class="loading">No CSV files found in Data directory</div>';
+                return;
+            }
+            
+            const filesGrid = document.createElement('div');
+            filesGrid.className = 'files-grid';
+            
+            availableFiles.forEach(file => {
+                const fileCard = document.createElement('div');
+                fileCard.className = 'file-card';
+                
+                fileCard.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name">${file.filename}</div>
+                        <div class="file-details">
+                            Person: ${file.person} | Mask: ${file.mask} | Action: ${file.action}
+                        </div>
+                    </div>
+                    <button class="download-btn" onclick="downloadFile('${file.filename}')">
+                        ⬇ Download
+                    </button>
+                `;
+                
+                filesGrid.appendChild(fileCard);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(filesGrid);
+        }
+        
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalFiles').textContent = availableFiles.length;
+            
+            const persons = [...new Set(availableFiles.map(f => f.person))];
+            const masks = [...new Set(availableFiles.map(f => f.mask))];
+            const actions = [...new Set(availableFiles.map(f => f.action))];
+            
+            document.getElementById('totalPersons').textContent = persons.length;
+            document.getElementById('totalMasks').textContent = masks.length;
+            document.getElementById('totalActions').textContent = actions.length;
+        }
+        
+        // Refresh the file list
+        async function refreshFileList() {
+            const button = document.querySelector('[onclick="refreshFileList()"]');
+            const originalText = button.innerHTML;
+            
+            try {
+                button.innerHTML = '⏳ Refreshing...';
+                button.disabled = true;
+                
+                document.getElementById('filesContainer').innerHTML = '<div class="loading">Loading files...</div>';
+                
+                availableFiles = await getAvailableFiles();
+                renderFilesList();
+                updateStats();
+                
+            } catch (error) {
+                console.error('Error refreshing file list:', error);
+                document.getElementById('filesContainer').innerHTML = '<div class="loading">Error loading files</div>';
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+        
+        // Load commit information
+        async function loadCommitInfo() {
+            try {
+                const response = await fetch('git_commit.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const commitData = await response.json();
+                
+                const commitInfoDiv = document.getElementById('commitInfo');
+                if (commitData.commit && commitData.commit.sha) {
+                    const fullSha = commitData.commit.sha;
+                    const timestamp = commitData.commit.timestamp ? new Date(commitData.commit.timestamp).toLocaleString() : '';
+                    
+                    commitInfoDiv.innerHTML = `
+                        <div>
+                            <strong>SHA:</strong> <code style="background-color: #e9ecef; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 11px;">${fullSha}</code>
+                            ${timestamp ? `<span style="margin-left: 15px;"><strong>Updated:</strong> ${timestamp}</span>` : ''}
+                        </div>
+                    `;
+                } else {
+                    commitInfoDiv.textContent = 'Commit information not available';
+                }
+            } catch (error) {
+                console.error('Error loading commit info:', error);
+                const commitInfoDiv = document.getElementById('commitInfo');
+                commitInfoDiv.textContent = 'Unable to load commit information';
+            }
+        }
+        
+        // Initialize the page
+        async function init() {
+            try {
+                await refreshFileList();
+                await loadCommitInfo();
+            } catch (error) {
+                console.error('Error initializing page:', error);
+            }
+        }
+        
+        // Start the application when the page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html> 
