@@ -294,36 +294,52 @@
         
         // Get list of available CSV files
         async function getAvailableFiles() {
+            const filesContainer = document.getElementById('filesContainer'); // For UI updates
             try {
-                const response = await fetch('Data/');
+                const response = await fetch('Data/file_list.json');
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorMessage = `Error: Data file list (file_list.json) missing or inaccessible. Status: ${response.status}. Please ensure Data/file_list.json is correctly set up and accessible.`;
+                    console.error(errorMessage);
+                    if (filesContainer) {
+                        filesContainer.innerHTML = `<div class="loading" style="color: red; font-weight: bold;">${errorMessage}</div>`;
+                    }
+                    return null; // Signal failure
                 }
                 
-                const html = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const links = doc.querySelectorAll('a');
-                
-                const files = [];
-                links.forEach(link => {
-                    const href = link.getAttribute('href');
-                    if (href && href.endsWith('.csv')) {
-                        files.push(href);
+                let filesArray;
+                try {
+                    filesArray = await response.json();
+                } catch (parseError) {
+                    const errorMessage = 'Error: Data file list (file_list.json) is corrupted or not valid JSON. Please check its content.';
+                    console.error(errorMessage, parseError);
+                    if (filesContainer) {
+                         filesContainer.innerHTML = `<div class="loading" style="color: red; font-weight: bold;">${errorMessage}</div>`;
                     }
-                });
+                    return null; // Signal failure
+                }
                 
-                return files.map(file => {
-                    const parsed = parseFilename(file);
+                console.log('Found CSV files from Data/file_list.json:', filesArray);
+                
+                // Clear any previous error message if we successfully loaded the list
+                if (filesContainer && filesContainer.querySelector('.loading[style*="color: red"]')) {
+                    filesContainer.innerHTML = '<div class="loading">Loading files...</div>'; // Reset to loading before render
+                }
+
+                return filesArray.map(filename => {
+                    const parsed = parseFilename(filename);
                     return {
-                        filename: file,
+                        filename: filename,
                         ...parsed
                     };
                 }).filter(item => item.person);
                 
-            } catch (error) {
-                console.error('Error fetching file list:', error);
-                return [];
+            } catch (networkError) { // Catches network errors for the fetch itself
+                const errorMessage = 'Error: Network problem while trying to load data file list. Please check your internet connection.';
+                console.error(errorMessage, networkError);
+                if (filesContainer) {
+                    filesContainer.innerHTML = `<div class="loading" style="color: red; font-weight: bold;">${errorMessage}</div>`;
+                }
+                return null; // Signal failure
             }
         }
         
@@ -432,20 +448,36 @@
         async function refreshFileList() {
             const button = document.querySelector('[onclick="refreshFileList()"]');
             const originalText = button.innerHTML;
+            const filesContainer = document.getElementById('filesContainer');
             
             try {
                 button.innerHTML = '⏳ Refreshing...';
                 button.disabled = true;
                 
-                document.getElementById('filesContainer').innerHTML = '<div class="loading">Loading files...</div>';
+                // Set a generic loading message first. getAvailableFiles might overwrite it with an error.
+                filesContainer.innerHTML = '<div class="loading">Loading files...</div>';
                 
-                availableFiles = await getAvailableFiles();
-                renderFilesList();
-                updateStats();
+                const files = await getAvailableFiles();
                 
-            } catch (error) {
-                console.error('Error refreshing file list:', error);
-                document.getElementById('filesContainer').innerHTML = '<div class="loading">Error loading files</div>';
+                if (files === null) {
+                    // Error message already set by getAvailableFiles.
+                    availableFiles = []; // Ensure availableFiles is empty for updateStats
+                } else {
+                    availableFiles = files;
+                    // If files is not null, renderFilesList will be called.
+                    // If availableFiles is empty (e.g. file_list.json was an empty array),
+                    // renderFilesList will show its "No CSV files found" message.
+                    renderFilesList(); 
+                }
+                updateStats(); // Update counts (will show 0 if files is null or resulting availableFiles is empty)
+                
+            } catch (error) { 
+                // This catch is for truly unexpected errors not handled by getAvailableFiles
+                const criticalErrorMessage = 'Critical error: File list refresh failed unexpectedly.';
+                console.error(criticalErrorMessage, error);
+                filesContainer.innerHTML = `<div class="loading" style="color: red; font-weight: bold;">${criticalErrorMessage}</div>`;
+                availableFiles = []; // Ensure availableFiles is reset
+                updateStats(); // Update to 0
             } finally {
                 button.innerHTML = originalText;
                 button.disabled = false;
