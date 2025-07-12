@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subitizing Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .game-area {
+            position: relative;
+            width: 400px;
+            height: 300px;
+            margin: 2rem auto;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transform: scale(0);
+            animation: dotAppear 0.3s ease-out forwards;
+        }
+
+        @keyframes dotAppear {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .controls {
+            margin: 2rem 0;
+        }
+
+        .difficulty-selector {
+            margin-bottom: 1rem;
+        }
+
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .difficulty-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .difficulty-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: white;
+        }
+
+        .number-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .number-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .number-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .number-btn:active {
+            transform: scale(0.95);
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin: 1rem;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .feedback {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            min-height: 2rem;
+        }
+
+        .correct {
+            color: #4ecdc4;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+        }
+
+        .incorrect {
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            color: #333;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎯 Subitizing Challenge</h1>
+        <p class="subtitle">How quickly can you recognize quantities without counting?</p>
+        
+        <div class="instructions">
+            <strong>How to play:</strong> Dots will appear briefly on screen. Click the number you saw as quickly as possible. Trust your first instinct - don't count!
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-value" id="score">0</span>
+                <span class="stat-label">Score</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="streak">0</span>
+                <span class="stat-label">Streak</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value" id="accuracy">0%</span>
+                <span class="stat-label">Accuracy</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="difficulty-selector">
+                <button class="difficulty-btn active" data-difficulty="easy">Easy (1-4)</button>
+                <button class="difficulty-btn" data-difficulty="medium">Medium (1-6)</button>
+                <button class="difficulty-btn" data-difficulty="hard">Hard (1-10)</button>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="countdown hidden" id="countdown"></div>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <div class="number-buttons" id="numberButtons">
+            <!-- Will be populated by JavaScript -->
+        </div>
+
+        <button class="start-btn" id="startBtn">Start Game</button>
+    </div>
+
+    <script>
+        class SubitizingGame {
+            constructor() {
+                this.score = 0;
+                this.streak = 0;
+                this.totalAttempts = 0;
+                this.correctAnswers = 0;
+                this.currentAnswer = 0;
+                this.difficulty = 'easy';
+                this.isPlaying = false;
+                this.showTime = 1000; // milliseconds
+                
+                this.difficultyRanges = {
+                    easy: { min: 1, max: 4, time: 1200 },
+                    medium: { min: 1, max: 6, time: 1000 },
+                    hard: { min: 1, max: 10, time: 800 }
+                };
+
+                this.initializeElements();
+                this.setupEventListeners();
+                this.createNumberButtons();
+            }
+
+            initializeElements() {
+                this.gameArea = document.getElementById('gameArea');
+                this.startBtn = document.getElementById('startBtn');
+                this.feedback = document.getElementById('feedback');
+                this.countdown = document.getElementById('countdown');
+                this.numberButtons = document.getElementById('numberButtons');
+                this.scoreEl = document.getElementById('score');
+                this.streakEl = document.getElementById('streak');
+                this.accuracyEl = document.getElementById('accuracy');
+            }
+
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startRound());
+                
+                document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.setDifficulty(e.target.dataset.difficulty));
+                });
+            }
+
+            setDifficulty(difficulty) {
+                this.difficulty = difficulty;
+                this.showTime = this.difficultyRanges[difficulty].time;
+                
+                document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
+                
+                this.createNumberButtons();
+            }
+
+            createNumberButtons() {
+                const max = this.difficultyRanges[this.difficulty].max;
+                this.numberButtons.innerHTML = '';
+                
+                for (let i = 1; i <= max; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = 'number-btn';
+                    btn.textContent = i;
+                    btn.addEventListener('click', () => this.guessNumber(i));
+                    this.numberButtons.appendChild(btn);
+                }
+            }
+
+            async startRound() {
+                if (this.isPlaying) return;
+                
+                this.isPlaying = true;
+                this.startBtn.textContent = 'Playing...';
+                this.startBtn.disabled = true;
+                this.feedback.textContent = '';
+                this.clearDots();
+
+                // Countdown
+                await this.showCountdown();
+                
+                // Generate and show dots
+                const range = this.difficultyRanges[this.difficulty];
+                this.currentAnswer = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+                
+                this.showDots(this.currentAnswer);
+                
+                // Hide dots after specified time
+                setTimeout(() => {
+                    this.clearDots();
+                    this.startBtn.textContent = 'Next Round';
+                    this.startBtn.disabled = false;
+                }, this.showTime);
+            }
+
+            async showCountdown() {
+                this.countdown.classList.remove('hidden');
+                
+                for (let i = 3; i > 0; i--) {
+                    this.countdown.textContent = i;
+                    await this.wait(600);
+                }
+                
+                this.countdown.textContent = 'GO!';
+                await this.wait(400);
+                this.countdown.classList.add('hidden');
+            }
+
+            showDots(count) {
+                this.clearDots();
+                
+                for (let i = 0; i < count; i++) {
+                    setTimeout(() => {
+                        const dot = document.createElement('div');
+                        dot.className = 'dot';
+                        
+                        // Random position within game area with padding
+                        const x = Math.random() * (this.gameArea.offsetWidth - 40) + 10;
+                        const y = Math.random() * (this.gameArea.offsetHeight - 40) + 10;
+                        
+                        dot.style.left = x + 'px';
+                        dot.style.top = y + 'px';
+                        
+                        // Random color
+                        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffd93d', '#ff9ff3'];
+                        dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+                        
+                        this.gameArea.appendChild(dot);
+                    }, i * 50); // Stagger appearance slightly
+                }
+            }
+
+            clearDots() {
+                const dots = this.gameArea.querySelectorAll('.dot');
+                dots.forEach(dot => dot.remove());
+            }
+
+            guessNumber(guess) {
+                if (!this.isPlaying || this.currentAnswer === 0) return;
+                
+                this.totalAttempts++;
+                const isCorrect = guess === this.currentAnswer;
+                
+                if (isCorrect) {
+                    this.correctAnswers++;
+                    this.score += this.getPoints();
+                    this.streak++;
+                    this.feedback.textContent = `Correct! It was ${this.currentAnswer}`;
+                    this.feedback.className = 'feedback correct';
+                } else {
+                    this.streak = 0;
+                    this.feedback.textContent = `Wrong! It was ${this.currentAnswer}, not ${guess}`;
+                    this.feedback.className = 'feedback incorrect';
+                }
+                
+                this.updateStats();
+                this.isPlaying = false;
+                this.currentAnswer = 0;
+                this.startBtn.textContent = 'Next Round';
+                this.startBtn.disabled = false;
+            }
+
+            getPoints() {
+                let basePoints = 10;
+                if (this.difficulty === 'medium') basePoints = 15;
+                if (this.difficulty === 'hard') basePoints = 20;
+                
+                // Bonus for streak
+                return basePoints + Math.floor(this.streak / 3) * 5;
+            }
+
+            updateStats() {
+                this.scoreEl.textContent = this.score;
+                this.streakEl.textContent = this.streak;
+                
+                const accuracy = this.totalAttempts > 0 ? 
+                    Math.round((this.correctAnswers / this.totalAttempts) * 100) : 0;
+                this.accuracyEl.textContent = accuracy + '%';
+            }
+
+            wait(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new SubitizingGame();
+        });
+    </script>
+</body>
+</html>
