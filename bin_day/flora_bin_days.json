@@ -1,33 +1,33 @@
 {
-  "last_updated": "2025-05-26T01:09:26.338186",
+  "last_updated": "2025-07-28T01:19:09.830925",
   "collections": [
     {
       "bin_color": "Black Bin",
       "next_collections": [
-        "2 Jun 2025",
-        "16 Jun 2025",
-        "30 Jun 2025"
+        "28 Jul 2025",
+        "11 Aug 2025",
+        "25 Aug 2025"
       ],
       "bin_type": ""
     },
     {
       "bin_color": "Brown Bin",
       "next_collections": [
-        "9 Jun 2025",
-        "7 Jul 2025",
-        "4 Aug 2025"
+        "4 Aug 2025",
+        "1 Sep 2025",
+        "29 Sep 2025"
       ],
       "bin_type": ""
     },
     {
       "bin_color": "Blue Bin",
       "next_collections": [
-        "26 May 2025",
-        "23 Jun 2025",
-        "21 Jul 2025"
+        "18 Aug 2025",
+        "15 Sep 2025",
+        "13 Oct 2025"
       ],
       "bin_type": ""
     }
   ],
-  "next_color": "#0a0a0a"
+  "next_color": "#6b3c31"
 }
