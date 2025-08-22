@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trimmer (Remove Channels)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: #f5f5f5; min-height: 100vh; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header { background: white; border-radius: 8px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
+        h1 { font-size: 1.6rem; font-weight: 600; color: #1f2937; margin-bottom: 8px; }
+        p.lead { color: #6b7280; }
+        .card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.06); margin-bottom: 16px; }
+        .upload-area { border: 2px dashed #d1d5db; border-radius: 8px; padding: 24px; text-align: center; background: #fafafa; transition: all 0.2s ease; cursor: pointer; }
+        .upload-area.dragover { background: #f0f0f0; border-color: #9ca3af; }
+        input[type="file"] { display: none; }
+        .upload-label { display: inline-block; padding: 10px 16px; background: #2563eb; color: white; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        .muted { color: #6b7280; font-size: 0.95em; }
+        .error { color: #b91c1c; font-weight: 600; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        .ch-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
+        .ch-title { font-weight: 600; margin-bottom: 8px; }
+        .checkbox { display: flex; gap: 8px; align-items: center; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 10px 16px; background: #2563eb; color: #fff; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn.secondary { background: #6b7280; }
+        .btn.ghost { background: transparent; color: #2563eb; border: 1px solid #93c5fd; }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        .preview { width: 100%; overflow: auto; border: 1px solid #e5e7eb; border-radius: 6px; }
+        table { border-collapse: collapse; width: 100%; min-width: 700px; }
+        th, td { border-bottom: 1px solid #f1f5f9; text-align: left; padding: 8px 10px; font-size: 0.9em; white-space: nowrap; }
+        th { background: #f8fafc; font-weight: 600; color: #475569; position: sticky; top: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Trimmer</h1>
+            <p class="lead">Upload a CSV, select which channels to keep/remove, and export a new CSV with only the channels you want. Channels are detected from headers like <code>Read Voltage i</code> and <code>Read Current i</code> (and optional <code>Power i</code>).</p>
+        </div>
+
+        <div class="card">
+            <div id="uploadArea" class="upload-area">
+                <input type="file" id="fileInput" accept=".csv">
+                <label for="fileInput" class="upload-label">Choose CSV File</label>
+                <p class="muted" style="margin-top: 8px;">or drag and drop your CSV file here</p>
+            </div>
+        </div>
+
+        <div class="card" id="configCard" style="display:none;">
+            <div class="muted" id="status">Parsed 0 rows.</div>
+            <div style="margin: 12px 0;" class="actions">
+                <button class="btn ghost" id="selectAll">Select all</button>
+                <button class="btn ghost" id="selectNone">Select none</button>
+                <button class="btn ghost" id="invertSel">Invert selection</button>
+            </div>
+            <div id="channelsGrid" class="grid"></div>
+            <div class="actions" style="margin-top: 16px;">
+                <button id="downloadBtn" class="btn" disabled>Download Trimmed CSV</button>
+                <a class="btn secondary" href="index.html">Back to Widgets</a>
+            </div>
+            <div id="error" class="error" style="margin-top: 10px; display: none;"></div>
+        </div>
+
+        <div class="card" id="previewCard" style="display:none;">
+            <div class="muted" style="margin-bottom: 8px;">Preview (first 10 rows)</div>
+            <div id="preview" class="preview"></div>
+        </div>
+    </div>
+
+    <script>
+        let originalRows = null; let originalHeaders = []; let originalFileName = 'data.csv';
+        let channelNumbers = []; let selectedChannels = new Set();
+
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const statusEl = document.getElementById('status');
+        const channelsGrid = document.getElementById('channelsGrid');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const errorEl = document.getElementById('error');
+        const previewEl = document.getElementById('preview');
+        const configCard = document.getElementById('configCard');
+        const previewCard = document.getElementById('previewCard');
+        const selectAllBtn = document.getElementById('selectAll');
+        const selectNoneBtn = document.getElementById('selectNone');
+        const invertSelBtn = document.getElementById('invertSel');
+
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => { e.preventDefault(); uploadArea.classList.remove('dragover'); const file = e.dataTransfer.files[0]; if (file) handleFile(file); });
+        fileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) handleFile(file); });
+
+        function handleFile(file){
+            originalFileName = file.name || 'data.csv';
+            statusEl.textContent = 'Parsing CSV…';
+            errorEl.style.display='none'; errorEl.textContent='';
+            Papa.parse(file, { header: true, dynamicTyping: true, skipEmptyLines: true,
+                complete: function(results){
+                    const rows = results.data || [];
+                    if (!rows.length) return setError('CSV appears to be empty.');
+                    originalRows = rows.map(r => { const o={}; for (const k in r){ if(!Object.prototype.hasOwnProperty.call(r,k)) continue; o[(k||'').trim()] = r[k]; } return o; });
+                    originalHeaders = Object.keys(originalRows[0]);
+                    detectChannels(originalHeaders);
+                    if (!channelNumbers.length) return setError('No channels detected. Expect headers like "Read Voltage 1" / "Read Current 1".');
+                    selectedChannels = new Set(channelNumbers);
+                    renderChannelSelectors();
+                    configCard.style.display='block'; previewCard.style.display='block';
+                    statusEl.textContent = `Parsed ${originalRows.length.toLocaleString()} rows. Detected channels: ${channelNumbers.join(', ')}.`;
+                    downloadBtn.disabled = false;
+                    renderPreview();
+                },
+                error: function(err){ setError('Failed to parse CSV: ' + (err && err.message ? err.message : String(err))); }
+            });
+        }
+
+        function setError(msg){ errorEl.textContent = msg; errorEl.style.display='block'; statusEl.textContent='Error'; downloadBtn.disabled=true; previewEl.innerHTML=''; }
+
+        function detectChannels(headers){
+            const nums = new Set();
+            headers.forEach(h => {
+                const m1 = /Read\s*Voltage\s*(\d+)/i.exec(h);
+                const m2 = /Read\s*Current\s*(\d+)/i.exec(h);
+                const m3 = /Power\s*(\d+)/i.exec(h);
+                if (m1) nums.add(parseInt(m1[1], 10));
+                if (m2) nums.add(parseInt(m2[1], 10));
+                if (m3) nums.add(parseInt(m3[1], 10));
+            });
+            channelNumbers = Array.from(nums).filter(n => Number.isFinite(n)).sort((a,b)=>a-b);
+        }
+
+        function renderChannelSelectors(){
+            channelsGrid.innerHTML='';
+            channelNumbers.forEach(i => {
+                const card = document.createElement('div'); card.className='ch-card';
+                const title = document.createElement('div'); title.className='ch-title'; title.textContent = `Channel ${i}`;
+                const checkbox = document.createElement('label'); checkbox.className='checkbox';
+                const input = document.createElement('input'); input.type='checkbox'; input.checked = selectedChannels.has(i);
+                const span = document.createElement('span'); span.textContent = 'Include in export';
+                checkbox.appendChild(input); checkbox.appendChild(span);
+                input.addEventListener('change', () => { if (input.checked) selectedChannels.add(i); else selectedChannels.delete(i); renderPreview(); });
+                card.appendChild(title); card.appendChild(checkbox); channelsGrid.appendChild(card);
+            });
+
+            selectAllBtn.onclick = () => { selectedChannels = new Set(channelNumbers); renderChannelSelectors(); renderPreview(); };
+            selectNoneBtn.onclick = () => { selectedChannels = new Set(); renderChannelSelectors(); renderPreview(); };
+            invertSelBtn.onclick = () => { const next = new Set(); channelNumbers.forEach(i => { if (!selectedChannels.has(i)) next.add(i); }); selectedChannels = next; renderChannelSelectors(); renderPreview(); };
+        }
+
+        function buildFieldOrder(){
+            const isChannelKey = (k) => /^(Read\s*Voltage\s*\d+|Read\s*Current\s*\d+|Power\s*\d+)$/i.test(k.trim());
+            const nonChannel = originalHeaders.filter(h => !isChannelKey(h));
+            const fields = [...nonChannel];
+            const channels = channelNumbers.filter(i => selectedChannels.has(i));
+            channels.forEach(i => {
+                const v = `Read Voltage ${i}`; const c = `Read Current ${i}`; const p = `Power ${i}`;
+                if (originalHeaders.includes(v)) fields.push(v);
+                if (originalHeaders.includes(c)) fields.push(c);
+                if (originalHeaders.includes(p)) fields.push(p);
+            });
+            return fields;
+        }
+
+        function renderPreview(){
+            if (!originalRows || !originalRows.length) { previewEl.innerHTML=''; return; }
+            const fields = buildFieldOrder();
+            const rows = originalRows.slice(0, 10).map(r => fields.map(f => coerceCell(r[f])));
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const headRow = document.createElement('tr');
+            fields.forEach(h => { const th = document.createElement('th'); th.textContent = h; headRow.appendChild(th); });
+            thead.appendChild(headRow);
+            const tbody = document.createElement('tbody');
+            rows.forEach(r => { const tr = document.createElement('tr'); r.forEach(c => { const td = document.createElement('td'); td.textContent = c; tr.appendChild(td); }); tbody.appendChild(tr); });
+            table.appendChild(thead); table.appendChild(tbody);
+            previewEl.innerHTML=''; previewEl.appendChild(table);
+        }
+
+        function coerceCell(v){ if (v == null) return ''; if (typeof v === 'number' && Number.isFinite(v)) return String(v); if (typeof v === 'boolean') return v ? 'true' : 'false'; return String(v); }
+
+        downloadBtn.addEventListener('click', () => {
+            if (!originalRows) return;
+            const fields = buildFieldOrder();
+            try {
+                const data = originalRows.map(r => fields.map(f => r[f]));
+                const csv = Papa.unparse({ fields, data }, { newline: "\n" });
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const fileBase = (originalFileName.replace(/\.[^.]+$/, '')) || 'data';
+                a.href = url; a.download = fileBase + '-trimmed.csv';
+                document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
+            } catch (e) { setError('Failed to generate CSV: ' + (e && e.message ? e.message : String(e))); }
+        });
+    </script>
+</body>
+</html>
+

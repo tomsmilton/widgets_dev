@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Timestamp Adjuster</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        }
+        h1 { font-size: 1.6rem; font-weight: 600; color: #1f2937; margin-bottom: 8px; }
+        p.lead { color: #6b7280; }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+        }
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            background: #fafafa;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .upload-area.dragover { background: #f0f0f0; border-color: #9ca3af; }
+        input[type="file"] { display: none; }
+        .upload-label {
+            display: inline-block; padding: 10px 16px; background: #2563eb; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;
+        }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .field label { display: block; margin-bottom: 6px; color: #6b7280; font-size: 0.9em; }
+        .field input[type="datetime-local"] { width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.95em; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 10px 16px; background: #2563eb; color: #fff; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn.secondary { background: #6b7280; }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+        .muted { color: #6b7280; font-size: 0.9em; }
+        .error { color: #b91c1c; font-weight: 600; }
+        .preview { width: 100%; overflow: auto; border: 1px solid #e5e7eb; border-radius: 6px; }
+        table { border-collapse: collapse; width: 100%; min-width: 600px; }
+        th, td { border-bottom: 1px solid #f1f5f9; text-align: left; padding: 8px 10px; font-size: 0.9em; white-space: nowrap; }
+        th { background: #f8fafc; font-weight: 600; color: #475569; position: sticky; top: 0; }
+        .footerlinks { display: flex; gap: 8px; align-items: center; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        @media (max-width: 720px) { .row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CSV Timestamp Adjuster</h1>
+            <p class="lead">Upload a CSV with a seconds-based <code>Time</code> column, set a start date/time, and download a new CSV with a <code>Timestamp</code> column.</p>
+        </div>
+
+        <div class="card">
+            <div id="uploadArea" class="upload-area">
+                <input type="file" id="fileInput" accept=".csv">
+                <label for="fileInput" class="upload-label">Choose CSV File</label>
+                <p class="muted" style="margin-top: 8px;">or drag and drop your CSV file here</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="row">
+                <div class="field">
+                    <label for="startDateTime">Start Date/Time</label>
+                    <input type="datetime-local" id="startDateTime" step="1">
+                </div>
+                <div class="field">
+                    <label>Status</label>
+                    <div class="muted" id="status">Waiting for CSV…</div>
+                </div>
+            </div>
+            <div class="actions" style="margin-top: 16px;">
+                <button id="downloadBtn" class="btn" disabled>Download Adjusted CSV</button>
+                <a class="btn secondary" href="index.html">Back to Widgets</a>
+            </div>
+            <div id="error" class="error" style="margin-top: 10px; display: none;"></div>
+        </div>
+
+        <div class="card">
+            <div class="muted" style="margin-bottom: 8px;">Preview (first 10 rows)</div>
+            <div id="preview" class="preview"></div>
+        </div>
+
+        <div class="footerlinks muted">
+            <span>Shortcuts:</span>
+            <a href="metzerops.html">Power Monitoring Dashboard</a>
+            <span>·</span>
+            <a href="index.html">All Widgets</a>
+        </div>
+    </div>
+
+    <script>
+        let originalRows = null;
+        let originalFileName = 'data.csv';
+        let timeKey = 'Time';
+
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const startDateTimeInput = document.getElementById('startDateTime');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const statusEl = document.getElementById('status');
+        const previewEl = document.getElementById('preview');
+        const errorEl = document.getElementById('error');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+
+        startDateTimeInput.addEventListener('change', maybeEnableDownload);
+
+        function handleFile(file) {
+            originalFileName = file.name || 'data.csv';
+            statusEl.textContent = 'Parsing CSV…';
+            errorEl.style.display = 'none';
+            errorEl.textContent = '';
+
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const rows = results.data || [];
+                    if (!rows.length) {
+                        setError('CSV appears to be empty.');
+                        return;
+                    }
+                    // Trim header keys
+                    originalRows = rows.map(row => {
+                        const out = {};
+                        for (const key in row) {
+                            if (!Object.prototype.hasOwnProperty.call(row, key)) continue;
+                            out[(key || '').trim()] = row[key];
+                        }
+                        return out;
+                    });
+
+                    // Detect time key (case-insensitive match of 'time')
+                    const headerKeys = Object.keys(originalRows[0]);
+                    const detected = headerKeys.find(h => h.trim().toLowerCase() === 'time')
+                                   || headerKeys.find(h => h.trim().toLowerCase().includes('time'))
+                                   || 'Time';
+                    timeKey = detected;
+
+                    const missingTime = typeof originalRows[0][timeKey] === 'undefined';
+                    if (missingTime) {
+                        setError('No Time column found. Ensure your CSV has a seconds-based Time column.');
+                        return;
+                    }
+
+                    statusEl.textContent = `Parsed ${originalRows.length.toLocaleString()} rows. Detected Time column: "${timeKey}".`;
+                    renderPreview();
+                    maybeEnableDownload();
+                },
+                error: function(err) {
+                    setError('Failed to parse CSV: ' + (err && err.message ? err.message : String(err)));
+                }
+            });
+        }
+
+        function maybeEnableDownload() {
+            const hasData = Array.isArray(originalRows) && originalRows.length > 0;
+            const hasStart = !!startDateTimeInput.value;
+            downloadBtn.disabled = !(hasData && hasStart);
+        }
+
+        function setError(msg) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+            statusEl.textContent = 'Error';
+            downloadBtn.disabled = true;
+        }
+
+        function renderPreview() {
+            if (!originalRows || originalRows.length === 0) {
+                previewEl.innerHTML = '';
+                return;
+            }
+            const headers = ['Timestamp', ...Object.keys(originalRows[0])];
+            const rows = originalRows.slice(0, 10).map((row) => {
+                const ts = startDateTimeInput.value ? computeIsoTimestamp(row[timeKey]) : '';
+                return ['' + ts, ...headers.slice(1).map(h => coerceCell(row[h]))];
+            });
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const headRow = document.createElement('tr');
+            headers.forEach(h => { const th = document.createElement('th'); th.textContent = h; headRow.appendChild(th); });
+            thead.appendChild(headRow);
+            const tbody = document.createElement('tbody');
+            rows.forEach(r => { const tr = document.createElement('tr'); r.forEach(c => { const td = document.createElement('td'); td.textContent = c; tr.appendChild(td); }); tbody.appendChild(tr); });
+            table.appendChild(thead); table.appendChild(tbody);
+            previewEl.innerHTML = '';
+            previewEl.appendChild(table);
+        }
+
+        function coerceCell(v) {
+            if (v == null) return '';
+            if (typeof v === 'number' && Number.isFinite(v)) return String(v);
+            if (typeof v === 'boolean') return v ? 'true' : 'false';
+            return String(v);
+        }
+
+        function computeIsoTimestamp(timeSeconds) {
+            if (!startDateTimeInput.value) return '';
+            const startDate = new Date(startDateTimeInput.value);
+            let seconds = Number(timeSeconds);
+            if (!Number.isFinite(seconds)) return '';
+            const d = new Date(startDate.getTime() + seconds * 1000);
+            return d.toISOString();
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            if (!originalRows || !startDateTimeInput.value) return;
+            try {
+                // Build adjusted rows with Timestamp first
+                const adjustedRows = originalRows.map(row => {
+                    const ts = computeIsoTimestamp(row[timeKey]);
+                    return Object.assign({ Timestamp: ts }, row);
+                });
+
+                const csv = Papa.unparse(adjustedRows, { quotes: false, newline: "\n" });
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const fileBase = (originalFileName.replace(/\.[^.]+$/, '')) || 'data';
+                a.href = url;
+                a.download = fileBase + '-with-timestamps.csv';
+                document.body.appendChild(a);
+                a.click();
+                URL.revokeObjectURL(url);
+                a.remove();
+            } catch (e) {
+                setError('Failed to generate CSV: ' + (e && e.message ? e.message : String(e)));
+            }
+        });
+
+        // Keep preview in sync when the start date changes
+        startDateTimeInput.addEventListener('change', () => {
+            maybeEnableDownload();
+            renderPreview();
+        });
+    </script>
+</body>
+</html>
+
