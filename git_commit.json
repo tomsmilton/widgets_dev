@@ -1,16 +1,16 @@
 {
   "commit": {
-    "sha": "9bb5ac65d4632a03efdb22fb955ee08fbfc021b2",
-    "short_sha": "9bb5ac6",
+    "sha": "0dfd99bc3fd97c12fc05f8cf56241948b358af64",
+    "short_sha": "0dfd99b",
     "author": {
       "name": "Tom",
       "email": "tom.milton@amododesign.com"
     },
-    "timestamp": "2025-05-26T16:52:44+01:00",
-    "message": "message",
-    "url": "https://github.com/tomsmilton/widgets_dev/commit/9bb5ac65d4632a03efdb22fb955ee08fbfc021b2"
+    "timestamp": "2025-08-22T21:23:38+01:00",
+    "message": "init of metzerops",
+    "url": "https://github.com/tomsmilton/widgets_dev/commit/0dfd99bc3fd97c12fc05f8cf56241948b358af64"
   },
   "branch": "main",
   "repository": "tomsmilton/widgets_dev",
-  "updated_at": "2025-05-26T15:54:48Z"
+  "updated_at": "2025-08-22T20:24:12Z"
 }
