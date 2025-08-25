@@ -133,17 +133,38 @@
         }
 
         function buildFieldOrder(){
-            const isChannelKey = (k) => /^(Read\s*Voltage\s*\d+|Read\s*Current\s*\d+|Power\s*\d+)$/i.test(k.trim());
-            const nonChannel = originalHeaders.filter(h => !isChannelKey(h));
-            const fields = [...nonChannel];
-            channelNumbers.forEach(i => {
-                const v = `Read Voltage ${i}`;
-                const c = `Read Current ${i}`;
-                const p = `Power ${i}`;
-                if (originalHeaders.includes(v)) fields.push(v);
-                if (originalHeaders.includes(c)) fields.push(c);
-                // Always include new Power column
-                fields.push(p);
+            // Precompute which channels have voltage/current columns
+            const hasCurrent = new Set();
+            const hasVoltage = new Set();
+            originalHeaders.forEach(h => {
+                const mv = /^(Read\s*Voltage)\s*(\d+)$/i.exec((h || '').trim());
+                if (mv) { hasVoltage.add(parseInt(mv[2], 10)); return; }
+                const mc = /^(Read\s*Current)\s*(\d+)$/i.exec((h || '').trim());
+                if (mc) { hasCurrent.add(parseInt(mc[2], 10)); }
+            });
+
+            const fields = [];
+            originalHeaders.forEach(h => {
+                // Skip any existing Power columns; we'll insert computed ones inline
+                const mp = /^(Power)\s*(\d+)$/i.exec((h || '').trim());
+                if (mp) { return; }
+
+                fields.push(h);
+
+                const mv = /^(Read\s*Voltage)\s*(\d+)$/i.exec((h || '').trim());
+                if (mv) {
+                    const ch = parseInt(mv[2], 10);
+                    if (!hasCurrent.has(ch)) {
+                        fields.push(`Power ${ch}`);
+                    }
+                    return;
+                }
+                const mc = /^(Read\s*Current)\s*(\d+)$/i.exec((h || '').trim());
+                if (mc) {
+                    const ch = parseInt(mc[2], 10);
+                    fields.push(`Power ${ch}`);
+                    return;
+                }
             });
             return fields;
         }
@@ -197,4 +218,5 @@
     </script>
 </body>
 </html>
+
 

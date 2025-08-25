@@ -149,15 +149,18 @@
         }
 
         function buildFieldOrder(){
-            const isChannelKey = (k) => /^(Read\s*Voltage\s*\d+|Read\s*Current\s*\d+|Power\s*\d+)$/i.test(k.trim());
-            const nonChannel = originalHeaders.filter(h => !isChannelKey(h));
-            const fields = [...nonChannel];
-            const channels = channelNumbers.filter(i => selectedChannels.has(i));
-            channels.forEach(i => {
-                const v = `Read Voltage ${i}`; const c = `Read Current ${i}`; const p = `Power ${i}`;
-                if (originalHeaders.includes(v)) fields.push(v);
-                if (originalHeaders.includes(c)) fields.push(c);
-                if (originalHeaders.includes(p)) fields.push(p);
+            const getChannelFromKey = (k) => {
+                const m = /^(Read\s*Voltage|Read\s*Current|Power)\s*(\d+)$/i.exec((k || '').trim());
+                return m ? parseInt(m[2], 10) : null;
+            };
+            const fields = [];
+            originalHeaders.forEach(h => {
+                const ch = getChannelFromKey(h);
+                if (ch == null) {
+                    fields.push(h);
+                } else if (selectedChannels.has(ch)) {
+                    fields.push(h);
+                }
             });
             return fields;
         }
@@ -196,4 +199,5 @@
     </script>
 </body>
 </html>
+
 
