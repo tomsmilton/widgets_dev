@@ -1,16 +1,16 @@
 {
   "commit": {
-    "sha": "9bb5ac65d4632a03efdb22fb955ee08fbfc021b2",
-    "short_sha": "9bb5ac6",
+    "sha": "c3a50590d28b77ff6510ccf4c601fb862f957fcc",
+    "short_sha": "c3a5059",
     "author": {
       "name": "Tom",
       "email": "tom.milton@amododesign.com"
     },
-    "timestamp": "2025-05-26T16:52:44+01:00",
-    "message": "message",
-    "url": "https://github.com/tomsmilton/widgets_dev/commit/9bb5ac65d4632a03efdb22fb955ee08fbfc021b2"
+    "timestamp": "2025-08-25T22:55:15+01:00",
+    "message": "updates to widgets site",
+    "url": "https://github.com/tomsmilton/widgets_dev/commit/c3a50590d28b77ff6510ccf4c601fb862f957fcc"
   },
   "branch": "main",
   "repository": "tomsmilton/widgets_dev",
-  "updated_at": "2025-05-26T15:54:48Z"
+  "updated_at": "2025-09-02T11:27:50Z"
 }
