@@ -5,29 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Richmond Bin Collection Information</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
             height: 100vh;
-            transition: all 0.5s ease;
             overflow: hidden;
             position: relative;
         }
 
-        .main-content {
-            text-align: center;
+        .split-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
         }
 
-        .next-date {
-            font-size: 4.5rem;
+        .bin-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.5s ease;
+        }
+
+        .bin-name {
+            font-size: 2.5rem;
             font-weight: bold;
+            margin-bottom: 30px;
+            line-height: 1.3;
+        }
+
+        .collection-date {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
             line-height: 1.2;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .bottom-content {
@@ -40,28 +73,26 @@
             justify-content: center;
             align-items: center;
             gap: 20px;
-        }
-
-        .additional-info {
-            text-align: center;
-            opacity: 0.7;
-            transition: opacity 0.3s ease;
-            padding-bottom: 80px;
-        }
-
-        .additional-info:hover {
-            opacity: 1;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
         }
 
         .last-updated {
             font-size: 0.8rem;
+            color: white;
         }
 
         .view-more {
             cursor: pointer;
             text-decoration: underline;
             font-size: 0.9rem;
+            color: white;
             transition: opacity 0.3s ease;
+        }
+
+        .view-more:hover {
+            opacity: 0.7;
         }
 
         .modal {
@@ -143,12 +174,10 @@
             margin-bottom: 12px;
             font-size: 1.1rem;
             opacity: 0.9;
-            transition: opacity 0.3s ease;
         }
 
         .collection-dates li.next-collection {
             font-weight: bold;
-            position: relative;
         }
 
         .collection-dates li.next-collection::after {
@@ -158,57 +187,15 @@
             opacity: 0.7;
         }
 
-        .loading-spinner {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 600px) {
-            .next-date {
-                font-size: 3rem;
-            }
-
-            .modal-content {
-                padding: 20px;
-                width: 90%;
-            }
-
-            .collection-dates li {
-                font-size: 1rem;
-            }
-
-            .toggle-text {
-                bottom: 16px;
-                right: 16px;
-                width: 48px;
-                height: 48px;
-                font-size: 1.3rem;
-            }
-
-            .bottom-content {
-                padding: 16px;
-                padding-bottom: 80px;
-            }
-        }
-
         .toggle-text {
             position: fixed;
-            bottom: 20px;
+            bottom: 80px;
             right: 20px;
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            border: 2px solid currentColor;
-            background: transparent;
+            border: 2px solid white;
+            background: rgba(0, 0, 0, 0.3);
             cursor: pointer;
             opacity: 0.7;
             transition: opacity 0.3s ease;
@@ -217,7 +204,7 @@
             justify-content: center;
             font-size: 1.2rem;
             padding: 0;
-            color: inherit;
+            color: white;
             -webkit-tap-highlight-color: transparent;
             z-index: 100;
         }
@@ -226,9 +213,9 @@
             opacity: 1;
         }
 
-        body.text-hidden .main-content,
-        body.text-hidden .bottom-content,
-        body.text-hidden .modal {
+        body.text-hidden .bin-name,
+        body.text-hidden .collection-date,
+        body.text-hidden .bottom-content {
             opacity: 0;
             pointer-events: none;
         }
@@ -240,14 +227,60 @@
         body.text-hidden .toggle-text:hover {
             opacity: 0.7;
         }
+
+        /* Mobile: Horizontal split */
+        @media (max-width: 768px) {
+            .split-container {
+                flex-direction: column;
+            }
+
+            .bin-name {
+                font-size: 1.8rem;
+                margin-bottom: 15px;
+            }
+
+            .collection-date {
+                font-size: 2rem;
+                margin-bottom: 10px;
+            }
+
+            .bin-section {
+                padding: 20px;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 90%;
+            }
+
+            .toggle-text {
+                bottom: 70px;
+                right: 16px;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+
+        .error-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            background-color: #2b0000;
+            color: #ff9999;
+            font-size: 2rem;
+            text-align: center;
+            padding: 40px;
+        }
     </style>
 </head>
 <body>
     <button class="toggle-text" id="toggleText" title="Toggle text visibility">Aa</button>
-    <div class="main-content">
-        <div class="next-date" id="nextDate">
-            <div class="loading-spinner"></div>
-        </div>
+
+    <div class="split-container" id="splitContainer">
+        <div class="loading-spinner" style="margin: auto;"></div>
     </div>
 
     <div class="bottom-content">
@@ -263,7 +296,7 @@
     </div>
 
     <script>
-        // Load text visibility preference, default to hidden (true)
+        // Load text visibility preference
         const isTextHidden = localStorage.getItem('hideText') !== 'false';
         if (isTextHidden) {
             document.body.classList.add('text-hidden');
@@ -278,33 +311,27 @@
         // Color configurations for Richmond bins
         const colorMap = {
             'Glass, can, plastic and carton recycling': '#008080',
-            'Paper and card recycling': '#ADD8E6',
+            'Paper and card recycling': '#87CEEB',
             'Rubbish and food': '#0a0a0a',
             'Garden waste': '#228B22'
         };
 
         function getLighterShade(color, factor = 3.5) {
-            // Convert hex to RGB
             const r = parseInt(color.slice(1, 3), 16);
             const g = parseInt(color.slice(3, 5), 16);
             const b = parseInt(color.slice(5, 7), 16);
 
-            // Make it lighter
             const newR = Math.min(255, Math.round(r * factor));
             const newG = Math.min(255, Math.round(g * factor));
             const newB = Math.min(255, Math.round(b * factor));
 
-            // Convert back to hex
             return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
         }
 
         function showError(message) {
-            const bgColor = '#2b0000';  // Deep red
-            document.body.style.backgroundColor = bgColor;
-            document.body.style.color = getLighterShade(bgColor, 4);  // Make text a bit lighter for better contrast
-            document.getElementById('nextDate').textContent = message;
-            document.getElementById('lastUpdated').textContent = '';
-            document.getElementById('allBins').textContent = message;
+            document.body.innerHTML = `
+                <div class="error-state">${message}</div>
+            `;
         }
 
         function updateUI(data) {
@@ -315,12 +342,12 @@
 
                 // Find the next collection date
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+                today.setHours(0, 0, 0, 0);
 
-                let nextBin = null;
                 let nextDate = null;
                 let minDays = Infinity;
 
+                // Find the absolute next collection date
                 data.collections.forEach(bin => {
                     bin.next_collections.forEach(dateStr => {
                         const collectionDate = new Date(dateStr);
@@ -328,33 +355,61 @@
 
                         if (daysDifference >= 0 && daysDifference < minDays) {
                             minDays = daysDifference;
-                            nextBin = bin.bin_color;
                             nextDate = collectionDate;
                         }
                     });
                 });
 
-                const bgColor = colorMap[nextBin] || '#555555';
-                document.body.style.backgroundColor = bgColor;
-                document.body.style.color = getLighterShade(bgColor);
+                if (!nextDate) {
+                    showError('No upcoming collections found');
+                    return;
+                }
 
-                // Display next bin information
-                document.getElementById('nextDate').textContent = nextDate.toLocaleDateString('en-GB', {
+                // Find all bins being collected on the next date
+                const binsOnNextDate = [];
+                data.collections.forEach(bin => {
+                    bin.next_collections.forEach(dateStr => {
+                        const collectionDate = new Date(dateStr);
+                        if (collectionDate.getTime() === nextDate.getTime()) {
+                            binsOnNextDate.push(bin);
+                        }
+                    });
+                });
+
+                // Create split screen sections
+                const container = document.getElementById('splitContainer');
+                container.innerHTML = '';
+
+                const formattedDate = nextDate.toLocaleDateString('en-GB', {
                     weekday: 'long',
-                    year: 'numeric',
+                    day: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    year: 'numeric'
+                });
+
+                binsOnNextDate.forEach(bin => {
+                    const section = document.createElement('div');
+                    section.className = 'bin-section';
+                    const bgColor = colorMap[bin.bin_color] || '#555555';
+                    section.style.backgroundColor = bgColor;
+                    section.style.color = getLighterShade(bgColor);
+
+                    section.innerHTML = `
+                        <div class="bin-name">${bin.bin_color}</div>
+                        <div class="collection-date">${formattedDate}</div>
+                    `;
+
+                    container.appendChild(section);
                 });
 
                 // Populate the modal with all bin collection information
                 const allBinsElement = document.getElementById('allBins');
-                allBinsElement.innerHTML = '';
+                allBinsElement.innerHTML = '<h2 style="margin-bottom: 20px;">All Upcoming Collections</h2>';
 
                 data.collections.forEach(bin => {
                     const binEntry = document.createElement('div');
                     binEntry.className = 'bin-entry';
 
-                    // Add specific bin class for styling
                     if (bin.bin_color.includes('Glass')) {
                         binEntry.classList.add('bin-entry-glass');
                     } else if (bin.bin_color.includes('Paper')) {
@@ -383,8 +438,7 @@
                             day: 'numeric'
                         });
 
-                        // Highlight next collection date
-                        if (collectionDate.getTime() === nextDate.getTime() && bin.bin_color === nextBin) {
+                        if (collectionDate.getTime() === nextDate.getTime()) {
                             dateItem.classList.add('next-collection');
                         }
 
@@ -409,7 +463,7 @@
                 updateUI(data);
             } catch (error) {
                 console.error('Error fetching data:', error);
-                document.getElementById('nextDate').innerHTML = 'Error loading data';
+                showError('Error loading data');
             }
         }
 
