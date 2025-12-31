@@ -120,7 +120,7 @@ def get_richmond_bin_days(property_id):
 
     # Color configurations for Richmond bins
     color_map = {
-        'Glass, can, plastic and carton recycling': '#9B59B6',  # Mixed recycling - purple
+        'Glass, can, plastic and carton recycling': '#2d2d2d',  # Mixed recycling - lighter black
         'Paper and card recycling': '#2E86DE',  # Blue
         'Rubbish and food': '#0a0a0a',  # Black dustbins
         'Garden waste': '#27AE60',  # Green
