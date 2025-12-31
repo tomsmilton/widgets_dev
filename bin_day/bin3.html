@@ -141,19 +141,23 @@
         }
 
         .bin-entry-glass {
-            background: rgba(0, 128, 128, 0.1);
+            background: rgba(155, 89, 182, 0.1); /* Purple for mixed recycling */
         }
 
         .bin-entry-paper {
-            background: rgba(173, 216, 230, 0.1);
+            background: rgba(46, 134, 222, 0.1); /* Blue */
         }
 
         .bin-entry-rubbish {
-            background: rgba(10, 10, 10, 0.1);
+            background: rgba(10, 10, 10, 0.1); /* Black */
         }
 
         .bin-entry-garden {
-            background: rgba(34, 139, 34, 0.1);
+            background: rgba(39, 174, 96, 0.1); /* Green */
+        }
+
+        .bin-entry-food {
+            background: rgba(27, 94, 32, 0.1); /* Darker green */
         }
 
         .bin-header {
@@ -310,10 +314,11 @@
 
         // Color configurations for Richmond bins
         const colorMap = {
-            'Glass, can, plastic and carton recycling': '#008080',
-            'Paper and card recycling': '#87CEEB',
-            'Rubbish and food': '#0a0a0a',
-            'Garden waste': '#228B22'
+            'Glass, can, plastic and carton recycling': '#9B59B6', // Mixed recycling - purple
+            'Paper and card recycling': '#2E86DE', // Blue
+            'Rubbish and food': '#0a0a0a', // Black dustbins
+            'Garden waste': '#27AE60', // Green
+            'Food waste': '#1B5E20' // Slightly darker green
         };
 
         function getLighterShade(color, factor = 3.5) {
@@ -410,14 +415,16 @@
                     const binEntry = document.createElement('div');
                     binEntry.className = 'bin-entry';
 
-                    if (bin.bin_color.includes('Glass')) {
+                    if (bin.bin_color.includes('Glass') || bin.bin_color.includes('plastic') || bin.bin_color.includes('can')) {
                         binEntry.classList.add('bin-entry-glass');
-                    } else if (bin.bin_color.includes('Paper')) {
+                    } else if (bin.bin_color.includes('Paper') || bin.bin_color.includes('card')) {
                         binEntry.classList.add('bin-entry-paper');
                     } else if (bin.bin_color.includes('Rubbish')) {
                         binEntry.classList.add('bin-entry-rubbish');
                     } else if (bin.bin_color.includes('Garden')) {
                         binEntry.classList.add('bin-entry-garden');
+                    } else if (bin.bin_color.includes('Food')) {
+                        binEntry.classList.add('bin-entry-food');
                     }
 
                     const binHeader = document.createElement('div');
