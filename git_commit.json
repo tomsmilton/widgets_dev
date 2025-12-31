@@ -1,16 +1,16 @@
 {
   "commit": {
-    "sha": "9bb5ac65d4632a03efdb22fb955ee08fbfc021b2",
-    "short_sha": "9bb5ac6",
+    "sha": "74874f1ab20ace4ef51d634cf664d2b9627bf26a",
+    "short_sha": "74874f1",
     "author": {
       "name": "Tom",
       "email": "tom.milton@amododesign.com"
     },
-    "timestamp": "2025-05-26T16:52:44+01:00",
-    "message": "message",
-    "url": "https://github.com/tomsmilton/widgets_dev/commit/9bb5ac65d4632a03efdb22fb955ee08fbfc021b2"
+    "timestamp": "2025-12-31T21:05:32Z",
+    "message": "correcting black bin",
+    "url": "https://github.com/tomsmilton/widgets_dev/commit/74874f1ab20ace4ef51d634cf664d2b9627bf26a"
   },
   "branch": "main",
   "repository": "tomsmilton/widgets_dev",
-  "updated_at": "2025-05-26T15:54:48Z"
+  "updated_at": "2025-12-31T21:05:56Z"
 }
