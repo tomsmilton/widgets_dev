@@ -1,0 +1,42 @@
+{
+  "last_updated": "2025-12-31T10:00:00.000000",
+  "collections": [
+    {
+      "bin_color": "Glass, can, plastic and carton recycling",
+      "next_collections": [
+        "2026-01-02",
+        "2026-01-16",
+        "2026-01-30"
+      ],
+      "bin_type": ""
+    },
+    {
+      "bin_color": "Paper and card recycling",
+      "next_collections": [
+        "2026-01-02",
+        "2026-01-16",
+        "2026-01-30"
+      ],
+      "bin_type": ""
+    },
+    {
+      "bin_color": "Rubbish and food",
+      "next_collections": [
+        "2026-01-02",
+        "2026-01-16",
+        "2026-01-30"
+      ],
+      "bin_type": ""
+    },
+    {
+      "bin_color": "Garden waste",
+      "next_collections": [
+        "2026-01-08",
+        "2026-01-22",
+        "2026-02-05"
+      ],
+      "bin_type": ""
+    }
+  ],
+  "next_color": "#008080"
+}
