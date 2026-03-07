@@ -2962,11 +2962,11 @@
       "award_type": "Grant",
       "is_sme": "No",
       "report_period": "FY24-25",
-      "category": "Unknown",
-      "city": "",
-      "county": "",
+      "category": "UK Public Body",
+      "city": "London",
+      "county": "Greater London",
       "postcode": "",
-      "country": ""
+      "country": "England"
     },
     {
       "supplier": "University of Bath",
@@ -3361,11 +3361,11 @@
       "award_type": "Contract",
       "is_sme": "No",
       "report_period": "FY24-25",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "Ireland"
     },
     {
       "supplier": "The Manufacturing Technology Centre Limited",
@@ -3886,11 +3886,11 @@
       "award_type": "Grant",
       "is_sme": "Yes",
       "report_period": "FY24-25",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "Netherlands"
     },
     {
       "supplier": "University of Edinburgh",
@@ -4075,11 +4075,11 @@
       "award_type": "Contract",
       "is_sme": "Yes",
       "report_period": "Q1 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "USA"
     },
     {
       "supplier": "Max Planck Institute of Molecular Plant Physiology",
@@ -4348,11 +4348,11 @@
       "award_type": "Grant",
       "is_sme": "No",
       "report_period": "Q1 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "Switzerland"
     },
     {
       "supplier": "University of Sheffield",
@@ -4474,11 +4474,11 @@
       "award_type": "Grant",
       "is_sme": "No",
       "report_period": "Q1 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "Philippines"
     },
     {
       "supplier": "Institut Teknologi Sepuluh Nopember",
@@ -4873,11 +4873,11 @@
       "award_type": "Contract",
       "is_sme": "Yes",
       "report_period": "Q1 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "USA"
     },
     {
       "supplier": "The Energy and Resources Institute",
@@ -5398,11 +5398,11 @@
       "award_type": "Grant",
       "is_sme": "Yes",
       "report_period": "Q2 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "Japan"
     },
     {
       "supplier": "University of Warwick",
@@ -5566,11 +5566,11 @@
       "award_type": "Contract",
       "is_sme": "Yes",
       "report_period": "Q2 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "USA"
     },
     {
       "supplier": "Ashgro Inc",
@@ -5839,11 +5839,11 @@
       "award_type": "Grant",
       "is_sme": "No",
       "report_period": "Q2 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "Mali"
     },
     {
       "supplier": "Southern Cross University",
@@ -6091,11 +6091,11 @@
       "award_type": "Contract",
       "is_sme": "No",
       "report_period": "Q2 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "USA"
     },
     {
       "supplier": "Harwich Partners, LLC",
@@ -6112,11 +6112,11 @@
       "award_type": "Contract",
       "is_sme": "Yes",
       "report_period": "Q2 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "USA"
     },
     {
       "supplier": "Osborne Clarke",
@@ -6406,11 +6406,11 @@
       "award_type": "Contract",
       "is_sme": "No",
       "report_period": "Q3 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "USA"
     },
     {
       "supplier": "Northeastern University London",
@@ -6469,11 +6469,11 @@
       "award_type": "Contract",
       "is_sme": "Yes",
       "report_period": "Q3 FY25-26",
-      "category": "Unknown",
+      "category": "International",
       "city": "",
       "county": "",
       "postcode": "",
-      "country": ""
+      "country": "USA"
     },
     {
       "supplier": "Lila Science Inc",
@@ -6553,11 +6553,11 @@
       "award_type": "Contract",
       "is_sme": "No",
       "report_period": "Q3 FY25-26",
-      "category": "Unknown",
-      "city": "",
-      "county": "",
+      "category": "UK University",
+      "city": "London",
+      "county": "Greater London",
       "postcode": "",
-      "country": ""
+      "country": "England"
     },
     {
       "supplier": "Humanis AI",
@@ -6750,11 +6750,11 @@
       "award_type": "Amendment",
       "is_sme": "No",
       "report_period": "Q3 FY25-26",
-      "category": "Unknown",
-      "city": "",
-      "county": "",
-      "postcode": "",
-      "country": ""
+      "category": "UK Organisation",
+      "city": "Harrogate",
+      "county": "West Yorkshire",
+      "postcode": "HG2 8NZ",
+      "country": "England"
     },
     {
       "supplier": "Individual independent consultant*",
@@ -7194,10 +7194,10 @@
   ],
   "uk_counties": {
     "Greater London": {
-      "count": 83,
-      "total_value": 142936501.0,
-      "original_value": 132752448.0,
-      "suppliers": 56
+      "count": 85,
+      "total_value": 150170188.0,
+      "original_value": 139986135.0,
+      "suppliers": 58
     },
     "Wiltshire": {
       "count": 3,
@@ -7326,10 +7326,10 @@
       "suppliers": 1
     },
     "West Yorkshire": {
-      "count": 8,
-      "total_value": 11367719.0,
+      "count": 9,
+      "total_value": 11398435.0,
       "original_value": 11367719.0,
-      "suppliers": 3
+      "suppliers": 4
     },
     "Bedfordshire": {
       "count": 5,
@@ -7400,10 +7400,10 @@
   },
   "international": {
     "USA": {
-      "count": 35,
-      "total_value": 45324295.0,
-      "original_value": 45113295.0,
-      "suppliers": 33
+      "count": 42,
+      "total_value": 47627673.0,
+      "original_value": 47416673.0,
+      "suppliers": 40
     },
     "Estonia": {
       "count": 2,
@@ -7441,11 +7441,23 @@
       "original_value": 1152125.0,
       "suppliers": 2
     },
+    "Ireland": {
+      "count": 1,
+      "total_value": 34971.0,
+      "original_value": 34971.0,
+      "suppliers": 1
+    },
     "Greenland": {
       "count": 1,
       "total_value": 1075850.0,
       "original_value": 1075850.0,
       "suppliers": 1
+    },
+    "Netherlands": {
+      "count": 2,
+      "total_value": 1407715.0,
+      "original_value": 1407715.0,
+      "suppliers": 2
     },
     "Germany": {
       "count": 2,
@@ -7453,16 +7465,22 @@
       "original_value": 9572013.0,
       "suppliers": 2
     },
+    "Switzerland": {
+      "count": 1,
+      "total_value": 984790.0,
+      "original_value": 984790.0,
+      "suppliers": 1
+    },
+    "Philippines": {
+      "count": 1,
+      "total_value": 147954.0,
+      "original_value": 147954.0,
+      "suppliers": 1
+    },
     "Indonesia": {
       "count": 1,
       "total_value": 345188.0,
       "original_value": 345188.0,
-      "suppliers": 1
-    },
-    "Netherlands": {
-      "count": 1,
-      "total_value": 1255090.0,
-      "original_value": 1255090.0,
       "suppliers": 1
     },
     "India": {
@@ -7489,6 +7507,18 @@
       "original_value": 2078254.0,
       "suppliers": 1
     },
+    "Japan": {
+      "count": 1,
+      "total_value": 280239.0,
+      "original_value": 280239.0,
+      "suppliers": 1
+    },
+    "Mali": {
+      "count": 1,
+      "total_value": 272074.0,
+      "original_value": 272074.0,
+      "suppliers": 1
+    },
     "Israel": {
       "count": 1,
       "total_value": 100188.0,
@@ -7497,10 +7527,10 @@
     }
   },
   "unknown": {
-    "count": 41,
-    "total_value": 17192110.0,
-    "original_value": 16758794.0,
-    "suppliers": 27
+    "count": 25,
+    "total_value": 5751676.0,
+    "original_value": 5349076.0,
+    "suppliers": 11
   },
   "totals": {
     "count": 333,
