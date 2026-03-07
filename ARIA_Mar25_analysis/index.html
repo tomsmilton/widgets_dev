@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARIA Contract Awards by Location</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg: #fafaf9;
+            --surface: #ffffff;
+            --border: #e8e5e0;
+            --text: #2d2b28;
+            --text-secondary: #8a8580;
+            --accent: #c96442;
+            --accent-light: #f5ebe6;
+            --heading: #1a1917;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--text); background: var(--bg); line-height: 1.5; max-width: 1100px; margin: 0 auto; }
+
+        header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1.75rem 2rem 1.25rem; display: flex; justify-content: space-between; align-items: flex-start; }
+        .header-left {}
+        header h1 { font-size: 1.4rem; font-weight: 600; color: var(--heading); letter-spacing: -0.02em; }
+        header p { color: var(--text-secondary); margin-top: 0.25rem; font-size: 0.85rem; }
+        .caveats-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 0.35rem 0.7rem; cursor: pointer; font-size: 0.78rem; color: var(--text-secondary); transition: all 0.15s; white-space: nowrap; margin-top: 0.2rem; }
+        .caveats-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-overlay.hidden { display: none; }
+        .modal { background: var(--surface); border-radius: 12px; padding: 1.5rem 1.75rem; max-width: 560px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,0.12); font-size: 0.82rem; color: #6b4a3a; position: relative; }
+        .modal h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.6rem; color: #5a3a2a; }
+        .modal ul { margin: 0.25rem 0 1rem 1.2rem; }
+        .modal li { margin-bottom: 0.3rem; }
+        .modal-close { display: inline-block; background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 0.4rem 1rem; cursor: pointer; font-size: 0.82rem; font-weight: 500; }
+        .modal-close:hover { opacity: 0.9; }
+
+        .drilldown-modal { background: var(--surface); border-radius: 12px; padding: 1.5rem 1.75rem; max-width: 820px; width: 100%; max-height: 80vh; box-shadow: 0 8px 30px rgba(0,0,0,0.12); position: relative; display: flex; flex-direction: column; }
+        .drilldown-modal h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.15rem; color: var(--heading); }
+        .drilldown-modal .drilldown-subtitle { font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem; }
+        .drilldown-table-wrap { overflow-y: auto; flex: 1; }
+        .drilldown-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .drilldown-table th { position: sticky; top: 0; background: var(--surface); text-align: left; padding: 0.4rem 0.5rem; border-bottom: 2px solid var(--border); font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.04em; }
+        .drilldown-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border); }
+        .drilldown-table tr:hover td { background: var(--accent-light); }
+
+        .summary-bar { display: flex; gap: 2.5rem; padding: 1rem 2rem; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .stat { display: flex; flex-direction: column; }
+        .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--heading); letter-spacing: -0.02em; }
+        .stat-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+
+        .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 2rem; background: var(--surface); overflow-x: auto; }
+        .tab { padding: 0.7rem 1.1rem; cursor: pointer; font-size: 0.82rem; font-weight: 500; color: var(--text-secondary); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; white-space: nowrap; }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        #map, #choroplethMap { height: 540px; width: 100%; }
+
+        .legend { background: var(--surface); padding: 0.75rem 1rem; border-radius: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.08); line-height: 1.6; font-size: 0.78rem; }
+        .legend h4 { margin-bottom: 0.25rem; font-size: 0.82rem; font-weight: 600; }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+        .legend-circle { border-radius: 50%; display: inline-block; opacity: 0.75; border: 1.5px solid rgba(0,0,0,0.2); }
+        .gradient-bar { width: 120px; height: 12px; border-radius: 3px; border: 1px solid var(--border); }
+        .gradient-label { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary); }
+
+        .detail-panel { padding: 1.5rem 2rem; background: var(--surface); border-top: 1px solid var(--border); }
+        .detail-panel h2 { font-size: 1.1rem; margin-bottom: 0.25rem; font-weight: 600; color: var(--heading); }
+        .detail-panel .subtitle { color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 1rem; }
+        .detail-panel.empty { text-align: center; color: var(--text-secondary); padding: 3rem 2rem; font-size: 0.9rem; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        thead { background: var(--bg); }
+        th { text-align: left; padding: 0.55rem 0.75rem; font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f0eeeb; vertical-align: top; }
+        tr:hover td { background: #faf8f5; }
+        .val { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .sme-badge { background: #e8f0e8; color: #3a6e3a; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600; }
+
+        .section { padding: 1.5rem 2rem; }
+        .section h2 { font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--heading); }
+        .section .subtitle { color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 1rem; }
+
+        .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; }
+        .chart-container h3 { font-size: 0.95rem; margin-bottom: 0.75rem; font-weight: 600; color: var(--heading); }
+        .chart-toggle { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+        .chart-toggle button { padding: 0.3rem 0.7rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); cursor: pointer; font-size: 0.78rem; color: var(--text-secondary); transition: all 0.15s; }
+        .chart-toggle button:hover { border-color: var(--accent); color: var(--accent); }
+        .chart-toggle button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .country-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem; }
+        .country-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; cursor: pointer; transition: all 0.15s; }
+        .country-card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .country-card .name { font-weight: 600; font-size: 0.9rem; }
+        .country-card .meta { font-size: 0.78rem; color: var(--text-secondary); }
+
+        .back-btn { display: inline-flex; align-items: center; gap: 0.3rem; background: none; border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.7rem; cursor: pointer; font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem; }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .research-log { padding: 1.5rem 2rem; max-width: 900px; }
+        .research-log h1 { font-size: 1.3rem; font-weight: 700; margin: 1.5rem 0 0.5rem; color: var(--heading); }
+        .research-log h2 { font-size: 1.1rem; font-weight: 600; margin: 1.25rem 0 0.4rem; color: var(--heading); border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+        .research-log h3 { font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.3rem; color: var(--heading); }
+        .research-log p { margin: 0.4rem 0; font-size: 0.85rem; }
+        .research-log ul, .research-log ol { margin: 0.3rem 0 0.3rem 1.5rem; font-size: 0.85rem; }
+        .research-log table { margin: 0.5rem 0; font-size: 0.8rem; }
+        .research-log th, .research-log td { padding: 0.35rem 0.6rem; }
+        .research-log strong { color: var(--heading); }
+        .research-log code { background: #f0eeeb; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.8rem; }
+
+        .hidden { display: none; }
+
+        @media (max-width: 768px) {
+            .summary-bar { gap: 1rem; }
+            #map, #choroplethMap { height: 380px; }
+            table { font-size: 0.75rem; }
+            th, td { padding: 0.35rem 0.5rem; }
+            .tabs { padding: 0 1rem; }
+            .section, .detail-panel, .caveats { padding-left: 1rem; padding-right: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Caveats modal -->
+    <div class="modal-overlay" id="caveatsModal">
+        <div class="modal">
+            <h3>Caveats</h3>
+            <ul>
+                <li><strong>Contract awards only</strong> — does not include the 27 contract amendments (extensions, value increases) in the database</li>
+                <li><strong>Registered address used</strong> — supplier locations are based on Companies House registered address, which may differ from where work is performed</li>
+                <li><strong>~£31M unlocated</strong> — some contracts have suppliers with truncated or unresolved names from PDF extraction and are excluded from regional totals</li>
+                <li><strong>Spend categories are estimated</strong> — the R&D / Activation / Operating split is inferred from contract context fields, not from ARIA's own classification</li>
+                <li><strong>Financial transactions not shown</strong> — the 910 payment transactions in the database are separate from contract awards and not included here</li>
+            </ul>
+            <button class="modal-close" onclick="document.getElementById('caveatsModal').classList.add('hidden')">Got it</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="drilldownModal" onclick="if(event.target===this)this.classList.add('hidden')">
+        <div class="drilldown-modal">
+            <h3 id="drilldownTitle"></h3>
+            <div class="drilldown-subtitle" id="drilldownSubtitle"></div>
+            <div class="drilldown-table-wrap" id="drilldownBody"></div>
+            <div style="margin-top:0.75rem;text-align:right;"><button class="modal-close" onclick="document.getElementById('drilldownModal').classList.add('hidden')">Close</button></div>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <h1>ARIA Contract Awards by Location</h1>
+            <p>Transparency data — all awarded contracts mapped to supplier registered address</p>
+        </div>
+        <button class="caveats-btn" onclick="document.getElementById('caveatsModal').classList.remove('hidden')">Caveats</button>
+    </header>
+
+    <div class="summary-bar" id="summaryBar"></div>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="map">Bubble Map</div>
+        <div class="tab" data-tab="choropleth">County Map</div>
+        <div class="tab" data-tab="tomforth">Tom Forth Plot</div>
+        <div class="tab" data-tab="charts">Charts</div>
+        <div class="tab" data-tab="counties">County Table</div>
+        <div class="tab" data-tab="international">International</div>
+        <div class="tab" data-tab="all">All Contracts</div>
+        <div class="tab" data-tab="research">Research Log</div>
+    </div>
+
+    <div class="main-content">
+        <!-- Bubble Map -->
+        <div id="mapTab">
+            <div id="map"></div>
+            <div id="detailPanel" class="detail-panel empty">Click a bubble to see contracts for that area</div>
+        </div>
+
+        <!-- Choropleth -->
+        <div id="choroplethTab" class="hidden">
+            <div id="choroplethMap"></div>
+        </div>
+
+        <!-- Tom Forth Plot -->
+        <div id="tomforthTab" class="hidden">
+            <div class="section">
+                <div class="chart-toggle" id="tomforthToggle">
+                    <button class="active" data-mode="normalised">Normalised to £250M</button>
+                    <button data-mode="actual">Actual Values</button>
+                </div>
+                <div class="chart-container" style="max-width: 720px; margin: 0 auto;">
+                    <canvas id="chartOverview" style="cursor:pointer"></canvas>
+                </div>
+                <p style="text-align:center;font-size:0.72rem;color:var(--text-secondary);margin-top:0.3rem;">Click a bar segment to see contracts</p>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div id="chartsTab" class="hidden">
+            <div class="section">
+                <h2>Contract Value by Region</h2>
+                <p class="subtitle">Contracts grouped by ONS region: London, South East &amp; East of England vs Rest of UK vs International</p>
+                <div class="chart-toggle" id="chartToggle">
+                    <button class="active" data-metric="value">Total Value</button>
+                    <button data-metric="count">Contract Count</button>
+                </div>
+                <div class="chart-container">
+                    <h3>London, South East &amp; East of England</h3>
+                    <canvas id="chartLondonSE"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Rest of UK</h3>
+                    <canvas id="chartRestUK"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>International</h3>
+                    <canvas id="chartIntl"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- County Table -->
+        <div id="countiesTab" class="hidden">
+            <div class="section">
+                <h2>UK Counties</h2>
+                <p class="subtitle">Click a county to see its contracts</p>
+                <div class="country-grid" id="countyGrid"></div>
+                <div id="countyDetail" class="hidden" style="margin-top:1.5rem;"></div>
+            </div>
+        </div>
+
+        <!-- International -->
+        <div id="internationalTab" class="hidden">
+            <div class="section">
+                <h2>International Contracts</h2>
+                <p class="subtitle">Click a country to see its contracts</p>
+                <div class="country-grid" id="countryGrid"></div>
+                <div id="intlDetail" class="hidden" style="margin-top:1.5rem;"></div>
+            </div>
+        </div>
+
+        <!-- All Contracts -->
+        <div id="allTab" class="hidden">
+            <div class="detail-panel" id="allPanel"></div>
+        </div>
+
+        <!-- Research Log -->
+        <div id="researchTab" class="hidden">
+            <div class="research-log" id="researchLog"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+    const COUNTY_COORDS = {
+        "Greater London": [51.509, -0.118], "Oxfordshire": [51.752, -1.258],
+        "Cambridgeshire": [52.205, 0.121], "City of Glasgow": [55.864, -4.252],
+        "West Midlands": [52.486, -1.890], "City of Edinburgh": [55.953, -3.189],
+        "Hampshire": [51.058, -1.310], "West Yorkshire": [53.799, -1.549],
+        "Greater Manchester": [53.483, -2.244], "Devon": [50.720, -3.534],
+        "South Yorkshire": [53.383, -1.470], "Bedfordshire": [52.003, -0.450],
+        "Bristol": [51.455, -2.588], "Kent": [51.278, 0.522],
+        "Berkshire": [51.432, -1.133], "County Durham": [54.778, -1.576],
+        "Norfolk": [52.628, 1.297], "Wiltshire": [51.350, -1.992],
+        "Essex": [51.770, 0.550], "East Sussex": [50.870, 0.230],
+        "North Yorkshire": [54.150, -1.380], "West Sussex": [50.930, -0.460],
+        "Somerset": [51.105, -2.926], "Tyne and Wear": [54.978, -1.612],
+        "Merseyside": [53.410, -2.978], "Dorset": [50.748, -2.344],
+        "Fife": [56.208, -3.150], "Stirling": [56.117, -3.937],
+        "Cheshire": [53.190, -2.590], "Northern Ireland": [54.597, -5.930],
+        "Highland": [57.480, -5.200], "Hertfordshire": [51.810, -0.225],
+        "Derbyshire": [53.150, -1.500], "Dundee City": [56.462, -2.971],
+    };
+
+    const COUNTY_TO_ONS = {
+        'Greater London': 'London',
+        'Oxfordshire': 'South East', 'Kent': 'South East', 'Berkshire': 'South East',
+        'East Sussex': 'South East', 'West Sussex': 'South East', 'Hampshire': 'South East',
+        'Cambridgeshire': 'East of England', 'Essex': 'East of England',
+        'Norfolk': 'East of England', 'Hertfordshire': 'East of England', 'Bedfordshire': 'East of England',
+        'Bristol': 'South West', 'Devon': 'South West', 'Dorset': 'South West',
+        'Wiltshire': 'South West', 'Somerset': 'South West',
+        'West Midlands': 'West Midlands', 'Derbyshire': 'East Midlands',
+        'Greater Manchester': 'North West', 'Merseyside': 'North West', 'Cheshire': 'North West',
+        'West Yorkshire': 'Yorkshire and The Humber', 'South Yorkshire': 'Yorkshire and The Humber',
+        'North Yorkshire': 'Yorkshire and The Humber',
+        'Tyne and Wear': 'North East', 'County Durham': 'North East',
+        'City of Glasgow': 'Scotland', 'City of Edinburgh': 'Scotland',
+        'Fife': 'Scotland', 'Stirling': 'Scotland', 'Highland': 'Scotland', 'Dundee City': 'Scotland',
+        'Northern Ireland': 'Northern Ireland',
+    };
+    const LONDON_SE_EAST = new Set(['London', 'South East', 'East of England']);
+
+    let DATA = null, BOUNDARIES = null;
+    let map = null, choroplethMapObj = null;
+    let circleMarkers = [], selectedMarker = null;
+    let charts = {}, currentMetric = 'value', tomforthMode = 'normalised';
+
+    async function init() {
+        const [dataResp, boundResp, logResp] = await Promise.all([
+            fetch('data/contracts.json'), fetch('data/counties.geojson'),
+            fetch('data/research.md').then(r => r.ok ? r.text() : '# Research log not found')
+        ]);
+        DATA = await dataResp.json();
+        BOUNDARIES = await boundResp.json();
+        const logMd = typeof logResp === 'string' ? logResp : await logResp;
+
+        renderSummary();
+        initBubbleMap();
+        renderCountyTable();
+        renderInternational();
+        renderCharts();
+        renderTomForthPlot();
+        renderAllContracts();
+        renderResearchLog(logMd);
+        setupTabs();
+    }
+
+    // --- Summary ---
+    function renderSummary() {
+        const ukCount = Object.values(DATA.uk_counties).reduce((s, c) => s + c.count, 0);
+        const intlCount = Object.values(DATA.international).reduce((s, c) => s + c.count, 0);
+        document.getElementById('summaryBar').innerHTML = `
+            <div class="stat"><span class="stat-value">${DATA.totals.count}</span><span class="stat-label">Total Contracts</span></div>
+            <div class="stat"><span class="stat-value">${fmtGBP(DATA.totals.value)}</span><span class="stat-label">Total Value</span></div>
+            <div class="stat"><span class="stat-value">${ukCount}</span><span class="stat-label">UK Contracts</span></div>
+            <div class="stat"><span class="stat-value">${Object.keys(DATA.uk_counties).length}</span><span class="stat-label">UK Counties</span></div>
+            <div class="stat"><span class="stat-value">${intlCount}</span><span class="stat-label">International</span></div>
+            <div class="stat"><span class="stat-value">${Object.keys(DATA.international).length}</span><span class="stat-label">Countries</span></div>
+        `;
+    }
+
+    // --- Bubble Map (sized by value) ---
+    function initBubbleMap() {
+        map = L.map('map', { scrollWheelZoom: true }).setView([54.5, -2.5], 6);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OSM &copy; CARTO', maxZoom: 19
+        }).addTo(map);
+
+        const maxVal = Math.max(...Object.values(DATA.uk_counties).map(c => c.total_value));
+        for (const [county, stats] of Object.entries(DATA.uk_counties)) {
+            const coords = COUNTY_COORDS[county];
+            if (!coords) continue;
+            const radius = 6 + Math.sqrt(stats.total_value / maxVal) * 38;
+            const intensity = stats.total_value / maxVal;
+            const marker = L.circleMarker(coords, {
+                radius, fillColor: bubbleColor(intensity),
+                color: 'rgba(45,43,40,0.35)', weight: 1.5, fillOpacity: 0.7,
+            }).addTo(map);
+            marker.bindTooltip(`<strong>${county}</strong><br>${stats.count} contracts<br>${fmtGBP(stats.total_value)}`, { direction: 'top', offset: [0, -radius] });
+            marker.on('click', () => showCountyDetail(county, marker));
+            circleMarkers.push(marker);
+        }
+        addBubbleLegend(maxVal);
+    }
+
+    function bubbleColor(t) {
+        const r = Math.round(230 - t * 50);
+        const g = Math.round(200 - t * 90);
+        const b = Math.round(190 - t * 120);
+        return `rgb(${r},${g},${b})`;
+    }
+
+    function addBubbleLegend(maxVal) {
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = '<h4>Contract Value</h4>';
+            for (const frac of [0.05, 0.25, 0.5, 1.0]) {
+                const r = 6 + Math.sqrt(frac) * 38;
+                const val = maxVal * frac;
+                div.innerHTML += `<div class="legend-item"><span class="legend-circle" style="width:${Math.min(r*2,50)}px;height:${Math.min(r*2,50)}px;background:${bubbleColor(frac)}"></span>${fmtGBP(val)}</div>`;
+            }
+            return div;
+        };
+        legend.addTo(map);
+    }
+
+    function showCountyDetail(county, marker) {
+        if (selectedMarker) selectedMarker.setStyle({ weight: 1.5, color: 'rgba(45,43,40,0.35)' });
+        marker.setStyle({ weight: 2.5, color: 'var(--accent)' });
+        selectedMarker = marker;
+        const contracts = DATA.contracts.filter(c => c.county === county);
+        const stats = DATA.uk_counties[county];
+        const panel = document.getElementById('detailPanel');
+        panel.classList.remove('empty');
+        panel.innerHTML = `<h2>${county}</h2><p class="subtitle">${stats.count} contracts · ${fmtGBP(stats.total_value)} total · ${stats.suppliers} suppliers</p>${contractTable(contracts)}`;
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // --- Choropleth Map ---
+    function initChoroplethMap() {
+        if (choroplethMapObj) return;
+        choroplethMapObj = L.map('choroplethMap', { scrollWheelZoom: true }).setView([54.5, -2.5], 6);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OSM &copy; CARTO', maxZoom: 19, opacity: 0.3
+        }).addTo(choroplethMapObj);
+
+        const maxVal = Math.max(...Object.values(DATA.uk_counties).map(c => c.total_value));
+
+        L.geoJSON(BOUNDARIES, {
+            style: function(feature) {
+                const name = feature.properties.name;
+                const stats = DATA.uk_counties[name];
+                const val = stats ? stats.total_value : 0;
+                const t = val > 0 ? Math.pow(val / maxVal, 0.4) : 0;
+                return {
+                    fillColor: choroplethColor(t),
+                    weight: 1.5, color: '#b8b4af', fillOpacity: 0.85,
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                const name = feature.properties.name;
+                const stats = DATA.uk_counties[name];
+                if (stats) {
+                    layer.bindTooltip(`<strong>${name}</strong><br>${stats.count} contracts<br>${fmtGBP(stats.total_value)}`, { sticky: true });
+                }
+            }
+        }).addTo(choroplethMapObj);
+
+        // Value labels at county centroids
+        for (const [county, stats] of Object.entries(DATA.uk_counties)) {
+            const coords = COUNTY_COORDS[county];
+            if (!coords) continue;
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="font-size:11px;font-weight:700;color:#2d2b28;text-shadow:0 0 4px #fff,0 0 4px #fff,0 0 4px #fff;white-space:nowrap;text-align:center">${fmtGBP(stats.total_value)}</div>`,
+                iconSize: [80, 16], iconAnchor: [40, 8]
+            });
+            L.marker(coords, { icon, interactive: false }).addTo(choroplethMapObj);
+        }
+
+        // Legend
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function () {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `<h4>Total Contract Value</h4>
+                <div class="gradient-bar" style="background:linear-gradient(to right, ${choroplethColor(0)}, ${choroplethColor(0.3)}, ${choroplethColor(0.6)}, ${choroplethColor(1)})"></div>
+                <div class="gradient-label"><span>£0</span><span>${fmtGBP(maxVal)}</span></div>`;
+            return div;
+        };
+        legend.addTo(choroplethMapObj);
+
+        // Labels layer on top
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19, opacity: 0.6
+        }).addTo(choroplethMapObj);
+    }
+
+    function choroplethColor(t) {
+        // Warm gradient: cream → terracotta
+        const r = Math.round(250 - t * 60);
+        const g = Math.round(245 - t * 140);
+        const b = Math.round(235 - t * 165);
+        return `rgb(${r},${g},${b})`;
+    }
+
+    // --- Tom Forth Plot ---
+    function classifyContext(ctx) {
+        if (!ctx) return 'Operating Costs';
+        const lower = ctx.toLowerCase();
+        if (lower.includes('activation') || lower.includes('ai scientist')) return 'Activation Partners & AI Scientists';
+        if (lower.includes('programme') || lower.includes('seed') || lower.includes('opportunity')
+            || lower.includes('scalable neural') || lower.includes('mathematics for safe')
+            || lower.includes('nature computes') || lower.includes('programmable plants')
+            || lower.includes('exploring climate') || lower.includes('prize')) return 'R&D Programme Funding';
+        return 'Operating Costs';
+    }
+
+    function renderTomForthPlot() {
+        drawTomForth(tomforthMode);
+        document.querySelectorAll('#tomforthToggle button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#tomforthToggle button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                tomforthMode = btn.dataset.mode;
+                drawTomForth(tomforthMode);
+            });
+        });
+    }
+
+    function drawTomForth(mode) {
+        const regionKeys = ['lse', 'restuk', 'restworld'];
+        const regionBuckets = {
+            lse: { 'R&D Programme Funding': 0, 'Activation Partners & AI Scientists': 0, 'Operating Costs': 0 },
+            restuk: { 'R&D Programme Funding': 0, 'Activation Partners & AI Scientists': 0, 'Operating Costs': 0 },
+            restworld: { 'R&D Programme Funding': 0, 'Activation Partners & AI Scientists': 0, 'Operating Costs': 0 },
+        };
+        const regionContracts = {
+            lse: { 'R&D Programme Funding': [], 'Activation Partners & AI Scientists': [], 'Operating Costs': [] },
+            restuk: { 'R&D Programme Funding': [], 'Activation Partners & AI Scientists': [], 'Operating Costs': [] },
+            restworld: { 'R&D Programme Funding': [], 'Activation Partners & AI Scientists': [], 'Operating Costs': [] },
+        };
+
+        let rawTotal = 0;
+        for (const c of DATA.contracts) {
+            const val = c.value || 0;
+            const bucket = classifyContext(c.context);
+            const ons = COUNTY_TO_ONS[c.county] || '';
+            let region;
+            if (c.category === 'International') { region = 'restworld'; }
+            else if (c.category && c.category.startsWith('UK')) { region = LONDON_SE_EAST.has(ons) ? 'lse' : 'restuk'; }
+            else continue;
+            regionBuckets[region][bucket] += val;
+            regionContracts[region][bucket].push(c);
+            rawTotal += val;
+        }
+
+        const scale = mode === 'normalised' ? (250_000_000 / rawTotal) : 1;
+        // Chart.js accepts arrays for multiline x-axis labels
+        const labels = [
+            ['London, South East', '& East of England'],
+            ['Rest of', 'the UK'],
+            ['Rest of', 'the World']
+        ];
+        const categories = ['R&D Programme Funding', 'Activation Partners & AI Scientists', 'Operating Costs'];
+        const colors = ['#c96442', '#e0a080', '#f0d8a0'];
+        const totals = regionKeys.map(r => Object.values(regionBuckets[r]).reduce((s, v) => s + v, 0) * scale);
+
+        const datasets = categories.map((cat, i) => ({
+            label: cat,
+            data: regionKeys.map(r => regionBuckets[r][cat] * scale),
+            backgroundColor: colors[i], borderRadius: 3,
+        }));
+
+        if (charts.tomforth) charts.tomforth.destroy();
+        const ctx = document.getElementById('chartOverview').getContext('2d');
+        document.getElementById('chartOverview').parentElement.style.height = '480px';
+
+        charts.tomforth = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: mode === 'normalised' ? 'Estimated ARIA Spend by Region (Scaled to £250M)' : 'ARIA Contract Spend by Region (Actual)',
+                        font: { size: 18, weight: '600' }, color: '#1a1917', padding: { bottom: 4 } },
+                    subtitle: { display: true, text: mode === 'normalised' ? 'Extrapolating known proportions to total committed capital' : 'Total awarded contract value by supplier registered location',
+                        font: { size: 12 }, color: '#8a8580', padding: { bottom: 20 } },
+                    legend: { position: 'right', labels: { padding: 16, boxWidth: 14, font: { size: 11 } } },
+                    tooltip: { callbacks: { label: c => c.dataset.label + ': ' + fmtGBP(c.raw), footer: items => 'Total: ' + fmtGBP(totals[items[0].dataIndex]) } }
+                },
+                scales: {
+                    x: { stacked: true, grid: { display: false }, ticks: { font: { size: 12, weight: '500' }, color: '#2d2b28' } },
+                    y: { stacked: true, ticks: { callback: v => v >= 1e6 ? '£'+(v/1e6).toFixed(0)+'M' : v >= 1e3 ? '£'+(v/1e3).toFixed(0)+'K' : '£'+v, font: { size: 11 }, color: '#8a8580' }, grid: { color: '#f0eeeb' } }
+                },
+                layout: { padding: { top: 10 } },
+                onClick(evt, elements) {
+                    if (!elements.length) return;
+                    const el = elements[0];
+                    const regionIdx = el.index;
+                    const catIdx = el.datasetIndex;
+                    const regionKey = regionKeys[regionIdx];
+                    const cat = categories[catIdx];
+                    const regionLabel = Array.isArray(labels[regionIdx]) ? labels[regionIdx].join(' ') : labels[regionIdx];
+                    const contracts = regionContracts[regionKey][cat];
+                    const totalVal = contracts.reduce((s, c) => s + (c.value || 0), 0);
+
+                    document.getElementById('drilldownTitle').textContent = regionLabel + ' — ' + cat;
+                    document.getElementById('drilldownSubtitle').textContent = contracts.length + ' contracts · ' + fmtGBP(totalVal);
+
+                    let html = '<table class="drilldown-table"><thead><tr><th>Supplier</th><th>Context</th><th>Value</th><th>Date</th><th>County</th></tr></thead><tbody>';
+                    const sorted = [...contracts].sort((a, b) => (b.value || 0) - (a.value || 0));
+                    for (const c of sorted) {
+                        html += '<tr><td>' + (c.supplier||'') + '</td><td>' + (c.context||'') + '</td><td>' + fmtGBP(c.value||0) + '</td><td>' + (c.award_date||'') + '</td><td>' + (c.county || c.country || '') + '</td></tr>';
+                    }
+                    html += '</tbody></table>';
+                    document.getElementById('drilldownBody').innerHTML = html;
+                    document.getElementById('drilldownModal').classList.remove('hidden');
+                }
+            },
+            plugins: [{
+                id: 'barTotalLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    chart.data.labels.forEach((_, i) => {
+                        const meta = chart.getDatasetMeta(chart.data.datasets.length - 1);
+                        const bar = meta.data[i];
+                        ctx.save(); ctx.textAlign = 'center';
+                        ctx.font = 'bold 13px Inter, -apple-system, sans-serif';
+                        ctx.fillStyle = '#1a1917';
+                        ctx.fillText(fmtGBP(totals[i]), bar.x, bar.y - 8);
+                        ctx.restore();
+                    });
+                }
+            }]
+        });
+    }
+
+    // --- Bar Charts ---
+    function renderCharts() {
+        const londonSEEast = {}, restUK = {}, intl = {};
+        for (const [county, stats] of Object.entries(DATA.uk_counties)) {
+            (LONDON_SE_EAST.has(COUNTY_TO_ONS[county] || '') ? londonSEEast : restUK)[county] = stats;
+        }
+        for (const [country, stats] of Object.entries(DATA.international)) intl[country] = stats;
+
+        drawBarChart('chartLondonSE', 'londonSE', londonSEEast, currentMetric);
+        drawBarChart('chartRestUK', 'restUK', restUK, currentMetric);
+        drawBarChart('chartIntl', 'intl', intl, currentMetric);
+
+        document.querySelectorAll('#chartToggle button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#chartToggle button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMetric = btn.dataset.metric;
+                drawBarChart('chartLondonSE', 'londonSE', londonSEEast, currentMetric);
+                drawBarChart('chartRestUK', 'restUK', restUK, currentMetric);
+                drawBarChart('chartIntl', 'intl', intl, currentMetric);
+            });
+        });
+    }
+
+    function drawBarChart(canvasId, chartKey, data, metric) {
+        const sorted = Object.entries(data).sort((a, b) => (metric === 'value' ? b[1].total_value - a[1].total_value : b[1].count - a[1].count));
+        const labels = sorted.map(([n]) => n);
+        const values = sorted.map(([, s]) => metric === 'value' ? s.total_value : s.count);
+        const colors = sorted.map((_, i) => {
+            const t = labels.length > 1 ? i / (labels.length - 1) : 0;
+            return `rgb(${Math.round(201-t*40)},${Math.round(100+t*60)},${Math.round(66+t*80)})`;
+        });
+        if (charts[chartKey]) charts[chartKey].destroy();
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const isValue = metric === 'value';
+        charts[chartKey] = new Chart(ctx, {
+            type: 'bar', data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 3 }] },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => isValue ? fmtGBP(c.raw) : c.raw + ' contracts' } } },
+                scales: {
+                    x: { ticks: { callback: v => isValue ? (v>=1e6?'£'+(v/1e6).toFixed(0)+'M':v>=1e3?'£'+(v/1e3).toFixed(0)+'K':'£'+v) : v }, grid: { color: '#f0eeeb' } },
+                    y: { ticks: { font: { size: 11 } }, grid: { display: false } }
+                }
+            }
+        });
+        const height = Math.max(250, labels.length * 28 + 40);
+        document.getElementById(canvasId).parentElement.style.height = height + 'px';
+        document.getElementById(canvasId).style.height = height + 'px';
+        charts[chartKey].resize();
+    }
+
+    // --- County Table ---
+    function renderCountyTable() {
+        const grid = document.getElementById('countyGrid');
+        const sorted = Object.entries(DATA.uk_counties).sort((a, b) => b[1].total_value - a[1].total_value);
+        grid.innerHTML = sorted.map(([county, stats]) => {
+            const ons = COUNTY_TO_ONS[county] || '';
+            return `<div class="country-card" onclick="showCountyTableDetail('${county.replace(/'/g, "\\'")}')">
+                <div class="name">${county}</div>
+                <div class="meta">${stats.count} contracts · ${fmtGBP(stats.total_value)} · ${stats.suppliers} suppliers</div>
+                <div class="meta" style="color:#b0a8a0;font-size:0.72rem">${ons}</div>
+            </div>`;
+        }).join('');
+    }
+    window.showCountyTableDetail = function(county) {
+        const contracts = DATA.contracts.filter(c => c.county === county);
+        const stats = DATA.uk_counties[county];
+        const detail = document.getElementById('countyDetail');
+        detail.classList.remove('hidden');
+        detail.innerHTML = `<button class="back-btn" onclick="this.parentElement.classList.add('hidden')">← Back</button>
+            <h2>${county}</h2><p class="subtitle">${stats.count} contracts · ${fmtGBP(stats.total_value)} total · ${stats.suppliers} suppliers</p>${contractTable(contracts)}`;
+        detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    // --- International ---
+    function renderInternational() {
+        const grid = document.getElementById('countryGrid');
+        const sorted = Object.entries(DATA.international).sort((a, b) => b[1].count - a[1].count);
+        grid.innerHTML = sorted.map(([country, stats]) => `
+            <div class="country-card" onclick="showCountryDetail('${country.replace(/'/g, "\\'")}')">
+                <div class="name">${country}</div>
+                <div class="meta">${stats.count} contracts · ${fmtGBP(stats.total_value)}</div>
+            </div>`).join('');
+    }
+    window.showCountryDetail = function(country) {
+        const contracts = DATA.contracts.filter(c => c.country === country && c.category === 'International');
+        const stats = DATA.international[country];
+        const detail = document.getElementById('intlDetail');
+        detail.classList.remove('hidden');
+        detail.innerHTML = `<button class="back-btn" onclick="this.parentElement.classList.add('hidden')">← Back</button>
+            <h2>${country}</h2><p class="subtitle">${stats.count} contracts · ${fmtGBP(stats.total_value)} total</p>${contractTable(contracts)}`;
+        detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    // --- All Contracts (with sorting + filtering) ---
+    let allSortCol = 'value', allSortAsc = false, allFilter = '';
+
+    function renderAllContracts() {
+        const panel = document.getElementById('allPanel');
+        panel.innerHTML = `<h2>All Contracts</h2>
+            <div style="display:flex;gap:1rem;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap">
+                <input type="text" id="allFilter" placeholder="Filter by supplier, service, context, location..." style="flex:1;min-width:200px;padding:0.4rem 0.7rem;border:1px solid var(--border);border-radius:6px;font-size:0.82rem;outline:none;" />
+            </div>
+            <p class="subtitle" id="allStats"></p>
+            <div style="overflow-x:auto" id="allTableWrap"></div>`;
+        document.getElementById('allFilter').addEventListener('input', e => { allFilter = e.target.value.toLowerCase(); renderAllTable(); });
+        renderAllTable();
+    }
+
+    function renderAllTable() {
+        const filtered = DATA.contracts.filter(c => {
+            if (!allFilter) return true;
+            const hay = [c.supplier, c.service_description, c.context, c.city, c.country, c.county].join(' ').toLowerCase();
+            return allFilter.split(' ').every(term => hay.includes(term));
+        });
+        const sortFn = {
+            supplier: (a, b) => (a.supplier || '').localeCompare(b.supplier || ''),
+            service: (a, b) => (a.service_description || '').localeCompare(b.service_description || ''),
+            context: (a, b) => (a.context || '').localeCompare(b.context || ''),
+            date: (a, b) => (a.award_date || '').localeCompare(b.award_date || ''),
+            duration: (a, b) => (parseInt(a.duration_months) || 0) - (parseInt(b.duration_months) || 0),
+            value: (a, b) => (a.value || 0) - (b.value || 0),
+            location: (a, b) => (a.city || a.country || '').localeCompare(b.city || b.country || ''),
+        };
+        const sorted = [...filtered].sort((a, b) => {
+            const result = (sortFn[allSortCol] || sortFn.value)(a, b);
+            return allSortAsc ? result : -result;
+        });
+
+        const totalVal = filtered.reduce((s, c) => s + (c.value || 0), 0);
+        document.getElementById('allStats').textContent = `${filtered.length} contracts · ${fmtGBP(totalVal)} total value` + (allFilter ? ' (filtered)' : '');
+
+        const arrow = col => allSortCol === col ? (allSortAsc ? ' ↑' : ' ↓') : '';
+        const th = (col, label) => `<th style="cursor:pointer" onclick="sortAllBy('${col}')">${label}${arrow(col)}</th>`;
+        const rows = sorted.map(c => `<tr><td>${c.supplier}${c.is_sme === 'Yes' ? ' <span class="sme-badge">SME</span>' : ''}</td>
+            <td>${c.service_description || ''}</td><td>${c.context || ''}</td>
+            <td>${c.award_date || ''}</td><td>${c.duration_months || ''}</td>
+            <td class="val">${c.value_raw || ''}</td><td>${c.city || c.country || ''}</td></tr>`).join('');
+        document.getElementById('allTableWrap').innerHTML = `<table><thead><tr>${th('supplier','Supplier')}${th('service','Service')}${th('context','Context')}${th('date','Award Date')}${th('duration','Duration')}${th('value','Value')}${th('location','Location')}</tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    window.sortAllBy = function(col) {
+        if (allSortCol === col) allSortAsc = !allSortAsc;
+        else { allSortCol = col; allSortAsc = col === 'supplier' || col === 'service' || col === 'context' || col === 'location'; }
+        renderAllTable();
+    };
+
+    // --- Research Log ---
+    function renderResearchLog(md) {
+        document.getElementById('researchLog').innerHTML = marked.parse(md);
+    }
+
+    // --- Shared ---
+    function contractTable(contracts) {
+        const rows = contracts.sort((a, b) => (b.value || 0) - (a.value || 0))
+            .map(c => `<tr><td>${c.supplier}${c.is_sme === 'Yes' ? ' <span class="sme-badge">SME</span>' : ''}</td>
+                <td>${c.service_description || ''}</td><td>${c.context || ''}</td>
+                <td>${c.award_date || ''}</td><td>${c.duration_months || ''}</td>
+                <td class="val">${c.value_raw || ''}</td><td>${c.city || c.country || ''}</td></tr>`).join('');
+        return `<div style="overflow-x:auto"><table><thead><tr><th>Supplier</th><th>Service</th><th>Context</th><th>Award Date</th><th>Duration</th><th>Value</th><th>Location</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    }
+
+    function setupTabs() {
+        const tabs = document.querySelectorAll('.tab');
+        const panels = { map:'mapTab', choropleth:'choroplethTab', tomforth:'tomforthTab', charts:'chartsTab', counties:'countiesTab', international:'internationalTab', all:'allTab', research:'researchTab' };
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                Object.values(panels).forEach(id => document.getElementById(id).classList.add('hidden'));
+                document.getElementById(panels[tab.dataset.tab]).classList.remove('hidden');
+                if (tab.dataset.tab === 'map') setTimeout(() => map.invalidateSize(), 100);
+                if (tab.dataset.tab === 'choropleth') { initChoroplethMap(); setTimeout(() => choroplethMapObj.invalidateSize(), 100); }
+            });
+        });
+    }
+
+    function fmtGBP(val) {
+        if (!val && val !== 0) return '';
+        if (val >= 1_000_000) return '£' + (val / 1_000_000).toFixed(1) + 'M';
+        if (val >= 1_000) return '£' + (val / 1_000).toFixed(0) + 'K';
+        return '£' + val.toFixed(0);
+    }
+
+    init();
+    </script>
+</body>
+</html>

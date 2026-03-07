@@ -33,11 +33,12 @@ jobs:
       env:
         FLORA_PROPERTY_ID: ${{ secrets.FLORA_PROPERTY_ID }}
         ALEX_PROPERTY_ID: ${{ secrets.ALEX_PROPERTY_ID }}
+        RICHMOND_PROPERTY_ID: ${{ secrets.RICHMOND_PROPERTY_ID }}
       run: python bin_days.py
     
     - name: Commit and push if changes
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git add flora_bin_days.json alex_bin_days.json
+        git add flora_bin_days.json alex_bin_days.json richmond_bin_days.json
         git diff --quiet && git diff --staged --quiet || (git commit -m "Update bin collection days" && git push) 

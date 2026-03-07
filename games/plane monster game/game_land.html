@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Landing - Fly, Land, Chase</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0e0e0e;
+            color: #fff;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Comic Sans MS', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #hud {
+            width: 100%;
+            max-width: 900px;
+            box-sizing: border-box;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #7c3aed 100%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 22px;
+        }
+
+        #stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        #tips {
+            margin-top: 6px;
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        #gameCanvas {
+            border: 3px solid #0ea5e9;
+            box-shadow: 0 0 20px rgba(14,165,233,0.35);
+            margin: 18px;
+            background: #222;
+        }
+    </style>
+    </head>
+<body>
+    <div id="hud">
+        <h1>🛩️ Monster Landing — Fly, Land, Chase 👻</h1>
+        <div id="stats">
+            <div>Ghosts: <strong id="ghostCount">0</strong></div>
+            <div>Mode: <strong id="mode">Flying</strong></div>
+            <div>Hint: <span id="hint">Fly with Arrow Keys. Space drops bomb. Land near bottom and press E.</span></div>
+        </div>
+        <div id="tips">
+            - Arrow Keys: fly plane • Space: drop bomb • E: enter/exit plane (landed) • WASD: run • Shift: sprint • Click: water gun
+        </div>
+    </div>
+
+    <canvas id="gameCanvas" width="900" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Assets
+        const sprites = {
+            map: new Image(),
+            plane: new Image(),
+            plane2: new Image(),
+            ghost: new Image()
+        };
+        sprites.map.src = 'map.png';
+        sprites.plane.src = 'harrier.png';
+        sprites.plane2.src = 'concorde.gif';
+        sprites.ghost.src = 'ghost.png';
+
+        // World
+        const groundHeight = 70;
+        const gravity = 0.08;
+
+        // Player plane and pilot
+        const plane = {
+            x: 140,
+            y: 160,
+            vx: 0,
+            vy: 0,
+            speed: 2.4,
+            angle: 0,
+            width: 72,
+            height: 52,
+            landed: false
+        };
+
+        const pilot = {
+            x: plane.x,
+            y: canvas.height - groundHeight - 18,
+            speed: 2.2,
+            sprint: 3.2,
+            radius: 10,
+            onFoot: false
+        };
+
+        // Ghosts
+        const ghosts = [];
+        const GHOST_COUNT = 8;
+        function spawnGhosts() {
+            ghosts.length = 0;
+            for (let i = 0; i < GHOST_COUNT; i++) {
+                ghosts.push({
+                    x: 200 + Math.random() * (canvas.width - 400),
+                    y: 180 + Math.random() * (canvas.height - groundHeight - 240),
+                    vx: (Math.random() - 0.5) * 0.8,
+                    vy: (Math.random() - 0.5) * 0.8,
+                    size: 34 + Math.random() * 10,
+                    health: 60,
+                    caught: false
+                });
+            }
+            document.getElementById('ghostCount').textContent = ghosts.length;
+        }
+        spawnGhosts();
+
+        // Bombs (optional)
+        const bombs = [];
+        // Water gun projectiles
+        const shots = [];
+        let isShooting = false;
+        let lastShot = 0;
+        const shotCooldown = 160; // ms
+        const shotSpeed = 5.2;
+        const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouse.y = (e.clientY - rect.top) * (canvas.height / rect.height);
+        });
+        canvas.addEventListener('mousedown', () => { isShooting = true; });
+        window.addEventListener('mouseup', () => { isShooting = false; });
+
+        // Input
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+        });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        function dropBomb(aircraft) {
+            bombs.push({ x: aircraft.x, y: aircraft.y, vy: 2.2, size: 8 });
+        }
+
+        function tryToggleEnterExit() {
+            if (!pilot.onFoot) {
+                // Only exit plane if landed and near ground
+                if (plane.landed && Math.abs(plane.vx) < 0.4 && Math.abs(plane.vy) < 0.4) {
+                    pilot.onFoot = true;
+                    pilot.x = plane.x;
+                    pilot.y = canvas.height - groundHeight - pilot.radius;
+                    document.getElementById('mode').textContent = 'On Foot';
+                    document.getElementById('hint').textContent = 'WASD to run, Shift to sprint. Touch ghosts to catch them. E near plane to enter.';
+                }
+            } else {
+                // Enter plane only when close to it
+                const dist = Math.hypot(pilot.x - plane.x, pilot.y - (canvas.height - groundHeight - pilot.radius));
+                if (dist < 50) {
+                    pilot.onFoot = false;
+                    plane.landed = false;
+                    plane.y = canvas.height - groundHeight - plane.height * 0.4 - 4;
+                    document.getElementById('mode').textContent = 'Flying';
+                    document.getElementById('hint').textContent = 'Fly with Arrow Keys. Space drops bomb. Land near bottom and press E.';
+                }
+            }
+        }
+
+        // Update
+        function update() {
+            if (!pilot.onFoot) {
+                // Plane controls
+                if (keys['ArrowLeft']) { plane.vx = -plane.speed; plane.angle = Math.PI; }
+                else if (keys['ArrowRight']) { plane.vx = plane.speed; plane.angle = 0; }
+                else { plane.vx *= 0.93; }
+
+                if (!plane.landed) {
+                    if (keys['ArrowUp']) plane.vy -= 0.12;
+                    if (keys['ArrowDown']) plane.vy += 0.12;
+                    plane.vy += gravity; // gravity
+                } else {
+                    plane.vy = 0;
+                }
+
+                plane.x += plane.vx;
+                plane.y += plane.vy;
+
+                // Boundaries
+                plane.x = Math.max(plane.width * 0.4, Math.min(canvas.width - plane.width * 0.4, plane.x));
+                const groundY = canvas.height - groundHeight - plane.height * 0.35;
+                if (!plane.landed) {
+                    // Allow reaching the landing threshold
+                    plane.y = Math.max(plane.height * 0.4, Math.min(groundY, plane.y));
+                }
+
+                // Landing detection (touching runway)
+                if (plane.y >= groundY) {
+                    plane.y = groundY;
+                    plane.landed = true;
+                } else {
+                    plane.landed = false;
+                }
+
+                // Take off when pressing up while landed
+                if (plane.landed && keys['ArrowUp']) {
+                    plane.landed = false;
+                    plane.vy = -1.5;
+                }
+
+                if (keys[' '] && !plane.landed) dropBomb();
+            } else {
+                // Pilot controls
+                const currentSpeed = keys['Shift'] ? pilot.sprint : pilot.speed;
+                if (keys['a'] || keys['A']) pilot.x -= currentSpeed;
+                if (keys['d'] || keys['D']) pilot.x += currentSpeed;
+                if (keys['w'] || keys['W']) pilot.y -= currentSpeed;
+                if (keys['s'] || keys['S']) pilot.y += currentSpeed;
+                // Keep within play area (allow full vertical range above ground)
+                pilot.y = Math.min(pilot.y, canvas.height - groundHeight - pilot.radius);
+                pilot.y = Math.max(pilot.radius, pilot.y);
+                pilot.x = Math.max(pilot.radius, Math.min(canvas.width - pilot.radius, pilot.x));
+
+                // Shoot water gun towards mouse
+                if (isShooting && (!lastShot || Date.now() - lastShot > shotCooldown)) {
+                    lastShot = Date.now();
+                    const dx = mouse.x - pilot.x;
+                    const dy = mouse.y - pilot.y;
+                    const len = Math.hypot(dx, dy) || 1;
+                    shots.push({
+                        x: pilot.x,
+                        y: pilot.y,
+                        vx: (dx / len) * shotSpeed,
+                        vy: (dy / len) * shotSpeed,
+                        r: 4
+                    });
+                }
+            }
+
+            // Bombs fall
+            for (let i = bombs.length - 1; i >= 0; i--) {
+                const b = bombs[i];
+                b.y += b.vy;
+                if (b.y > canvas.height - groundHeight) bombs.splice(i, 1);
+            }
+
+            // Update shots
+            for (let i = shots.length - 1; i >= 0; i--) {
+                const s = shots[i];
+                s.x += s.vx; s.y += s.vy;
+                if (s.x < -10 || s.x > canvas.width + 10 || s.y < -10 || s.y > canvas.height + 10) {
+                    shots.splice(i, 1);
+                    continue;
+                }
+                // Collide with ghosts
+                for (let j = ghosts.length - 1; j >= 0; j--) {
+                    const g = ghosts[j];
+                    if (g.caught) continue;
+                    const dist = Math.hypot(g.x - s.x, g.y - s.y);
+                    if (dist < g.size * 0.7 + s.r) {
+                        g.health -= 30;
+                        shots.splice(i, 1);
+                        if (g.health <= 0) {
+                            g.caught = true;
+                            document.getElementById('ghostCount').textContent = ghosts.filter(x => !x.caught).length;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Ghosts wander
+            ghosts.forEach(g => {
+                if (g.caught) return;
+                if (Math.random() < 0.01) { g.vx = (Math.random() - 0.5) * 0.9; g.vy = (Math.random() - 0.5) * 0.9; }
+                g.x += g.vx; g.y += g.vy;
+                const minY = 120;
+                const maxY = canvas.height - groundHeight - 120;
+                if (g.x < g.size) { g.x = g.size; g.vx *= -1; }
+                if (g.x > canvas.width - g.size) { g.x = canvas.width - g.size; g.vx *= -1; }
+                if (g.y < minY) { g.y = minY; g.vy *= -1; }
+                if (g.y > maxY) { g.y = maxY; g.vy *= -1; }
+
+                // On-foot capture by touching
+                if (pilot.onFoot) {
+                    const dx = g.x - pilot.x;
+                    const dy = g.y - pilot.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < g.size * 0.6 + pilot.radius) {
+                        g.caught = true;
+                        document.getElementById('ghostCount').textContent = ghosts.filter(x => !x.caught).length;
+                    }
+                }
+            });
+
+            // Enter/Exit
+            if (keys['e'] || keys['E']) {
+                // Debounce: only on keydown edge would be ideal; quick simple cooldown
+                if (!update._enterCooldown || Date.now() - update._enterCooldown > 250) {
+                    tryToggleEnterExit();
+                    update._enterCooldown = Date.now();
+                }
+            }
+        }
+
+        // Draw helpers
+        function drawBackground() {
+            if (sprites.map.complete && sprites.map.naturalWidth > 0) {
+                ctx.drawImage(sprites.map, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = '#1f2937';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            // Dim for contrast
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawGround() {
+            ctx.fillStyle = '#152a12';
+            ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
+            // Runway line
+            ctx.fillStyle = '#4ade80';
+            ctx.fillRect(0, canvas.height - groundHeight + 18, canvas.width, 4);
+        }
+
+        function drawPlane() {
+            ctx.save();
+            ctx.translate(plane.x, plane.y);
+            ctx.rotate(plane.angle);
+            if (sprites.plane.complete && sprites.plane.naturalWidth > 0) {
+                ctx.drawImage(sprites.plane, -plane.width/2, -plane.height/2, plane.width, plane.height);
+            } else {
+                ctx.fillStyle = '#60a5fa';
+                ctx.fillRect(-30, -6, 60, 12);
+            }
+            ctx.restore();
+
+            if (plane.landed && !pilot.onFoot) {
+                ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                ctx.font = '14px system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Press E to exit plane', plane.x, plane.y - 28);
+            }
+        }
+
+        function drawPilot() {
+            if (!pilot.onFoot) return;
+            ctx.save();
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(pilot.x, pilot.y, pilot.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawGhosts() {
+            ghosts.forEach(g => {
+                if (g.caught) return;
+                const w = g.size * 2.2;
+                const h = g.size * 1.9;
+                if (sprites.ghost.complete && sprites.ghost.naturalWidth > 0) {
+                    ctx.drawImage(sprites.ghost, g.x - w/2, g.y - h/2, w, h);
+                } else {
+                    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                    ctx.beginPath();
+                    ctx.arc(g.x, g.y, g.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Health indicator
+                ctx.fillStyle = 'rgba(255,0,0,0.35)';
+                ctx.fillRect(g.x - 20, g.y - h/2 - 12, 40, 5);
+                ctx.fillStyle = 'rgba(255,0,0,0.9)';
+                ctx.fillRect(g.x - 20, g.y - h/2 - 12, 40 * (g.health / 60), 5);
+            });
+        }
+
+        function drawBombs() {
+            bombs.forEach(b => {
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawShots() {
+            shots.forEach(s => {
+                const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 2.5);
+                grad.addColorStop(0, 'rgba(96,165,250,0.95)');
+                grad.addColorStop(1, 'rgba(59,130,246,0.0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r * 2.2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function draw() {
+            drawBackground();
+            drawGround();
+            drawGhosts();
+            drawBombs();
+            drawShots();
+            drawPlane();
+            drawPilot();
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+    </body>
+    </html>
+
+

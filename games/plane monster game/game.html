@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Bomber - Two Player Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 100%);
+        }
+        
+        #gameCanvas {
+            display: block;
+            border: 3px solid #333;
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 10;
+        }
+        
+        .powerSelect {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            margin: 10px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .powerButton {
+            margin: 5px;
+            padding: 15px 25px;
+            font-size: 18px;
+            background: #FFD700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .powerButton:hover {
+            transform: scale(1.1);
+            background: #FFA500;
+        }
+        
+        .powerButton.selected {
+            background: #32CD32;
+            transform: scale(1.1);
+        }
+        
+        #startButton {
+            padding: 20px 40px;
+            font-size: 24px;
+            background: linear-gradient(45deg, #00C851, #00FF00);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            margin-top: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        #winScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 48px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            margin: 10px;
+        }
+        
+        h2 {
+            font-size: 32px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="startScreen">
+        <h1>✈️ Monster Bomber! 👾</h1>
+        
+        <div style="display: flex;">
+            <div class="powerSelect">
+                <h2>Player 1 (Blue) - WASD</h2>
+                <p>Choose your power:</p>
+                <button class="powerButton" onclick="selectPower(1, 'rapid')">⚡ Rapid Fire</button>
+                <button class="powerButton" onclick="selectPower(1, 'big')">💣 Big Bombs</button>
+                <button class="powerButton" onclick="selectPower(1, 'triple')">🎯 Triple Shot</button>
+            </div>
+            
+            <div class="powerSelect">
+                <h2>Player 2 (Red) - Arrow Keys</h2>
+                <p>Choose your power:</p>
+                <button class="powerButton" onclick="selectPower(2, 'rapid')">⚡ Rapid Fire</button>
+                <button class="powerButton" onclick="selectPower(2, 'big')">💣 Big Bombs</button>
+                <button class="powerButton" onclick="selectPower(2, 'triple')">🎯 Triple Shot</button>
+            </div>
+        </div>
+        
+        <button id="startButton" onclick="startGame()">START GAME!</button>
+    </div>
+    
+    <div id="winScreen">
+        <h1>🎉 YOU WIN! 🎉</h1>
+        <h2>Great teamwork!</h2>
+        <button id="startButton" onclick="location.reload()">Play Again!</button>
+    </div>
+    
+    <canvas id="gameCanvas"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // World (top-down)
+        const world = { width: 4000, height: 3000 };
+        let cameraX = 0;
+        let cameraY = 0;
+
+        // Load plane images
+        const concordeImg = new Image();
+        concordeImg.src = 'concorde.gif';
+        const harrierImg = new Image();
+        harrierImg.src = 'harrier.jpg';
+        
+        // Load monster image
+        const ghostImg = new Image();
+        ghostImg.src = 'ghost.jpeg';
+        
+        let gameStarted = false;
+        let gameWon = false;
+        
+        // Player powers selection
+        let player1Power = null;
+        let player2Power = null;
+        
+        // Game objects (world coordinates)
+        let player1 = {
+            x: 200,
+            y: 200,
+            vx: 0,
+            vy: 0,
+            color: '#4169E1',
+            power: null,
+            cooldown: 0,
+            bullets: [],
+            sprite: concordeImg,
+            angle: 0
+        };
+        
+        let player2 = {
+            x: world.width - 200,
+            y: 200,
+            vx: 0,
+            vy: 0,
+            color: '#DC143C',
+            power: null,
+            cooldown: 0,
+            bullets: [],
+            sprite: harrierImg,
+            angle: Math.PI
+        };
+        
+        let monster = {
+            x: world.width / 2,
+            y: world.height - 400,
+            width: 160,
+            height: 160,
+            health: 100,
+            maxHealth: 100,
+            eyeOffset: 0,
+            tentacleWave: 0
+        };
+        
+        let particles = [];
+        
+        // Input handling
+        const keys = {};
+        
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        function selectPower(player, power) {
+            // Remove selected class from all buttons in this player's section
+            const playerSection = player === 1 ? 0 : 1;
+            const buttons = document.querySelectorAll('.powerSelect')[playerSection].querySelectorAll('.powerButton');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            // Add selected class to clicked button
+            event.target.classList.add('selected');
+            
+            if (player === 1) {
+                player1Power = power;
+            } else {
+                player2Power = power;
+            }
+        }
+        
+        function startGame() {
+            if (!player1Power || !player2Power) {
+                alert('Both players need to select their powers!');
+                return;
+            }
+            
+            player1.power = player1Power;
+            player2.power = player2Power;
+            
+            // Randomize monster position somewhere on the map
+            monster.x = 200 + Math.random() * (world.width - 400);
+            monster.y = 200 + Math.random() * (world.height - 400);
+            
+            document.getElementById('startScreen').style.display = 'none';
+            gameStarted = true;
+            gameLoop();
+        }
+        
+        function updatePlayer(player, upKey, downKey, leftKey, rightKey, shootKey) {
+            // Movement input
+            let ax = 0;
+            let ay = 0;
+            if (keys[upKey]) ay -= 1;
+            if (keys[downKey]) ay += 1;
+            if (keys[leftKey]) ax -= 1;
+            if (keys[rightKey]) ax += 1;
+            
+            const speed = 5;
+            if (ax !== 0 || ay !== 0) {
+                const len = Math.hypot(ax, ay) || 1;
+                player.vx = (ax / len) * speed;
+                player.vy = (ay / len) * speed;
+                player.angle = Math.atan2(player.vy, player.vx);
+            } else {
+                player.vx *= 0.9;
+                player.vy *= 0.9;
+            }
+            
+            player.x += player.vx;
+            player.y += player.vy;
+            
+            // Keep player in world bounds
+            player.x = Math.max(30, Math.min(world.width - 30, player.x));
+            player.y = Math.max(30, Math.min(world.height - 30, player.y));
+            
+            // Shooting
+            if (player.cooldown > 0) player.cooldown--;
+            
+            if (keys[shootKey] && player.cooldown <= 0) {
+                shootBullet(player);
+                
+                // Set cooldown based on power
+                if (player.power === 'rapid') {
+                    player.cooldown = 5;
+                } else if (player.power === 'big') {
+                    player.cooldown = 30;
+                } else if (player.power === 'triple') {
+                    player.cooldown = 20;
+                }
+            }
+            
+            // Update bullets
+            for (let i = player.bullets.length - 1; i >= 0; i--) {
+                let bullet = player.bullets[i];
+                bullet.x += bullet.vx;
+                bullet.y += bullet.vy;
+                
+                // Check collision with monster
+                if (bullet.x > monster.x - monster.width/2 && 
+                    bullet.x < monster.x + monster.width/2 &&
+                    bullet.y > monster.y - monster.height/2 && 
+                    bullet.y < monster.y + monster.height/2) {
+                    
+                    // Damage based on bullet size
+                    monster.health -= bullet.damage;
+                    
+                    // Create explosion particles
+                    for (let j = 0; j < 10; j++) {
+                        particles.push({
+                            x: bullet.x,
+                            y: bullet.y,
+                            vx: (Math.random() - 0.5) * 10,
+                            vy: (Math.random() - 0.5) * 10,
+                            size: 3 + Math.random() * 5,
+                            color: ['#FFD700', '#FFA500', '#FF6347'][Math.floor(Math.random() * 3)],
+                            life: 30
+                        });
+                    }
+                    
+                    player.bullets.splice(i, 1);
+                    continue;
+                }
+                
+                // Remove bullets that go off world
+                if (bullet.x < 0 || bullet.x > world.width || 
+                    bullet.y < 0 || bullet.y > world.height) {
+                    player.bullets.splice(i, 1);
+                }
+            }
+        }
+        
+        function shootBullet(player) {
+            const angle = player.angle;
+            
+            if (player.power === 'rapid') {
+                player.bullets.push({
+                    x: player.x,
+                    y: player.y,
+                    vx: Math.cos(angle) * 12,
+                    vy: Math.sin(angle) * 12,
+                    size: 4,
+                    damage: 1,
+                    color: '#FFFF00'
+                });
+            } else if (player.power === 'big') {
+                player.bullets.push({
+                    x: player.x,
+                    y: player.y,
+                    vx: Math.cos(angle) * 6,
+                    vy: Math.sin(angle) * 6,
+                    size: 12,
+                    damage: 5,
+                    color: '#FF4500'
+                });
+            } else if (player.power === 'triple') {
+                for (let i = -1; i <= 1; i++) {
+                    const spreadAngle = angle + i * 0.2;
+                    player.bullets.push({
+                        x: player.x,
+                        y: player.y,
+                        vx: Math.cos(spreadAngle) * 8,
+                        vy: Math.sin(spreadAngle) * 8,
+                        size: 6,
+                        damage: 2,
+                        color: '#00CED1'
+                    });
+                }
+            }
+        }
+        
+        function drawPlane(x, y, sprite, angleRad) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angleRad);
+            
+            const width = 100;
+            const height = 60;
+            if (sprite && sprite.complete) {
+                ctx.drawImage(sprite, -width / 2, -height / 2, width, height);
+            } else {
+                // Simple fallback if image hasn't loaded yet
+                ctx.fillStyle = '#666';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 25, 10, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+
+        function hashNoise(x, y) {
+            const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+            return s - Math.floor(s);
+        }
+
+        function drawMap(camX, camY) {
+            // Night map base
+            ctx.fillStyle = '#0b1d2a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Coarse tiled terrain
+            const tile = 200;
+            const startX = Math.floor(camX / tile) * tile;
+            const startY = Math.floor(camY / tile) * tile;
+            for (let x = startX; x < camX + canvas.width + tile; x += tile) {
+                for (let y = startY; y < camY + canvas.height + tile; y += tile) {
+                    const cx = Math.floor(x / tile);
+                    const cy = Math.floor(y / tile);
+                    const r = hashNoise(cx, cy);
+                    let color = r < 0.2 ? '#0a2740' : (r < 0.7 ? '#173b2e' : '#2a4c3a');
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x - camX, y - camY, tile, tile);
+                    // Occasional points/features
+                    if (r > 0.75) {
+                        ctx.fillStyle = '#265b45';
+                        ctx.beginPath();
+                        ctx.arc(x - camX + (tile/2), y - camY + (tile/2), 30 + (r * 20), 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+        
+        function drawMonster() {
+            // Gentle float animation
+            monster.tentacleWave += 0.05;
+            const floatOffset = Math.sin(monster.tentacleWave) * 6;
+            
+            const drawX = monster.x - monster.width / 2 - cameraX;
+            const drawY = monster.y - monster.height / 2 + floatOffset - cameraY;
+            
+            if (ghostImg && ghostImg.complete) {
+                ctx.drawImage(ghostImg, drawX, drawY, monster.width, monster.height);
+            } else {
+                // Fallback placeholder
+                ctx.fillStyle = '#888888';
+                ctx.beginPath();
+                ctx.arc(monster.x - cameraX, monster.y + floatOffset - cameraY, monster.width/2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Health bar
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(monster.x - 60 - cameraX, monster.y - 80 - cameraY, 120, 10);
+            ctx.fillStyle = '#00FF00';
+            ctx.fillRect(monster.x - 60 - cameraX, monster.y - 80 - cameraY, (monster.health / monster.maxHealth) * 120, 10);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(monster.x - 60 - cameraX, monster.y - 80 - cameraY, 120, 10);
+        }
+        
+        function drawCloud(cloud) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.beginPath();
+            ctx.arc(cloud.x, cloud.y, cloud.size * 0.5, 0, Math.PI * 2);
+            ctx.arc(cloud.x - cloud.size * 0.3, cloud.y, cloud.size * 0.4, 0, Math.PI * 2);
+            ctx.arc(cloud.x + cloud.size * 0.3, cloud.y, cloud.size * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function gameLoop() {
+            if (!gameStarted || gameWon) return;
+            
+            // Camera centers between players
+            const centerX = (player1.x + player2.x) / 2;
+            const centerY = (player1.y + player2.y) / 2;
+            cameraX = Math.max(0, Math.min(world.width - canvas.width, centerX - canvas.width / 2));
+            cameraY = Math.max(0, Math.min(world.height - canvas.height, centerY - canvas.height / 2));
+
+            // Draw map
+            drawMap(cameraX, cameraY);
+            
+            // Update players
+            updatePlayer(player1, 'w', 's', 'a', 'd', ' ');
+            updatePlayer(player2, 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'enter');
+            
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.5;
+                p.life--;
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            
+            // Draw everything
+            drawPlane(player1.x - cameraX, player1.y - cameraY, player1.sprite, player1.angle);
+            drawPlane(player2.x - cameraX, player2.y - cameraY, player2.sprite, player2.angle);
+            
+            // Draw bullets
+            player1.bullets.forEach(bullet => {
+                ctx.fillStyle = bullet.color;
+                ctx.beginPath();
+                ctx.arc(bullet.x - cameraX, bullet.y - cameraY, bullet.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            player2.bullets.forEach(bullet => {
+                ctx.fillStyle = bullet.color;
+                ctx.beginPath();
+                ctx.arc(bullet.x - cameraX, bullet.y - cameraY, bullet.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Draw particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / 30;
+                ctx.beginPath();
+                ctx.arc(p.x - cameraX, p.y - cameraY, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+            
+            // Draw monster
+            if (monster.health > 0) {
+                drawMonster();
+            } else if (!gameWon) {
+                // Victory!
+                gameWon = true;
+                document.getElementById('winScreen').style.display = 'flex';
+            }
+
+            // Fog of war: dark overlay with light cones in front of planes
+            ctx.save();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.92)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'destination-out';
+            const drawCone = (px, py, angle) => {
+                const radius = 260;
+                const spread = 0.6; // radians
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.arc(px, py, radius, angle - spread / 2, angle + spread / 2);
+                ctx.closePath();
+                ctx.fill();
+                // small ambient circle around plane
+                ctx.beginPath();
+                ctx.arc(px, py, 60, 0, Math.PI * 2);
+                ctx.fill();
+            };
+            drawCone(player1.x - cameraX, player1.y - cameraY, player1.angle);
+            drawCone(player2.x - cameraX, player2.y - cameraY, player2.angle);
+            ctx.restore();
+            
+            // Draw UI
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 20px Comic Sans MS';
+            ctx.fillText('Player 1: ' + (player1.power === 'rapid' ? '⚡ Rapid Fire' : 
+                         player1.power === 'big' ? '💣 Big Bombs' : '🎯 Triple Shot'), 10, 30);
+            ctx.fillText('Player 2: ' + (player2.power === 'rapid' ? '⚡ Rapid Fire' : 
+                         player2.power === 'big' ? '💣 Big Bombs' : '🎯 Triple Shot'), canvas.width - 10, 30);
+
+            // Controls legend
+            ctx.font = 'bold 16px Comic Sans MS';
+            ctx.textAlign = 'left';
+            ctx.fillText('P1: WASD to move, Space to shoot', 10, 55);
+            ctx.textAlign = 'right';
+            ctx.fillText('P2: Arrow Keys to move, Enter to shoot', canvas.width - 10, 55);
+            ctx.textAlign = 'left';
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>

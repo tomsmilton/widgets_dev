@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Bomber - Two Player Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #111;
+            color: white;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        #gameHeader {
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        #powerSelection {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin: 20px 0;
+        }
+        
+        .playerPowers {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 200px;
+        }
+        
+        .playerPowers h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+        
+        .powerBtn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        
+        .powerBtn:hover {
+            transform: scale(1.05);
+        }
+        
+        .powerBtn.selected {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 0 10px rgba(245, 87, 108, 0.5);
+        }
+        
+        #gameCanvas {
+            border: 3px solid #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+            margin: 20px;
+            cursor: crosshair;
+        }
+        
+        #gameInfo {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+        }
+        
+        .playerInfo {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        #startBtn {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 20px;
+            transition: transform 0.2s;
+        }
+        
+        #startBtn:hover {
+            transform: scale(1.1);
+        }
+        
+        #controls {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameHeader">
+        <h1>🛩️ Monster Bomber 🦖</h1>
+        <div id="powerSelection">
+            <div class="playerPowers">
+                <h3>✈️ Player 1 Powers (Blue)</h3>
+                <button class="powerBtn" onclick="selectPower(1, 'speed')">⚡ Super Speed</button>
+                <button class="powerBtn" onclick="selectPower(1, 'triple')">💣 Triple Bombs</button>
+                <button class="powerBtn" onclick="selectPower(1, 'big')">💥 Big Bombs</button>
+                <button class="powerBtn" onclick="selectPower(1, 'rapid')">🔥 Rapid Fire</button>
+            </div>
+            <div class="playerPowers">
+                <h3>✈️ Player 2 Powers (Red)</h3>
+                <button class="powerBtn" onclick="selectPower(2, 'speed')">⚡ Super Speed</button>
+                <button class="powerBtn" onclick="selectPower(2, 'triple')">💣 Triple Bombs</button>
+                <button class="powerBtn" onclick="selectPower(2, 'big')">💥 Big Bombs</button>
+                <button class="powerBtn" onclick="selectPower(2, 'rapid')">🔥 Rapid Fire</button>
+            </div>
+        </div>
+        <button id="startBtn" onclick="startGame()">Start Game!</button>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div id="gameInfo">
+        <div class="playerInfo">
+            <h3>Player 1 (Blue)</h3>
+            <p>Health: <span id="p1Health">100</span></p>
+            <p>Power: <span id="p1Power">None</span></p>
+        </div>
+        <div class="playerInfo">
+            <h3>Monster</h3>
+            <p>Health: <span id="monsterHealth">200</span></p>
+            <p>Status: <span id="monsterStatus">Hidden</span></p>
+        </div>
+        <div class="playerInfo">
+            <h3>Player 2 (Red)</h3>
+            <p>Health: <span id="p2Health">100</span></p>
+            <p>Power: <span id="p2Power">None</span></p>
+        </div>
+    </div>
+    
+    <div id="controls">
+        <h3>Controls</h3>
+        <p><strong>Player 1 (Blue):</strong> WASD to move, Space to drop bomb</p>
+        <p><strong>Player 2 (Red):</strong> Arrow Keys to move</p>
+        <p><strong>Bomb Barrage:</strong> Press 0 ten times to fire all bombs</p>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Sprite images
+        const sprites = {
+            monster: new Image(),
+            p1: new Image(),
+            p2: new Image(),
+            map: new Image()
+        };
+        sprites.monster.src = 'ghost.png';
+        sprites.p1.src = 'harrier.png';
+        sprites.p2.src = 'concorde.gif';
+        sprites.map.src = 'map.png';
+        
+        let gameStarted = false;
+        let gameWon = false;
+        let monsterFound = false;
+        let partyMode = { active: false, endTime: 0 };
+        
+        // Player data
+        const players = {
+            1: {
+                x: 100,
+                y: 300,
+                angle: 0,
+                speed: 2,
+                health: 100,
+                power: null,
+                sprite: sprites.p1,
+                color: '#4444ff',
+                lightColor: 'rgba(100, 100, 255, 0.3)',
+                lastBomb: 0,
+                bombCooldown: 1000
+            },
+            2: {
+                x: 700,
+                y: 300,
+                angle: Math.PI,
+                speed: 2,
+                health: 100,
+                power: null,
+                sprite: sprites.p2,
+                color: '#ff4444',
+                lightColor: 'rgba(255, 100, 100, 0.3)',
+                lastBomb: 0,
+                bombCooldown: 1000
+            }
+        };
+        
+        // Monsters
+        const monsters = [];
+        const MONSTER_COUNT = 8;
+        function spawnMonsters() {
+            monsters.length = 0;
+            for (let i = 0; i < MONSTER_COUNT; i++) {
+                monsters.push({
+                    x: 400 + (Math.random() - 0.5) * 300,
+                    y: 300 + (Math.random() - 0.5) * 200,
+                    vx: (Math.random() - 0.5) * 1.2,
+                    vy: (Math.random() - 0.5) * 1.2,
+                    health: 80,
+                    maxHealth: 80,
+                    size: 30 + Math.random() * 10,
+                    lastAttack: 0,
+                    attackCooldown: 1800 + Math.random() * 800,
+                    found: false
+                });
+            }
+        }
+        
+        // Bombs
+        const bombs = [];
+        
+        // Fog of war
+        const fogCanvas = document.createElement('canvas');
+        fogCanvas.width = canvas.width;
+        fogCanvas.height = canvas.height;
+        const fogCtx = fogCanvas.getContext('2d');
+        
+        // Party lights helpers
+        function drawPartyLights() {
+            const time = Date.now() * 0.0015;
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            for (let i = 0; i < 16; i++) {
+                const angle = time * (0.6 + i * 0.03) + i;
+                const radius = 120 + (i % 5) * 40;
+                const x = canvas.width / 2 + Math.cos(angle) * radius;
+                const y = canvas.height / 2 + Math.sin(angle * 1.3) * radius * 0.8;
+                const hue = (i * 30 + time * 120) % 360;
+                const grad = ctx.createRadialGradient(x, y, 0, x, y, 90);
+                grad.addColorStop(0, `hsla(${hue}, 90%, 60%, 0.9)`);
+                grad.addColorStop(1, `hsla(${hue}, 90%, 60%, 0)`);
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(x, y, 90, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+        
+        // Controls
+        const keys = {};
+        
+        function selectPower(player, power) {
+            players[player].power = power;
+            
+            // Update UI
+            document.getElementById(`p${player}Power`).textContent = 
+                power === 'speed' ? 'Super Speed' :
+                power === 'triple' ? 'Triple Bombs' :
+                power === 'big' ? 'Big Bombs' :
+                power === 'rapid' ? 'Rapid Fire' : 'None';
+            
+            // Update button styles
+            const playerButtons = document.querySelectorAll(`.playerPowers:nth-child(${player}) .powerBtn`);
+            playerButtons.forEach(btn => btn.classList.remove('selected'));
+            const selectedBtn = Array.from(playerButtons).find(btn => btn.textContent.includes(
+                power === 'speed' ? 'Speed' :
+                power === 'triple' ? 'Triple' :
+                power === 'big' ? 'Big' :
+                'Rapid'
+            ));
+            if (selectedBtn) selectedBtn.classList.add('selected');
+            
+            // Apply power effects
+            if (power === 'speed') {
+                players[player].speed = 4;
+            } else {
+                players[player].speed = 2;
+            }
+            
+            if (power === 'rapid') {
+                players[player].bombCooldown = 300;
+            } else {
+                players[player].bombCooldown = 1000;
+            }
+        }
+        
+        function startGame() {
+            if (!players[1].power || !players[2].power) {
+                alert('Both players must select a power!');
+                return;
+            }
+            
+            gameStarted = true;
+            gameWon = false;
+            monsterFound = false;
+            
+            // Reset positions
+            players[1].x = 100;
+            players[1].y = 300;
+            players[1].health = 100;
+            players[2].x = 700;
+            players[2].y = 300;
+            players[2].health = 100;
+            
+            spawnMonsters();
+            
+            bombs.length = 0;
+            
+            document.getElementById('p1Health').textContent = 100;
+            document.getElementById('p2Health').textContent = 100;
+            document.getElementById('monsterHealth').textContent = monsters.length;
+            document.getElementById('monsterStatus').textContent = 'Hidden';
+            
+            gameLoop();
+        }
+        
+        function updateFog() {
+            // Clear fog
+            fogCtx.fillStyle = 'black';
+            fogCtx.fillRect(0, 0, fogCanvas.width, fogCanvas.height);
+            
+            // Create light for each player
+            fogCtx.globalCompositeOperation = 'destination-out';
+            
+            [1, 2].forEach(p => {
+                const player = players[p];
+                const gradient = fogCtx.createRadialGradient(player.x, player.y, 0, player.x, player.y, 150);
+                gradient.addColorStop(0, 'rgba(0,0,0,1)');
+                gradient.addColorStop(0.5, 'rgba(0,0,0,0.8)');
+                gradient.addColorStop(1, 'rgba(0,0,0,0)');
+                fogCtx.fillStyle = gradient;
+                fogCtx.beginPath();
+                fogCtx.arc(player.x, player.y, 150, 0, Math.PI * 2);
+                fogCtx.fill();
+            });
+            
+            fogCtx.globalCompositeOperation = 'source-over';
+        }
+        
+        function dropBomb(playerNum) {
+            const player = players[playerNum];
+            const now = Date.now();
+            
+            if (now - player.lastBomb < player.bombCooldown) return;
+            
+            player.lastBomb = now;
+            
+            if (player.power === 'triple') {
+                for (let i = -1; i <= 1; i++) {
+                    bombs.push({
+                        x: player.x + i * 20,
+                        y: player.y,
+                        vy: 2,
+                        size: 10,
+                        damage: 15,
+                        player: playerNum
+                    });
+                }
+            } else if (player.power === 'big') {
+                bombs.push({
+                    x: player.x,
+                    y: player.y,
+                    vy: 1.5,
+                    size: 20,
+                    damage: 40,
+                    player: playerNum
+                });
+            } else {
+                bombs.push({
+                    x: player.x,
+                    y: player.y,
+                    vy: 2,
+                    size: 10,
+                    damage: 20,
+                    player: playerNum
+                });
+            }
+        }
+        
+        function checkMonsterVisibility() {
+            let anyFound = false;
+            monsters.forEach(m => {
+                [1, 2].forEach(p => {
+                    const player = players[p];
+                    const dist = Math.hypot(m.x - player.x, m.y - player.y);
+                    if (dist < 150) m.found = true;
+                });
+                if (m.found) anyFound = true;
+            });
+            monsterFound = anyFound;
+            document.getElementById('monsterStatus').textContent = anyFound ? 'Found!' : 'Hidden';
+        }
+        
+        function updateGame() {
+            if (!gameStarted || gameWon) return;
+            
+            // Update players
+            [1, 2].forEach(p => {
+                const player = players[p];
+                
+                if (p === 1) {
+                    if (keys['w'] || keys['W']) {
+                        player.y -= player.speed;
+                        player.angle = -Math.PI/2;
+                    }
+                    if (keys['s'] || keys['S']) {
+                        player.y += player.speed;
+                        player.angle = Math.PI/2;
+                    }
+                    if (keys['a'] || keys['A']) {
+                        player.x -= player.speed;
+                        player.angle = Math.PI;
+                    }
+                    if (keys['d'] || keys['D']) {
+                        player.x += player.speed;
+                        player.angle = 0;
+                    }
+                    if (keys[' ']) {
+                        dropBomb(1);
+                    }
+                } else {
+                    if (keys['ArrowUp']) {
+                        player.y -= player.speed;
+                        player.angle = -Math.PI/2;
+                    }
+                    if (keys['ArrowDown']) {
+                        player.y += player.speed;
+                        player.angle = Math.PI/2;
+                    }
+                    if (keys['ArrowLeft']) {
+                        player.x -= player.speed;
+                        player.angle = Math.PI;
+                    }
+                    if (keys['ArrowRight']) {
+                        player.x += player.speed;
+                        player.angle = 0;
+                    }
+                }
+                
+                // Keep players on screen
+                player.x = Math.max(20, Math.min(canvas.width - 20, player.x));
+                player.y = Math.max(20, Math.min(canvas.height - 20, player.y));
+            });
+            
+            // Handle party mode timeout
+            if (partyMode.active && Date.now() > partyMode.endTime) {
+                partyMode.active = false;
+                // Restore speeds based on power selections
+                [1, 2].forEach(p => {
+                    players[p].speed = players[p].power === 'speed' ? 4 : 2;
+                });
+            }
+            
+            // Update bombs and collisions with monsters
+            for (let i = bombs.length - 1; i >= 0; i--) {
+                const bomb = bombs[i];
+                bomb.y += bomb.vy;
+                
+                let bombConsumed = false;
+                for (let j = monsters.length - 1; j >= 0 && !bombConsumed; j--) {
+                    const m = monsters[j];
+                    if (!m.found) continue;
+                    const dist = Math.hypot(m.x - bomb.x, m.y - bomb.y);
+                    if (dist < m.size + bomb.size) {
+                        m.health -= bomb.damage;
+                        bombs.splice(i, 1);
+                        bombConsumed = true;
+                        if (m.health <= 0) {
+                            monsters.splice(j, 1);
+                            document.getElementById('monsterHealth').textContent = monsters.length;
+                            if (monsters.length === 0) {
+                                gameWon = true;
+                                alert('You defeated all the monsters! Great teamwork!');
+                            }
+                        }
+                    }
+                }
+                
+                // Remove bombs that go off screen
+                if (!bombConsumed && bomb.y > canvas.height) {
+                    bombs.splice(i, 1);
+                }
+            }
+            
+            // Move monsters and attacks
+            const now = Date.now();
+            monsters.forEach(m => {
+                // Randomly wander
+                if (Math.random() < 0.01) {
+                    m.vx = (Math.random() - 0.5) * 1.2;
+                    m.vy = (Math.random() - 0.5) * 1.2;
+                }
+                m.x += m.vx;
+                m.y += m.vy;
+                // Bounce from edges
+                if (m.x < m.size) { m.x = m.size; m.vx *= -1; }
+                if (m.x > canvas.width - m.size) { m.x = canvas.width - m.size; m.vx *= -1; }
+                if (m.y < m.size) { m.y = m.size; m.vy *= -1; }
+                if (m.y > canvas.height - m.size) { m.y = canvas.height - m.size; m.vy *= -1; }
+                
+                // Attack nearby players when found
+                if (m.found && now - m.lastAttack > m.attackCooldown) {
+                    let attacked = false;
+                    [1, 2].forEach(p => {
+                        const player = players[p];
+                        const dist = Math.hypot(m.x - player.x, m.y - player.y);
+                        if (dist < 100) {
+                            player.health -= 10;
+                            document.getElementById(`p${p}Health`).textContent = Math.max(0, player.health);
+                            attacked = true;
+                            if (player.health <= 0) {
+                                gameWon = true;
+                                alert(`Player ${p} was defeated! Game Over!`);
+                            }
+                        }
+                    });
+                    if (attacked) m.lastAttack = now;
+                }
+            });
+            
+            checkMonsterVisibility();
+            updateFog();
+        }
+        
+        function drawGame() {
+            // Background map
+            if (sprites.map.complete && sprites.map.naturalWidth > 0) {
+                ctx.drawImage(sprites.map, 0, 0, canvas.width, canvas.height);
+            } else {
+                // Fallback solid background while image loads
+                ctx.fillStyle = '#222';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // Optional subtle dark tint to keep atmosphere
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Party lights overlay
+            if (partyMode.active) {
+                drawPartyLights();
+            }
+            
+            // Draw monsters that have been found
+            if (monsterFound) {
+                monsters.forEach(m => {
+                    if (!m.found) return;
+                    ctx.save();
+                    ctx.translate(m.x, m.y);
+                    const mw = m.size * 2.2;
+                    const mh = m.size * 2.4;
+                    if (sprites.monster.complete && sprites.monster.naturalWidth > 0) {
+                        ctx.drawImage(sprites.monster, -mw / 2, -mh / 2, mw, mh);
+                    } else {
+                        // Fallback vector monster while image loads
+                        ctx.fillStyle = '#4a0080';
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0, m.size, m.size * 0.8, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    // Health bar
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                    ctx.fillRect(-40, -m.size - 20, 80, 10);
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+                    ctx.fillRect(-40, -m.size - 20, 80 * (m.health / m.maxHealth), 10);
+                    ctx.restore();
+                });
+            }
+            
+            // Draw players
+            [1, 2].forEach(p => {
+                const player = players[p];
+                const pw = 50; // plane draw width
+                const ph = 38; // plane draw height
+                
+                ctx.save();
+                ctx.translate(player.x, player.y);
+                ctx.rotate(player.angle);
+                if (player.sprite && player.sprite.complete && player.sprite.naturalWidth > 0) {
+                    ctx.drawImage(player.sprite, -pw / 2, -ph / 2, pw, ph);
+                } else {
+                    // Fallback vector plane while image loads
+                    ctx.fillStyle = player.color;
+                    ctx.beginPath();
+                    ctx.moveTo(15, 0);
+                    ctx.lineTo(-10, -8);
+                    ctx.lineTo(-5, 0);
+                    ctx.lineTo(-10, 8);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillRect(-5, -15, 10, 30);
+                }
+                ctx.restore();
+                
+                // Health bar
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+                ctx.fillRect(player.x - 20, player.y - 30, 40, 5);
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.8)';
+                ctx.fillRect(player.x - 20, player.y - 30, 40 * (player.health / 100), 5);
+            });
+            
+            // Draw bombs
+            bombs.forEach(bomb => {
+                ctx.fillStyle = '#ffaa00';
+                ctx.beginPath();
+                ctx.arc(bomb.x, bomb.y, bomb.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#ff6600';
+                ctx.beginPath();
+                ctx.arc(bomb.x, bomb.y, bomb.size * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Apply fog of war
+            ctx.globalAlpha = 0.9;
+            ctx.drawImage(fogCanvas, 0, 0);
+            ctx.globalAlpha = 1;
+        }
+        
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            
+            if (gameStarted && !gameWon) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        // Bomb barrage cheat: press '0' ten times quickly
+        let zeroPressCount = 0;
+        let zeroPressTimeout = null;
+        function fireAllBombs() {
+            const bombsPerPlayer = 20;
+            [1, 2].forEach(p => {
+                const player = players[p];
+                for (let i = 0; i < bombsPerPlayer; i++) {
+                    const offset = (i - bombsPerPlayer / 2) * 6;
+                    const isBig = player.power === 'big';
+                    bombs.push({
+                        x: player.x + offset,
+                        y: player.y,
+                        vy: 1.7 + Math.random() * 1.3,
+                        size: isBig ? 20 : 10,
+                        damage: isBig ? 40 : 20,
+                        player: p
+                    });
+                }
+            });
+        }
+
+        function startPartyMode() {
+            partyMode.active = true;
+            partyMode.endTime = Date.now() + 6000; // 6 seconds of party speed and lights
+            [1, 2].forEach(p => {
+                players[p].speed = 6; // fastest
+            });
+        }
+
+        // Event listeners
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            
+            // Prevent space and arrow keys from scrolling
+            if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                e.preventDefault();
+            }
+            // Handle '0' rapid-press barrage
+            if (e.key === '0') {
+                if (zeroPressTimeout) clearTimeout(zeroPressTimeout);
+                zeroPressCount++;
+                if (zeroPressCount >= 10) {
+                    fireAllBombs();
+                    startPartyMode();
+                    zeroPressCount = 0;
+                } else {
+                    zeroPressTimeout = setTimeout(() => { zeroPressCount = 0; }, 1500);
+                }
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        // Initial draw
+        drawGame();
+    </script>
+</body>
+</html>
