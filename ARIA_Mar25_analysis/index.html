@@ -109,6 +109,13 @@
         .research-log strong { color: var(--heading); }
         .research-log code { background: #f0eeeb; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.8rem; }
 
+        .per-capita-toggle { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--text-secondary); white-space: nowrap; }
+        .per-capita-toggle label { cursor: pointer; display: flex; align-items: center; gap: 0.35rem; }
+        .toggle-switch { position: relative; width: 34px; height: 18px; -webkit-appearance: none; appearance: none; background: var(--border); border-radius: 9px; outline: none; cursor: pointer; transition: background 0.2s; }
+        .toggle-switch:checked { background: var(--accent); }
+        .toggle-switch::before { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+        .toggle-switch:checked::before { transform: translateX(16px); }
+
         .hidden { display: none; }
 
         @media (max-width: 768px) {
@@ -156,6 +163,11 @@
     </header>
 
     <div class="summary-bar" id="summaryBar"></div>
+    <div style="display:flex;justify-content:flex-end;padding:0.5rem 2rem 0;background:var(--surface);">
+        <div class="per-capita-toggle">
+            <label><input type="checkbox" class="toggle-switch" id="perCapitaToggle" /> Per capita</label>
+        </div>
+    </div>
 
     <div class="tabs">
         <div class="tab active" data-tab="map">Bubble Map</div>
@@ -198,7 +210,7 @@
         <div id="chartsTab" class="hidden">
             <div class="section">
                 <h2>Contract Value by Region</h2>
-                <p class="subtitle">Contracts grouped by ONS region: London, South East &amp; East of England vs Rest of UK vs International</p>
+                <p class="subtitle" id="chartsSubtitle">Contracts grouped by ONS region: London, South East &amp; East of England vs Rest of UK vs International</p>
                 <div class="chart-toggle" id="chartToggle">
                     <button class="active" data-metric="value">Total Value</button>
                     <button data-metric="count">Contract Count</button>
@@ -290,10 +302,43 @@
     };
     const LONDON_SE_EAST = new Set(['London', 'South East', 'East of England']);
 
+    // Population data (approximate, 2021 Census / recent estimates)
+    const COUNTY_POPULATION = {
+        'Greater London': 8799800, 'Oxfordshire': 725300, 'Cambridgeshire': 855800,
+        'City of Glasgow': 635600, 'West Midlands': 2919600, 'City of Edinburgh': 527600,
+        'Hampshire': 1400000, 'West Yorkshire': 2347700, 'Greater Manchester': 2867800,
+        'Devon': 1215000, 'South Yorkshire': 1415900, 'Bedfordshire': 669000,
+        'Bristol': 472400, 'Kent': 1846500, 'Berkshire': 911400,
+        'County Durham': 857600, 'Norfolk': 914000, 'Wiltshire': 720000,
+        'Essex': 1503300, 'East Sussex': 829000, 'North Yorkshire': 826000,
+        'West Sussex': 866000, 'Somerset': 570000, 'Tyne and Wear': 1127000,
+        'Merseyside': 1391000, 'Dorset': 772000, 'Fife': 374000,
+        'Stirling': 94000, 'Cheshire': 790000, 'Northern Ireland': 1903200,
+        'Highland': 235000, 'Hertfordshire': 1190000, 'Derbyshire': 1060000,
+        'Dundee City': 148000,
+    };
+
+    const COUNTRY_POPULATION = {
+        'USA': 331900000, 'Estonia': 1326000, 'Italy': 59030000, 'Belgium': 11590000,
+        'Canada': 38930000, 'Australia': 26270000, 'Denmark': 5857000, 'Ireland': 5123500,
+        'Greenland': 56500, 'Netherlands': 17530000, 'Germany': 84360000,
+        'Switzerland': 8770000, 'Philippines': 115560000, 'Indonesia': 275500000,
+        'India': 1428600000, 'Pakistan': 231400000, 'Uruguay': 3444000,
+        'Japan': 125100000, 'Mali': 22400000, 'Israel': 9656000,
+    };
+
+    // Region populations for Tom Forth plot
+    const REGION_POPULATION = {
+        lse: 24158000,      // London + South East + East of England
+        restuk: 42672000,   // Rest of UK
+        restworld: 7_963_000_000, // World population minus UK (~67M)
+    };
+
     let DATA = null, BOUNDARIES = null;
     let map = null, choroplethMapObj = null;
     let circleMarkers = [], selectedMarker = null;
     let charts = {}, currentMetric = 'value', tomforthMode = 'normalised';
+    let perCapita = false;
 
     async function init() {
         const [dataResp, boundResp, logResp] = await Promise.all([
@@ -313,6 +358,46 @@
         renderAllContracts();
         renderResearchLog(logMd);
         setupTabs();
+
+        document.getElementById('perCapitaToggle').addEventListener('change', (e) => {
+            perCapita = e.target.checked;
+            refreshAllViews();
+        });
+    }
+
+    function refreshAllViews() {
+        // Rebuild bubble map
+        circleMarkers.forEach(m => map.removeLayer(m));
+        circleMarkers = [];
+        selectedMarker = null;
+        map.eachLayer(l => { if (l instanceof L.Control) return; if (l._leaflet_id && l.options && l.options.className === 'legend') map.removeControl(l); });
+        // Remove existing legend
+        document.querySelectorAll('#map .legend').forEach(el => el.closest('.leaflet-control')?.remove());
+        rebuildBubbleMap();
+
+        // Rebuild choropleth if initialised
+        if (choroplethMapObj) {
+            choroplethMapObj.remove();
+            choroplethMapObj = null;
+            document.getElementById('choroplethMap').innerHTML = '';
+            // Re-create the div for leaflet
+            const parent = document.getElementById('choroplethTab');
+            const newDiv = document.createElement('div');
+            newDiv.id = 'choroplethMap';
+            newDiv.style.cssText = 'height:540px;width:100%';
+            parent.innerHTML = '';
+            parent.appendChild(newDiv);
+            if (!document.getElementById('choroplethTab').classList.contains('hidden')) {
+                initChoroplethMap();
+                setTimeout(() => choroplethMapObj.invalidateSize(), 100);
+            }
+        }
+
+        renderCountyTable();
+        renderInternational();
+        renderCharts();
+        drawTomForth(tomforthMode);
+        renderAllTable();
     }
 
     // --- Summary ---
@@ -336,18 +421,29 @@
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OSM &copy; CARTO', maxZoom: 19
         }).addTo(map);
+        rebuildBubbleMap();
+    }
 
-        const maxVal = Math.max(...Object.values(DATA.uk_counties).map(c => c.total_value));
+    function rebuildBubbleMap() {
+        circleMarkers.forEach(m => map.removeLayer(m));
+        circleMarkers = [];
+        // Remove old legend controls
+        map.eachLayer(l => {}); // no-op; legends are controls not layers
+        if (map._bubbleLegend) { map.removeControl(map._bubbleLegend); map._bubbleLegend = null; }
+
+        const getVal = (county, stats) => perCapita ? countyPC(county, stats.total_value) : stats.total_value;
+        const maxVal = Math.max(...Object.entries(DATA.uk_counties).map(([c, s]) => getVal(c, s)));
         for (const [county, stats] of Object.entries(DATA.uk_counties)) {
             const coords = COUNTY_COORDS[county];
             if (!coords) continue;
-            const radius = 6 + Math.sqrt(stats.total_value / maxVal) * 38;
-            const intensity = stats.total_value / maxVal;
+            const val = getVal(county, stats);
+            const radius = 6 + Math.sqrt(val / maxVal) * 38;
+            const intensity = val / maxVal;
             const marker = L.circleMarker(coords, {
                 radius, fillColor: bubbleColor(intensity),
                 color: 'rgba(45,43,40,0.35)', weight: 1.5, fillOpacity: 0.7,
             }).addTo(map);
-            marker.bindTooltip(`<strong>${county}</strong><br>${stats.count} contracts<br>${fmtGBP(stats.total_value)}`, { direction: 'top', offset: [0, -radius] });
+            marker.bindTooltip(`<strong>${county}</strong><br>${stats.count} contracts<br>${fmtVal(val)}`, { direction: 'top', offset: [0, -radius] });
             marker.on('click', () => showCountyDetail(county, marker));
             circleMarkers.push(marker);
         }
@@ -365,14 +461,15 @@
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = function () {
             const div = L.DomUtil.create('div', 'legend');
-            div.innerHTML = '<h4>Contract Value</h4>';
+            div.innerHTML = `<h4>${perCapita ? 'Value per Capita' : 'Contract Value'}</h4>`;
             for (const frac of [0.05, 0.25, 0.5, 1.0]) {
                 const r = 6 + Math.sqrt(frac) * 38;
                 const val = maxVal * frac;
-                div.innerHTML += `<div class="legend-item"><span class="legend-circle" style="width:${Math.min(r*2,50)}px;height:${Math.min(r*2,50)}px;background:${bubbleColor(frac)}"></span>${fmtGBP(val)}</div>`;
+                div.innerHTML += `<div class="legend-item"><span class="legend-circle" style="width:${Math.min(r*2,50)}px;height:${Math.min(r*2,50)}px;background:${bubbleColor(frac)}"></span>${fmtVal(val)}</div>`;
             }
             return div;
         };
+        map._bubbleLegend = legend;
         legend.addTo(map);
     }
 
@@ -382,9 +479,10 @@
         selectedMarker = marker;
         const contracts = DATA.contracts.filter(c => c.county === county);
         const stats = DATA.uk_counties[county];
+        const pcInfo = perCapita && COUNTY_POPULATION[county] ? ` · ${fmtPC(countyPC(county, stats.total_value))}/cap` : '';
         const panel = document.getElementById('detailPanel');
         panel.classList.remove('empty');
-        panel.innerHTML = `<h2>${county}</h2><p class="subtitle">${stats.count} contracts · ${fmtGBP(stats.total_value)} total · ${stats.suppliers} suppliers</p>${contractTable(contracts)}`;
+        panel.innerHTML = `<h2>${county}</h2><p class="subtitle">${stats.count} contracts · ${fmtGBP(stats.total_value)} total${pcInfo} · ${stats.suppliers} suppliers</p>${contractTable(contracts)}`;
         panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -396,13 +494,17 @@
             attribution: '&copy; OSM &copy; CARTO', maxZoom: 19, opacity: 0.3
         }).addTo(choroplethMapObj);
 
-        const maxVal = Math.max(...Object.values(DATA.uk_counties).map(c => c.total_value));
+        const getVal = (county) => {
+            const stats = DATA.uk_counties[county];
+            if (!stats) return 0;
+            return perCapita ? countyPC(county, stats.total_value) : stats.total_value;
+        };
+        const maxVal = Math.max(...Object.keys(DATA.uk_counties).map(c => getVal(c)));
 
         L.geoJSON(BOUNDARIES, {
             style: function(feature) {
                 const name = feature.properties.name;
-                const stats = DATA.uk_counties[name];
-                const val = stats ? stats.total_value : 0;
+                const val = getVal(name);
                 const t = val > 0 ? Math.pow(val / maxVal, 0.4) : 0;
                 return {
                     fillColor: choroplethColor(t),
@@ -413,7 +515,7 @@
                 const name = feature.properties.name;
                 const stats = DATA.uk_counties[name];
                 if (stats) {
-                    layer.bindTooltip(`<strong>${name}</strong><br>${stats.count} contracts<br>${fmtGBP(stats.total_value)}`, { sticky: true });
+                    layer.bindTooltip(`<strong>${name}</strong><br>${stats.count} contracts<br>${fmtVal(getVal(name))}`, { sticky: true });
                 }
             }
         }).addTo(choroplethMapObj);
@@ -424,7 +526,7 @@
             if (!coords) continue;
             const icon = L.divIcon({
                 className: '',
-                html: `<div style="font-size:11px;font-weight:700;color:#2d2b28;text-shadow:0 0 4px #fff,0 0 4px #fff,0 0 4px #fff;white-space:nowrap;text-align:center">${fmtGBP(stats.total_value)}</div>`,
+                html: `<div style="font-size:11px;font-weight:700;color:#2d2b28;text-shadow:0 0 4px #fff,0 0 4px #fff,0 0 4px #fff;white-space:nowrap;text-align:center">${fmtVal(getVal(county))}</div>`,
                 iconSize: [80, 16], iconAnchor: [40, 8]
             });
             L.marker(coords, { icon, interactive: false }).addTo(choroplethMapObj);
@@ -434,9 +536,9 @@
         const legend = L.control({ position: 'bottomright' });
         legend.onAdd = function () {
             const div = L.DomUtil.create('div', 'legend');
-            div.innerHTML = `<h4>Total Contract Value</h4>
+            div.innerHTML = `<h4>${perCapita ? 'Value per Capita' : 'Total Contract Value'}</h4>
                 <div class="gradient-bar" style="background:linear-gradient(to right, ${choroplethColor(0)}, ${choroplethColor(0.3)}, ${choroplethColor(0.6)}, ${choroplethColor(1)})"></div>
-                <div class="gradient-label"><span>£0</span><span>${fmtGBP(maxVal)}</span></div>`;
+                <div class="gradient-label"><span>£0</span><span>${fmtVal(maxVal)}</span></div>`;
             return div;
         };
         legend.addTo(choroplethMapObj);
@@ -515,11 +617,13 @@
         ];
         const categories = ['R&D Programme Funding', 'Activation Partners & AI Scientists', 'Operating Costs'];
         const colors = ['#c96442', '#e0a080', '#f0d8a0'];
-        const totals = regionKeys.map(r => Object.values(regionBuckets[r]).reduce((s, v) => s + v, 0) * scale);
+
+        const pcDivisor = (r) => perCapita && REGION_POPULATION[r] ? REGION_POPULATION[r] : 1;
+        const totals = regionKeys.map(r => Object.values(regionBuckets[r]).reduce((s, v) => s + v, 0) * scale / pcDivisor(r));
 
         const datasets = categories.map((cat, i) => ({
             label: cat,
-            data: regionKeys.map(r => regionBuckets[r][cat] * scale),
+            data: regionKeys.map(r => regionBuckets[r][cat] * scale / pcDivisor(r)),
             backgroundColor: colors[i], borderRadius: 3,
         }));
 
@@ -533,16 +637,16 @@
             options: {
                 responsive: true, maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: mode === 'normalised' ? 'Estimated ARIA Spend by Region (Scaled to £250M)' : 'ARIA Contract Spend by Region (Actual)',
+                    title: { display: true, text: (mode === 'normalised' ? 'Estimated ARIA Spend by Region (Scaled to £250M)' : 'ARIA Contract Spend by Region (Actual)') + (perCapita ? ' — Per Capita' : ''),
                         font: { size: 18, weight: '600' }, color: '#1a1917', padding: { bottom: 4 } },
-                    subtitle: { display: true, text: mode === 'normalised' ? 'Extrapolating known proportions to total committed capital' : 'Total awarded contract value by supplier registered location',
+                    subtitle: { display: true, text: perCapita ? 'Per capita values (Rest of World excluded — no single population base)' : (mode === 'normalised' ? 'Extrapolating known proportions to total committed capital' : 'Total awarded contract value by supplier registered location'),
                         font: { size: 12 }, color: '#8a8580', padding: { bottom: 20 } },
                     legend: { position: 'right', labels: { padding: 16, boxWidth: 14, font: { size: 11 } } },
-                    tooltip: { callbacks: { label: c => c.dataset.label + ': ' + fmtGBP(c.raw), footer: items => 'Total: ' + fmtGBP(totals[items[0].dataIndex]) } }
+                    tooltip: { callbacks: { label: c => c.dataset.label + ': ' + fmtVal(c.raw), footer: items => 'Total: ' + fmtVal(totals[items[0].dataIndex]) } }
                 },
                 scales: {
                     x: { stacked: true, grid: { display: false }, ticks: { font: { size: 12, weight: '500' }, color: '#2d2b28' } },
-                    y: { stacked: true, ticks: { callback: v => v >= 1e6 ? '£'+(v/1e6).toFixed(0)+'M' : v >= 1e3 ? '£'+(v/1e3).toFixed(0)+'K' : '£'+v, font: { size: 11 }, color: '#8a8580' }, grid: { color: '#f0eeeb' } }
+                    y: { stacked: true, ticks: { callback: v => perCapita ? fmtPC(v) : (v >= 1e6 ? '£'+(v/1e6).toFixed(0)+'M' : v >= 1e3 ? '£'+(v/1e3).toFixed(0)+'K' : '£'+v), font: { size: 11 }, color: '#8a8580' }, grid: { color: '#f0eeeb' } }
                 },
                 layout: { padding: { top: 10 } },
                 onClick(evt, elements) {
@@ -579,7 +683,7 @@
                         ctx.save(); ctx.textAlign = 'center';
                         ctx.font = 'bold 13px Inter, -apple-system, sans-serif';
                         ctx.fillStyle = '#1a1917';
-                        ctx.fillText(fmtGBP(totals[i]), bar.x, bar.y - 8);
+                        ctx.fillText(fmtVal(totals[i]), bar.x, bar.y - 8);
                         ctx.restore();
                     });
                 }
@@ -595,26 +699,32 @@
         }
         for (const [country, stats] of Object.entries(DATA.international)) intl[country] = stats;
 
-        drawBarChart('chartLondonSE', 'londonSE', londonSEEast, currentMetric);
-        drawBarChart('chartRestUK', 'restUK', restUK, currentMetric);
-        drawBarChart('chartIntl', 'intl', intl, currentMetric);
+        drawBarChart('chartLondonSE', 'londonSE', londonSEEast, currentMetric, false);
+        drawBarChart('chartRestUK', 'restUK', restUK, currentMetric, false);
+        drawBarChart('chartIntl', 'intl', intl, currentMetric, true);
 
         document.querySelectorAll('#chartToggle button').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('#chartToggle button').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentMetric = btn.dataset.metric;
-                drawBarChart('chartLondonSE', 'londonSE', londonSEEast, currentMetric);
-                drawBarChart('chartRestUK', 'restUK', restUK, currentMetric);
-                drawBarChart('chartIntl', 'intl', intl, currentMetric);
+                drawBarChart('chartLondonSE', 'londonSE', londonSEEast, currentMetric, false);
+                drawBarChart('chartRestUK', 'restUK', restUK, currentMetric, false);
+                drawBarChart('chartIntl', 'intl', intl, currentMetric, true);
             });
         });
     }
 
-    function drawBarChart(canvasId, chartKey, data, metric) {
-        const sorted = Object.entries(data).sort((a, b) => (metric === 'value' ? b[1].total_value - a[1].total_value : b[1].count - a[1].count));
+    function drawBarChart(canvasId, chartKey, data, metric, isIntl) {
+        const getVal = ([name, stats]) => {
+            if (metric !== 'value') return stats.count;
+            if (!perCapita) return stats.total_value;
+            const pop = isIntl ? COUNTRY_POPULATION[name] : COUNTY_POPULATION[name];
+            return pop ? stats.total_value / pop : 0;
+        };
+        const sorted = Object.entries(data).sort((a, b) => getVal(b) - getVal(a));
         const labels = sorted.map(([n]) => n);
-        const values = sorted.map(([, s]) => metric === 'value' ? s.total_value : s.count);
+        const values = sorted.map(e => getVal(e));
         const colors = sorted.map((_, i) => {
             const t = labels.length > 1 ? i / (labels.length - 1) : 0;
             return `rgb(${Math.round(201-t*40)},${Math.round(100+t*60)},${Math.round(66+t*80)})`;
@@ -626,9 +736,9 @@
             type: 'bar', data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 3 }] },
             options: {
                 indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => isValue ? fmtGBP(c.raw) : c.raw + ' contracts' } } },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => isValue ? fmtVal(c.raw) : c.raw + ' contracts' } } },
                 scales: {
-                    x: { ticks: { callback: v => isValue ? (v>=1e6?'£'+(v/1e6).toFixed(0)+'M':v>=1e3?'£'+(v/1e3).toFixed(0)+'K':'£'+v) : v }, grid: { color: '#f0eeeb' } },
+                    x: { ticks: { callback: v => isValue ? (perCapita ? fmtPC(v) : (v>=1e6?'£'+(v/1e6).toFixed(0)+'M':v>=1e3?'£'+(v/1e3).toFixed(0)+'K':'£'+v)) : v }, grid: { color: '#f0eeeb' } },
                     y: { ticks: { font: { size: 11 } }, grid: { display: false } }
                 }
             }
@@ -642,12 +752,14 @@
     // --- County Table ---
     function renderCountyTable() {
         const grid = document.getElementById('countyGrid');
-        const sorted = Object.entries(DATA.uk_counties).sort((a, b) => b[1].total_value - a[1].total_value);
+        const sortVal = ([county, stats]) => perCapita ? countyPC(county, stats.total_value) : stats.total_value;
+        const sorted = Object.entries(DATA.uk_counties).sort((a, b) => sortVal(b) - sortVal(a));
         grid.innerHTML = sorted.map(([county, stats]) => {
             const ons = COUNTY_TO_ONS[county] || '';
+            const pcInfo = perCapita && COUNTY_POPULATION[county] ? ` · ${fmtPC(countyPC(county, stats.total_value))}/cap` : '';
             return `<div class="country-card" onclick="showCountyTableDetail('${county.replace(/'/g, "\\'")}')">
                 <div class="name">${county}</div>
-                <div class="meta">${stats.count} contracts · ${fmtGBP(stats.total_value)} · ${stats.suppliers} suppliers</div>
+                <div class="meta">${stats.count} contracts · ${fmtGBP(stats.total_value)}${pcInfo} · ${stats.suppliers} suppliers</div>
                 <div class="meta" style="color:#b0a8a0;font-size:0.72rem">${ons}</div>
             </div>`;
         }).join('');
@@ -655,30 +767,35 @@
     window.showCountyTableDetail = function(county) {
         const contracts = DATA.contracts.filter(c => c.county === county);
         const stats = DATA.uk_counties[county];
+        const pcInfo = perCapita && COUNTY_POPULATION[county] ? ` · ${fmtPC(countyPC(county, stats.total_value))}/cap` : '';
         const detail = document.getElementById('countyDetail');
         detail.classList.remove('hidden');
         detail.innerHTML = `<button class="back-btn" onclick="this.parentElement.classList.add('hidden')">← Back</button>
-            <h2>${county}</h2><p class="subtitle">${stats.count} contracts · ${fmtGBP(stats.total_value)} total · ${stats.suppliers} suppliers</p>${contractTable(contracts)}`;
+            <h2>${county}</h2><p class="subtitle">${stats.count} contracts · ${fmtGBP(stats.total_value)} total${pcInfo} · ${stats.suppliers} suppliers</p>${contractTable(contracts)}`;
         detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     // --- International ---
     function renderInternational() {
         const grid = document.getElementById('countryGrid');
-        const sorted = Object.entries(DATA.international).sort((a, b) => b[1].count - a[1].count);
-        grid.innerHTML = sorted.map(([country, stats]) => `
-            <div class="country-card" onclick="showCountryDetail('${country.replace(/'/g, "\\'")}')">
+        const sortVal = ([country, stats]) => perCapita && COUNTRY_POPULATION[country] ? countryPC(country, stats.total_value) : stats.total_value;
+        const sorted = Object.entries(DATA.international).sort((a, b) => sortVal(b) - sortVal(a));
+        grid.innerHTML = sorted.map(([country, stats]) => {
+            const pcInfo = perCapita && COUNTRY_POPULATION[country] ? ` · ${fmtPC(countryPC(country, stats.total_value))}/cap` : '';
+            return `<div class="country-card" onclick="showCountryDetail('${country.replace(/'/g, "\\'")}')">
                 <div class="name">${country}</div>
-                <div class="meta">${stats.count} contracts · ${fmtGBP(stats.total_value)}</div>
-            </div>`).join('');
+                <div class="meta">${stats.count} contracts · ${fmtGBP(stats.total_value)}${pcInfo}</div>
+            </div>`;
+        }).join('');
     }
     window.showCountryDetail = function(country) {
         const contracts = DATA.contracts.filter(c => c.country === country && c.category === 'International');
         const stats = DATA.international[country];
+        const pcInfo = perCapita && COUNTRY_POPULATION[country] ? ` · ${fmtPC(countryPC(country, stats.total_value))}/cap` : '';
         const detail = document.getElementById('intlDetail');
         detail.classList.remove('hidden');
         detail.innerHTML = `<button class="back-btn" onclick="this.parentElement.classList.add('hidden')">← Back</button>
-            <h2>${country}</h2><p class="subtitle">${stats.count} contracts · ${fmtGBP(stats.total_value)} total</p>${contractTable(contracts)}`;
+            <h2>${country}</h2><p class="subtitle">${stats.count} contracts · ${fmtGBP(stats.total_value)} total${pcInfo}</p>${contractTable(contracts)}`;
         detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
@@ -779,6 +896,26 @@
         if (val >= 1_000_000) return '£' + (val / 1_000_000).toFixed(1) + 'M';
         if (val >= 1_000) return '£' + (val / 1_000).toFixed(0) + 'K';
         return '£' + val.toFixed(0);
+    }
+
+    function fmtPC(val) {
+        if (!val && val !== 0) return '';
+        if (val >= 1_000) return '£' + (val / 1_000).toFixed(1) + 'K';
+        if (val >= 1) return '£' + val.toFixed(0);
+        if (val >= 0.01) return '£' + val.toFixed(2);
+        return '£' + val.toFixed(0);
+    }
+
+    function fmtVal(val) { return perCapita ? fmtPC(val) + '/cap' : fmtGBP(val); }
+
+    function countyPC(county, val) {
+        const pop = COUNTY_POPULATION[county];
+        return pop ? val / pop : 0;
+    }
+
+    function countryPC(country, val) {
+        const pop = COUNTRY_POPULATION[country];
+        return pop ? val / pop : 0;
     }
 
     function amendedStar(c) {
