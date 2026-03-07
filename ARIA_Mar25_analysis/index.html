@@ -127,9 +127,10 @@
         <div class="modal">
             <h3>Caveats</h3>
             <ul>
-                <li><strong>Contract awards only</strong> — does not include the 27 contract amendments (extensions, value increases) in the database</li>
+                <li><strong>Values include amendments</strong> — contract values shown are the current total after amendments (extensions, scope increases). Amended contracts are marked with <span style="color:var(--accent);font-weight:600">*</span> and hovering shows the original award value. Amendment-only records (no matching original) are labelled <span style="color:var(--text-secondary);font-size:0.85em">(amendment)</span></li>
+                <li><strong>Amendment matching is imperfect</strong> — 16 of 27 amendments could not be matched to their original contract due to name/context differences in the source data. These appear as separate amendment-only entries</li>
                 <li><strong>Registered address used</strong> — supplier locations are based on Companies House registered address, which may differ from where work is performed</li>
-                <li><strong>~£31M unlocated</strong> — some contracts have suppliers with truncated or unresolved names from PDF extraction and are excluded from regional totals</li>
+                <li><strong>Some contracts unlocated</strong> — some contracts have suppliers with truncated or unresolved names from PDF extraction and are excluded from regional totals</li>
                 <li><strong>Spend categories are estimated</strong> — the R&D / Activation / Operating split is inferred from contract context fields, not from ARIA's own classification</li>
                 <li><strong>Financial transactions not shown</strong> — the 910 payment transactions in the database are separate from contract awards and not included here</li>
             </ul>
@@ -320,7 +321,8 @@
         const intlCount = Object.values(DATA.international).reduce((s, c) => s + c.count, 0);
         document.getElementById('summaryBar').innerHTML = `
             <div class="stat"><span class="stat-value">${DATA.totals.count}</span><span class="stat-label">Total Contracts</span></div>
-            <div class="stat"><span class="stat-value">${fmtGBP(DATA.totals.value)}</span><span class="stat-label">Total Value</span></div>
+            <div class="stat"><span class="stat-value">${fmtGBP(DATA.totals.value)}</span><span class="stat-label">Current Value (inc. amendments)</span></div>
+            <div class="stat"><span class="stat-value">${DATA.totals.amended_count}</span><span class="stat-label">Amended</span></div>
             <div class="stat"><span class="stat-value">${ukCount}</span><span class="stat-label">UK Contracts</span></div>
             <div class="stat"><span class="stat-value">${Object.keys(DATA.uk_counties).length}</span><span class="stat-label">UK Counties</span></div>
             <div class="stat"><span class="stat-value">${intlCount}</span><span class="stat-label">International</span></div>
@@ -492,7 +494,7 @@
 
         let rawTotal = 0;
         for (const c of DATA.contracts) {
-            const val = c.value || 0;
+            const val = c.current_value || c.value || 0;
             const bucket = classifyContext(c.context);
             const ons = COUNTY_TO_ONS[c.county] || '';
             let region;
@@ -552,15 +554,15 @@
                     const cat = categories[catIdx];
                     const regionLabel = Array.isArray(labels[regionIdx]) ? labels[regionIdx].join(' ') : labels[regionIdx];
                     const contracts = regionContracts[regionKey][cat];
-                    const totalVal = contracts.reduce((s, c) => s + (c.value || 0), 0);
+                    const totalVal = contracts.reduce((s, c) => s + (c.current_value || c.value || 0), 0);
 
                     document.getElementById('drilldownTitle').textContent = regionLabel + ' — ' + cat;
                     document.getElementById('drilldownSubtitle').textContent = contracts.length + ' contracts · ' + fmtGBP(totalVal);
 
-                    let html = '<table class="drilldown-table"><thead><tr><th>Supplier</th><th>Context</th><th>Value</th><th>Date</th><th>County</th></tr></thead><tbody>';
-                    const sorted = [...contracts].sort((a, b) => (b.value || 0) - (a.value || 0));
+                    let html = '<table class="drilldown-table"><thead><tr><th>Supplier</th><th>Context</th><th>Current Value</th><th>Date</th><th>County</th></tr></thead><tbody>';
+                    const sorted = [...contracts].sort((a, b) => (b.current_value || b.value || 0) - (a.current_value || a.value || 0));
                     for (const c of sorted) {
-                        html += '<tr><td>' + (c.supplier||'') + '</td><td>' + (c.context||'') + '</td><td>' + fmtGBP(c.value||0) + '</td><td>' + (c.award_date||'') + '</td><td>' + (c.county || c.country || '') + '</td></tr>';
+                        html += '<tr><td>' + (c.supplier||'') + '</td><td>' + (c.context||'') + '</td><td>' + fmtGBP(c.current_value||c.value||0) + amendedStar(c) + '</td><td>' + (c.award_date||'') + '</td><td>' + (c.county || c.country || '') + '</td></tr>';
                     }
                     html += '</tbody></table>';
                     document.getElementById('drilldownBody').innerHTML = html;
@@ -698,7 +700,7 @@
     function renderAllTable() {
         const filtered = DATA.contracts.filter(c => {
             if (!allFilter) return true;
-            const hay = [c.supplier, c.service_description, c.context, c.city, c.country, c.county].join(' ').toLowerCase();
+            const hay = [c.supplier, c.service_description, c.context, c.city, c.country, c.county, c.amended ? 'amended' : ''].join(' ').toLowerCase();
             return allFilter.split(' ').every(term => hay.includes(term));
         });
         const sortFn = {
@@ -707,7 +709,7 @@
             context: (a, b) => (a.context || '').localeCompare(b.context || ''),
             date: (a, b) => (a.award_date || '').localeCompare(b.award_date || ''),
             duration: (a, b) => (parseInt(a.duration_months) || 0) - (parseInt(b.duration_months) || 0),
-            value: (a, b) => (a.value || 0) - (b.value || 0),
+            value: (a, b) => (a.current_value || a.value || 0) - (b.current_value || b.value || 0),
             location: (a, b) => (a.city || a.country || '').localeCompare(b.city || b.country || ''),
         };
         const sorted = [...filtered].sort((a, b) => {
@@ -715,16 +717,22 @@
             return allSortAsc ? result : -result;
         });
 
-        const totalVal = filtered.reduce((s, c) => s + (c.value || 0), 0);
-        document.getElementById('allStats').textContent = `${filtered.length} contracts · ${fmtGBP(totalVal)} total value` + (allFilter ? ' (filtered)' : '');
+        const totalVal = filtered.reduce((s, c) => s + (c.current_value || c.value || 0), 0);
+        const amendedCount = filtered.filter(c => c.amended).length;
+        const statsExtra = amendedCount ? ` · ${amendedCount} amended` : '';
+        document.getElementById('allStats').textContent = `${filtered.length} contracts · ${fmtGBP(totalVal)} current value${statsExtra}` + (allFilter ? ' (filtered)' : '');
 
         const arrow = col => allSortCol === col ? (allSortAsc ? ' ↑' : ' ↓') : '';
         const th = (col, label) => `<th style="cursor:pointer" onclick="sortAllBy('${col}')">${label}${arrow(col)}</th>`;
-        const rows = sorted.map(c => `<tr><td>${c.supplier}${c.is_sme === 'Yes' ? ' <span class="sme-badge">SME</span>' : ''}</td>
+        const rows = sorted.map(c => {
+            const cv = c.current_value || c.value || 0;
+            const aoMark = c.amendment_only ? ' <span style="color:var(--text-secondary);font-size:0.7rem">(amendment)</span>' : '';
+            return `<tr><td>${c.supplier}${c.is_sme === 'Yes' ? ' <span class="sme-badge">SME</span>' : ''}${aoMark}</td>
             <td>${c.service_description || ''}</td><td>${c.context || ''}</td>
             <td>${c.award_date || ''}</td><td>${c.duration_months || ''}</td>
-            <td class="val">${c.value_raw || ''}</td><td>${c.city || c.country || ''}</td></tr>`).join('');
-        document.getElementById('allTableWrap').innerHTML = `<table><thead><tr>${th('supplier','Supplier')}${th('service','Service')}${th('context','Context')}${th('date','Award Date')}${th('duration','Duration')}${th('value','Value')}${th('location','Location')}</tr></thead><tbody>${rows}</tbody></table>`;
+            <td class="val">${fmtGBP(cv)}${amendedStar(c)}</td><td>${c.city || c.country || ''}</td></tr>`;
+        }).join('');
+        document.getElementById('allTableWrap').innerHTML = `<table><thead><tr>${th('supplier','Supplier')}${th('service','Service')}${th('context','Context')}${th('date','Award Date')}${th('duration','Duration')}${th('value','Current Value')}${th('location','Location')}</tr></thead><tbody>${rows}</tbody></table>`;
     }
 
     window.sortAllBy = function(col) {
@@ -740,12 +748,15 @@
 
     // --- Shared ---
     function contractTable(contracts) {
-        const rows = contracts.sort((a, b) => (b.value || 0) - (a.value || 0))
-            .map(c => `<tr><td>${c.supplier}${c.is_sme === 'Yes' ? ' <span class="sme-badge">SME</span>' : ''}</td>
+        const rows = contracts.sort((a, b) => (b.current_value || b.value || 0) - (a.current_value || a.value || 0))
+            .map(c => {
+                const cv = c.current_value || c.value || 0;
+                return `<tr><td>${c.supplier}${c.is_sme === 'Yes' ? ' <span class="sme-badge">SME</span>' : ''}${c.amendment_only ? ' <span style="color:var(--text-secondary);font-size:0.7rem">(amendment)</span>' : ''}</td>
                 <td>${c.service_description || ''}</td><td>${c.context || ''}</td>
                 <td>${c.award_date || ''}</td><td>${c.duration_months || ''}</td>
-                <td class="val">${c.value_raw || ''}</td><td>${c.city || c.country || ''}</td></tr>`).join('');
-        return `<div style="overflow-x:auto"><table><thead><tr><th>Supplier</th><th>Service</th><th>Context</th><th>Award Date</th><th>Duration</th><th>Value</th><th>Location</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+                <td class="val">${fmtGBP(cv)}${amendedStar(c)}</td><td>${c.city || c.country || ''}</td></tr>`;
+            }).join('');
+        return `<div style="overflow-x:auto"><table><thead><tr><th>Supplier</th><th>Service</th><th>Context</th><th>Award Date</th><th>Duration</th><th>Current Value</th><th>Location</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
 
     function setupTabs() {
@@ -769,6 +780,33 @@
         if (val >= 1_000) return '£' + (val / 1_000).toFixed(0) + 'K';
         return '£' + val.toFixed(0);
     }
+
+    function amendedStar(c) {
+        if (!c.amended) return '';
+        const idx = DATA.contracts.indexOf(c);
+        return ` <span onclick="showAmendmentDetail(${idx})" style="color:var(--accent);font-weight:600;cursor:pointer" title="Click for amendment details">*</span>`;
+    }
+
+    window.showAmendmentDetail = function(idx) {
+        const c = DATA.contracts[idx];
+        if (!c || !c.amended) return;
+        const ov = c.value || 0;
+        const cv = c.current_value || 0;
+        document.getElementById('drilldownTitle').textContent = c.supplier + ' — Amendment History';
+        document.getElementById('drilldownSubtitle').textContent = (c.context || '') + (c.amendment_only ? ' (amendment-only record)' : '');
+
+        let html = '<table class="drilldown-table"><thead><tr><th>Stage</th><th>Date</th><th>Type</th><th>Value</th></tr></thead><tbody>';
+        if (!c.amendment_only) {
+            html += '<tr><td>Original award</td><td>' + (c.award_date || '') + '</td><td>Contract award</td><td>' + fmtGBP(ov) + '</td></tr>';
+        }
+        for (const a of c.amendments || []) {
+            html += '<tr><td>Amendment</td><td>' + (a.date || '') + '</td><td>' + (a.type || '') + '</td><td>' + fmtGBP(a.new_total) + '</td></tr>';
+        }
+        html += '<tr style="font-weight:600;border-top:2px solid var(--border)"><td>Current total</td><td></td><td></td><td>' + fmtGBP(cv) + '</td></tr>';
+        html += '</tbody></table>';
+        document.getElementById('drilldownBody').innerHTML = html;
+        document.getElementById('drilldownModal').classList.remove('hidden');
+    };
 
     init();
     </script>

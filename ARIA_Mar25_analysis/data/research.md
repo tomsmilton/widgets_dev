@@ -368,6 +368,64 @@ Counties are mapped to ONS regions as follows:
 For the overview chart, "London, South East & East of England" = London + South East + East of England.
 Everything else UK = "Rest of the UK".
 
+## Contract Amendments Analysis
+
+27 contract amendments in the database, representing modifications to existing contracts. Key findings:
+
+### Supplier name inconsistencies
+The amendments table has significant name variation for the same suppliers:
+
+| Amendments name | Contracts table name | Same entity? |
+|---|---|---|
+| Be-good / Be-good limited / Be-good Limited / Be Good Limited | Be-good events | Yes — 4 variants across 4 amendments |
+| Milltown Partners / Milltown Partners GBR Ltd | Milltown Partners GBR Ltd | Yes — 2 variants across 4 amendments |
+| Talentful Ltd / Talentful Ltdl | Talentful Ltd | Yes — typo "Ltdl" in one record |
+| Radley-Yeldar / Radley Yeldar Limited / Radley-Ye ldar | Radley-Yeldar | Yes — space in "Ye ldar" is a PDF extraction artefact |
+| PACE-XL Ltd | PACE XL Ltd | Yes — hyphen vs space |
+| Climate Connections Ltd | Climate Connection Ltd | Likely — plural vs singular |
+
+### Suppliers only in amendments (not in contracts table)
+These 4 suppliers appear in amendments but have no matching original contract record:
+
+| Supplier | Value | Context | Notes |
+|---|---|---|---|
+| Natural Environment Research Council | £1,415,329 | Contract | Original value was £0 — entirely new SoW. NERC is a UK public body (Swindon) |
+| Formagrid Inc | £211,000 | IT | Airtable's parent company (US). Original value £77k |
+| monday.com Ltd | £100,188 | Functional System | SaaS license renewal (Israel/international) |
+| Yorkshire Agricultural Society | £30,716 | Workshop Venue | Great Yorkshire Events Centre. Harrogate, North Yorkshire |
+
+### Amendment types breakdown
+- **Existing option to extend** (8): exercising pre-agreed extension clauses
+- **New related scope and contract value** (8): adding work and money
+- **New scope + timeline extension** (3): scope, money and time
+- **Other** (8): license renewals, SoW additions, market assessments, etc.
+
+### Value analysis
+- The `new_total_value_numeric` field is **cumulative** (original + amendment), not the amendment increment
+- Some suppliers have amendment chains (Milltown Partners: 3 amendments, Talentful: 2, Be-good: 4)
+- For chained amendments, the final `new_total_value_numeric` is the current total contract value
+- Total across all amendment records: £21.3M (but this double-counts chains)
+
+### Integration into the site
+Amendments are now incorporated into the map site data. The build script (`build_map_data.py`):
+1. Normalises amendment supplier names using `AMENDMENT_SUPPLIER_NORMALISE` mapping
+2. Groups amendments by (supplier, context) with case-insensitive context matching
+3. Matches amendment groups to original contracts where context matches
+4. For matched amendments, replaces `value` with `current_value` (highest amendment total)
+5. For unmatched amendments (16 of 27), creates "amendment-only" contract records
+
+**Matching results:**
+- 4 amendments successfully matched to original contracts (PACE XL, Talentful, Milltown Partners, Be-good events)
+- 16 amendments created as amendment-only records due to context mismatches (e.g. "Grant Agreement" vs specific programme names, "Website redesign" vs "Reporting design and brand refresh")
+- Original total: £466.8M → Current total (inc. amendments): £481.1M
+
+**On the site:**
+- All values default to current value (including amendments)
+- Amended contracts marked with * (hover shows original value)
+- Amendment-only records labelled "(amendment)"
+- Summary bar shows amendment count
+- Caveats updated to explain amendment handling
+
 ## Notable Findings
 - **Opto Biosystems Ltd** has been renamed to **Coherence Neuro Ltd**
 - **Plant Organelle Technologies Ltd** has been renamed to **Cytotrait Limited**
