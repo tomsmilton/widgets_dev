@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wired DMX Lighting — buyer's board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f5f8;            /* daylight-balanced paper */
+    --bg2:#eaeef3;
+    --surface:#ffffff;
+    --surface-hi:#ffffff;
+    --line:rgba(22,30,45,.10);
+    --line-hi:rgba(22,30,45,.18);
+    --ink:#161a21;          /* near-black, slightly cool */
+    --muted:#586473;
+    --muted-2:#8a94a3;
+    --tungsten:#c2701c;     /* 2700K accent, deep enough for white */
+    --daylight:#2b7fd6;     /* 6500K accent */
+    --tungsten-dim:rgba(194,112,28,.13);
+    --daylight-dim:rgba(43,127,214,.12);
+    --radius:14px;
+    --shadow:0 1px 2px rgba(22,30,45,.05),0 8px 22px rgba(22,30,45,.07);
+    --kelvin: linear-gradient(90deg,
+       #ff6a1f 0%, #ff7e2e 6%, #ff934a 14%, #ffac6f 24%,
+       #ffc795 36%, #ffe0bd 47%, #fff3e6 54%, #f0f5ff 60%,
+       #dceaff 70%, #c6dcff 82%, #b3d0ff 92%, #a6c8ff 100%);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.5;
+    background-image:radial-gradient(1100px 560px at 82% -12%, rgba(43,127,214,.08), transparent 60%),
+                     radial-gradient(900px 520px at -8% -4%, rgba(194,112,28,.07), transparent 55%);
+  }
+  .wrap{max-width:1240px;margin:0 auto;padding:0 22px}
+  .mono{font-family:"IBM Plex Mono",monospace}
+
+  /* ---------- hero ---------- */
+  header.hero{padding:54px 0 26px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--muted-2);margin:0 0 18px}
+  .eyebrow b{color:var(--tungsten);font-weight:600}
+  h1{font-family:"Saira Condensed",sans-serif;font-weight:700;letter-spacing:-.01em;
+    font-size:clamp(34px,6vw,68px);line-height:.98;margin:0 0 16px;max-width:16ch}
+  h1 .cool{color:var(--daylight)}
+  .lede{max-width:62ch;color:var(--muted);font-size:16px;margin:0 0 4px}
+  .lede a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-hi)}
+  .lede a:hover{border-color:var(--tungsten)}
+
+  /* kelvin scale legend */
+  .scale{margin:30px 0 8px}
+  .scale-bar{height:14px;border-radius:7px;background:var(--kelvin);
+    box-shadow:inset 0 0 0 1px rgba(22,30,45,.12)}
+  .scale-ticks{position:relative;height:30px;margin-top:6px}
+  .tick{position:absolute;transform:translateX(-50%);font-family:"IBM Plex Mono",monospace;
+    font-size:11px;color:var(--muted-2);white-space:nowrap}
+  .tick::before{content:"";position:absolute;top:-9px;left:50%;width:1px;height:6px;
+    background:var(--line-hi)}
+  .scale-cap{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted-2);
+    letter-spacing:.12em;text-transform:uppercase;display:flex;justify-content:space-between;margin-top:14px}
+
+  .stats{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:26px}
+  .stat{display:flex;align-items:baseline;gap:9px}
+  .stat .n{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:30px;line-height:1}
+  .stat .l{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted-2)}
+  .stat.warm .n{color:var(--tungsten)} .stat.cool .n{color:var(--daylight)}
+
+  /* ---------- controls ---------- */
+  .controls{position:sticky;top:0;z-index:30;background:rgba(243,245,248,.85);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 0}
+  .controls-grid{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field>label{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted-2)}
+  .search{flex:1 1 220px;min-width:180px}
+  .search input{width:100%;background:var(--surface);border:1px solid var(--line);
+    color:var(--ink);border-radius:10px;padding:10px 12px;font-family:"IBM Plex Mono",monospace;
+    font-size:13px;outline:none;box-shadow:var(--shadow)}
+  .search input::placeholder{color:var(--muted-2)}
+  .search input:focus{border-color:var(--tungsten);box-shadow:0 0 0 3px var(--tungsten-dim)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;
+    padding:7px 13px;cursor:pointer;transition:.14s;white-space:nowrap;user-select:none}
+  .chip:hover{border-color:var(--line-hi);color:var(--ink)}
+  .chip[aria-pressed="true"]{background:var(--ink);color:#f6f8fb;border-color:var(--ink);font-weight:600}
+  .chip:focus-visible{outline:2px solid var(--tungsten);outline-offset:2px}
+
+  select{background:var(--surface);border:1px solid var(--line);color:var(--ink);
+    border-radius:10px;padding:9px 12px;font-family:"IBM Plex Mono",monospace;font-size:12px;
+    cursor:pointer;outline:none;box-shadow:var(--shadow)}
+  select:focus{border-color:var(--tungsten);box-shadow:0 0 0 3px var(--tungsten-dim)}
+
+  .toggle{display:inline-flex;background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;padding:3px;gap:2px;box-shadow:var(--shadow)}
+  .toggle button{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);
+    background:transparent;border:none;border-radius:7px;padding:7px 12px;cursor:pointer}
+  .toggle button[aria-pressed="true"]{background:var(--daylight);color:#fff;font-weight:600}
+  .toggle button:focus-visible{outline:2px solid var(--daylight);outline-offset:2px}
+
+  .meta-row{display:flex;justify-content:space-between;align-items:center;gap:12px;
+    padding:18px 0 4px;flex-wrap:wrap}
+  .count{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--muted)}
+  .count b{color:var(--ink)}
+  .reset{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted-2);
+    background:none;border:none;cursor:pointer;text-decoration:underline;padding:4px}
+  .reset:hover{color:var(--tungsten)}
+
+  /* ---------- card grid ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+    gap:16px;padding:8px 0 60px}
+  .card{background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;
+    display:flex;flex-direction:column;gap:13px;position:relative;overflow:hidden;
+    box-shadow:var(--shadow);transition:box-shadow .18s,transform .18s}
+  .card:hover{box-shadow:0 2px 4px rgba(22,30,45,.06),0 14px 30px rgba(22,30,45,.10);transform:translateY(-2px)}
+  .card::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--dot,var(--muted-2))}
+  .card.enter{animation:rise .42s cubic-bezier(.2,.7,.25,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .brand{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted-2);display:flex;align-items:center;gap:8px}
+  .dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 0 1px rgba(22,30,45,.22)}
+  .dot.rgb{background:conic-gradient(from 200deg,#ff5a5a,#ffd25a,#5aff8c,#5ad9ff,#9b6bff,#ff5a5a)}
+  .dot.bi{background:linear-gradient(90deg,#ffae66 50%,#7db8ff 50%)}
+  .dot.day{background:#a9cbff}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);border:1px solid var(--line-hi);
+    border-radius:6px;padding:4px 8px;white-space:nowrap}
+
+  .model{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:27px;
+    line-height:1.02;letter-spacing:-.005em;margin:-3px 0 0}
+
+  .specs{display:flex;flex-wrap:wrap;gap:6px}
+  .spec{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);
+    background:rgba(22,30,45,.035);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+  .spec b{color:var(--ink);font-weight:600}
+
+  /* kelvin range bar inside card */
+  .kt{margin-top:1px}
+  .kt-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .kt-label{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink)}
+  .kt-tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted-2)}
+  .kt-track{position:relative;height:9px;border-radius:5px;
+    background:var(--kelvin);box-shadow:inset 0 0 0 1px rgba(22,30,45,.10)}
+  .kt-track::after{content:"";position:absolute;inset:0;border-radius:5px;
+    background:rgba(255,255,255,.5)}        /* wash the track on light */
+  .kt-seg{position:absolute;top:0;bottom:0;border-radius:5px;z-index:2;
+    box-shadow:0 1px 4px rgba(22,30,45,.25),inset 0 0 0 1px rgba(22,30,45,.10)}
+  .kt-axis{position:relative;height:13px;margin-top:3px}
+  .kt-axis span{position:absolute;font-family:"IBM Plex Mono",monospace;font-size:9.5px;
+    color:var(--muted-2);transform:translateX(-50%)}
+
+  .dmx{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+    padding-top:11px;border-top:1px solid var(--line)}
+  .dmx-badge{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;
+    text-transform:uppercase;padding:4px 8px;border-radius:6px;font-weight:600;white-space:nowrap}
+  .dmx-badge.native{background:var(--tungsten-dim);color:var(--tungsten);border:1px solid rgba(194,112,28,.38)}
+  .dmx-badge.adapter{background:rgba(22,30,45,.04);color:var(--muted);border:1px solid var(--line-hi)}
+  .dmx-text{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted)}
+
+  .note{font-size:12.5px;color:var(--muted-2);line-height:1.45}
+
+  .c-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;
+    margin-top:auto;padding-top:6px}
+  .price{display:flex;flex-direction:column;gap:1px}
+  .price .big{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:23px;color:var(--ink);
+    line-height:1}
+  .price .alt{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted-2)}
+  .price .approx{color:var(--tungsten)}
+  .buy{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink);text-decoration:none;
+    border:1px solid var(--line-hi);border-radius:9px;padding:9px 13px;transition:.14s;white-space:nowrap}
+  .buy:hover{border-color:var(--daylight);color:var(--daylight);background:var(--daylight-dim)}
+  .buy:focus-visible{outline:2px solid var(--daylight);outline-offset:2px}
+
+  .empty{grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--muted)}
+  .empty h3{font-family:"Saira Condensed",sans-serif;font-weight:600;font-size:26px;color:var(--ink);margin:0 0 8px}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line);padding:26px 0 60px;color:var(--muted-2);font-size:12.5px}
+  footer .legend{display:flex;flex-wrap:wrap;gap:18px 28px;margin-bottom:18px}
+  footer .lg{display:flex;align-items:center;gap:9px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted)}
+  footer p{max-width:78ch;line-height:1.55;margin:6px 0}
+  footer a{color:var(--muted);text-decoration:underline}
+
+  @media (max-width:560px){
+    h1{font-size:40px}
+    .grid{grid-template-columns:1fr}
+    .stat .n{font-size:24px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .card.enter{animation:none}
+    .card:hover{transform:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">DMX-controllable continuous lighting &middot; <b>panels &amp; point sources</b></p>
+    <h1>Lights that wire straight into a <span class="cool">DMX board</span></h1>
+    <p class="lede">Every fixture here accepts a wired DMX signal &mdash; the same control line behind the
+      <a href="#" id="ctx">Better Wakelight</a>. Sorted cheap to cinema-scale, from a £130-ish RGB panel to a
+      five-figure ARRI. Filter by type, colour, price, and &mdash; crucially for a build like the wakelight &mdash;
+      whether the DMX port is a real 5-pin XLR or needs a 3.5&nbsp;mm adapter.</p>
+
+    <div class="scale">
+      <div class="scale-bar" aria-hidden="true"></div>
+      <div class="scale-ticks" id="scaleTicks" aria-hidden="true"></div>
+      <div class="scale-cap"><span>Warm / tungsten</span><span>Colour temperature (K)</span><span>Cool / daylight</span></div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="wrap">
+    <div class="controls-grid">
+      <div class="field search">
+        <label for="q">Search</label>
+        <input id="q" type="text" placeholder="brand or model…" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <div class="chips" data-group="type" id="typeChips"></div>
+      </div>
+      <div class="field">
+        <label>Colour</label>
+        <div class="chips" data-group="color" id="colorChips"></div>
+      </div>
+      <div class="field">
+        <label>DMX connection</label>
+        <div class="chips" data-group="dmx" id="dmxChips"></div>
+      </div>
+      <div class="field">
+        <label for="price">Price</label>
+        <select id="price">
+          <option value="all">Any price</option>
+          <option value="0-500">Under $500</option>
+          <option value="500-1500">$500 – $1,500</option>
+          <option value="1500-3000">$1,500 – $3,000</option>
+          <option value="3000-10000">$3,000 – $10,000</option>
+          <option value="10000-999999">$10,000 +</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sort">Sort</label>
+        <select id="sort">
+          <option value="price-asc">Price ↑</option>
+          <option value="price-desc">Price ↓</option>
+          <option value="power-desc">Power ↓</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Region</label>
+        <div class="toggle" id="region" role="group" aria-label="Region and currency">
+          <button data-region="UK" aria-pressed="true">UK · £</button>
+          <button data-region="US" aria-pressed="false">US · $</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="meta-row">
+    <div class="count" id="count"></div>
+    <button class="reset" id="reset">Reset filters</button>
+  </div>
+  <main class="grid" id="grid" aria-live="polite"></main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="legend">
+      <span class="lg"><span class="dot rgb"></span>RGB / full colour</span>
+      <span class="lg"><span class="dot bi"></span>Bi-colour (warm↔cool)</span>
+      <span class="lg"><span class="dot day"></span>Daylight (fixed CCT)</span>
+      <span class="lg"><span class="dmx-badge native" style="font-size:9px">Native XLR</span>plugs straight into a DMX cable</span>
+      <span class="lg"><span class="dmx-badge adapter" style="font-size:9px">Adapter</span>needs a 3.5&nbsp;mm → XLR Y-cable</span>
+    </div>
+    <p><b style="color:var(--muted)">On prices &amp; currency.</b> Figures are approximate USD MSRP / typical street price, gathered mid-2026 and rounded.
+      The £ figures are a straight currency conversion (≈ £0.79 / $1) shown for scale only &mdash; <b style="color:var(--muted)">UK retail adds 20% VAT</b>, so real UK prices usually land higher.
+      "Buy" opens a B&amp;H search (US) or a web search (UK); confirm the live price and exact DMX spec with the retailer before ordering.</p>
+    <p><b style="color:var(--muted)">A note on what's <i>not</i> here.</b> Popular budget lights like the amaran 150c/300c and amaran COB&nbsp;S series are left out on purpose:
+      they have no native wired DMX and only reach DMX through Aputure's separate Sidus bridge. For a board that drives a 5-pin XLR directly, the
+      <b style="color:var(--muted)">"Native XLR"</b> rows are the ones that behave like the wakelight's Neewer panel.</p>
+    <p style="margin-top:14px;color:var(--muted-2)">Built as a CEO + Claude board, not a lighting-department spec sheet. Verify before you spend.</p>
+  </div>
+</footer>
+
+<script>
+/* ---------- data ---------- */
+const DATA = [
+  {brand:"Neewer", model:"PL60C", type:"Panel", color:"RGB", w:60, kMin:2500, kMax:10000, kLabel:"2500–10000K", cri:"95+", out:"23,000 lux @0.5m", dmxNative:true, dmx:"5-pin XLR", usd:170, note:"The exact panel from the Better Wakelight build — and the cheapest native-DMX panel on this board."},
+  {brand:"GVM", model:"YU150R", type:"Panel", color:"RGB", w:150, kMin:2700, kMax:7500, kLabel:"2700–7500K", cri:"97", out:"—", dmxNative:true, dmx:"DMX512 (3-pin)", usd:400, approx:true, note:"Budget RGB panel; also app + Bluetooth mesh. Price swings a lot by retailer — treat as a ballpark."},
+  {brand:"Aputure", model:"Nova P300c", type:"Panel", color:"RGB", w:300, kMin:2000, kMax:10000, kLabel:"2000–10000K", cri:"95", out:"≈8,300 lux @1m", dmxNative:true, dmx:"5-pin XLR", usd:1699, note:"Control box on a 5-pin XLR tail, clean DMX profiles. Kit with rolling case is ~$1,899."},
+  {brand:"Aputure", model:"Nova P600c", type:"Panel", color:"RGB", w:600, kMin:2000, kMax:10000, kLabel:"2000–10000K", cri:"95", out:"17,520 lux @1m", dmxNative:true, dmx:"5-pin XLR + CRMX", usd:2899, note:"Double the P300c, with built-in wireless CRMX too. Now succeeded by the Nova II 2×1."},
+  {brand:"Godox", model:"KNOWLED P600R", type:"Panel", color:"RGB", w:600, kMin:1800, kMax:10000, kLabel:"1800–10000K", cri:"96", out:"—", dmxNative:true, dmx:"5-pin XLR + RDM/Art-Net/CRMX", usd:3280, note:"Big 22×30\" RGB panel with full pro networking and an unusually wide 1800–10000K range."},
+  {brand:"Litepanels", model:"Gemini 2×1", type:"Panel", color:"RGB", w:325, kMin:2700, kMax:10000, kLabel:"2700–10000K", cri:"95+", out:"—", dmxNative:true, dmx:"5-pin XLR + RDM/Art-Net", usd:3795, note:"Hollywood-standard 2×1 RGBWW soft panel. Heavy, beautifully even, fully networkable."},
+  {brand:"ARRI", model:"SkyPanel S60 Pro", type:"Panel", color:"RGBW", w:500, kMin:2800, kMax:10000, kLabel:"2800–10000K", cri:"95", out:"—", dmxNative:true, dmx:"5-pin XLR + RDM/EtherCon/Art-Net", usd:4060, note:"The set-lighting benchmark. The Pro adds sACN / Art-Net over the classic S60-C."},
+  {brand:"ARRI", model:"SkyPanel S360-C", type:"Panel", color:"RGBW", w:1500, kMin:2800, kMax:10000, kLabel:"2800–10000K", cri:"95", out:"—", dmxNative:true, dmx:"5-pin XLR + Art-Net/CRMX", usd:19240, note:"The big one — roughly 4×6 ft of aperture, ~1500W. Price is the bare fixture. Truly cinema-scale."},
+
+  {brand:"Nanlite", model:"PavoTube II 15X", type:"Tube", color:"RGB", w:8, kMin:2700, kMax:12000, kLabel:"2700–12,000K", cri:"95+", out:"—", dmxNative:false, dmx:"3.5mm → XLR adapter", usd:185, note:"2-ft pixel tube. DMX comes via Nanlite's 3.5mm Y-cable, not a built-in XLR."},
+  {brand:"Godox", model:"TL60", type:"Tube", color:"RGB", w:18, kMin:2700, kMax:6500, kLabel:"2700–6500K", cri:"96", out:"—", dmxNative:false, dmx:"DMX via adapter", usd:239, note:"2-ft RGB tube, app + DMX. This is the single-light kit price; multi-packs cost less per tube."},
+  {brand:"Nanlite", model:"Forza 150", type:"Point", color:"Daylight", w:170, kMin:5600, kMax:5600, kLabel:"5600K", cri:"96", out:"—", dmxNative:false, dmx:"3.5mm DMX in (adapter)", usd:499, note:"Bright daylight COB. Single 3.5mm DMX input (in only). Bowens adapter included; V-mount via optional grip."},
+  {brand:"Aputure", model:"LS 300d II", type:"Point", color:"Daylight", w:350, kMin:5600, kMax:5600, kLabel:"5600K", cri:"96", out:"—", dmxNative:true, dmx:"5-pin XLR", usd:1090, note:"Workhorse daylight COB with native 5-pin DMX. Price is the complete light incl. control box."},
+  {brand:"Aputure", model:"LS 300x", type:"Point", color:"Bi-color", w:350, kMin:2700, kMax:6500, kLabel:"2700–6500K", cri:"96", out:"—", dmxNative:true, dmx:"5-pin XLR", usd:1090, note:"The bi-colour sibling of the 300d II — same body, same native DMX, tunable white."},
+  {brand:"Godox", model:"KNOWLED M600Bi", type:"Point", color:"Bi-color", w:600, kMin:2800, kMax:6500, kLabel:"2800–6500K", cri:"96", out:"—", dmxNative:true, dmx:"5-pin XLR + CRMX/Art-Net", usd:1599, note:"Strong-value 600W bi-colour COB with the full Godox pro-control stack."},
+  {brand:"Aputure", model:"LS 600d", type:"Point", color:"Daylight", w:600, kMin:5600, kMax:5600, kLabel:"5600K", cri:"96", out:"98,500 lux @1m", dmxNative:true, dmx:"5-pin XLR in/out", usd:1790, note:"One of the brightest single-source daylight LEDs going. DMX in AND out to daisy-chain fixtures."},
+  {brand:"Aputure", model:"LS 600d Pro", type:"Point", color:"Daylight", w:600, kMin:5600, kMax:5600, kLabel:"5600K", cri:"96", out:"98,500 lux @1m", dmxNative:true, dmx:"5-pin XLR + Art-Net/CRMX", usd:2290, note:"Pro control box: the first Aputure with Art-Net + wireless DMX. Weather-resistant build."},
+  {brand:"Aputure", model:"LS 600c Pro II", type:"Point", color:"RGB", w:600, kMin:2000, kMax:10000, kLabel:"2000–10000K", cri:"95", out:"—", dmxNative:true, dmx:"5-pin XLR + CRMX", usd:2490, note:"Full-colour 600W point source with native DMX + CRMX. Pricing varies — confirm the current figure."},
+  {brand:"Godox", model:"KNOWLED MG1200Bi", type:"Point", color:"Bi-color", w:1300, kMin:2800, kMax:6500, kLabel:"2800–6500K", cri:"96", out:"78,800 lux @3m", dmxNative:true, dmx:"5-pin XLR + CRMX/Art-Net", usd:2799, note:"HMI-class 1200W bi-colour with an ARRI-style smart accessory mount and IP54 weatherproofing."},
+  {brand:"Aputure", model:"LS 1200d Pro", type:"Point", color:"Daylight", w:1200, kMin:5600, kMax:5600, kLabel:"5600K", cri:"96", out:"83,100 lux @3m", dmxNative:true, dmx:"5-pin XLR in/out + etherCON", usd:4490, note:"Flagship daylight point source; competes head-on with HMIs. DMX in/out plus etherCON networking."},
+  {brand:"ARRI", model:"Orbiter", type:"Point", color:"RGB", w:500, kMin:2000, kMax:20000, kLabel:"2000–20,000K", cri:"98", out:"varies by optic", dmxNative:true, dmx:"5-pin XLR + Art-Net/CRMX", usd:8500, note:"Six-colour engine, swappable optics, the widest CCT range here. Body only — lenses cost extra."}
+];
+
+/* ---------- kelvin helpers ---------- */
+const DMIN=1800, DMAX=11000;
+function kelvinToRgb(k){
+  k=Math.max(1000,Math.min(40000,k))/100;let r,g,b;
+  r = k<=66 ? 255 : 329.698727446*Math.pow(k-60,-0.1332047592);
+  g = k<=66 ? 99.4708025861*Math.log(k)-161.1195681661 : 288.1221695283*Math.pow(k-60,-0.0755148492);
+  b = k>=66 ? 255 : (k<=19 ? 0 : 138.5177312231*Math.log(k-10)-305.0447927307);
+  const c=x=>Math.max(0,Math.min(255,Math.round(x)));
+  return `rgb(${c(r)},${c(g)},${c(b)})`;
+}
+const pos = k => Math.max(0,Math.min(100,((Math.min(k,DMAX)-DMIN)/(DMAX-DMIN))*100));
+
+/* ---------- state ---------- */
+const state = {q:"", type:"All", color:"All", dmx:"All", price:"all", sort:"price-asc", region:"UK"};
+const RATE = 0.79;
+
+/* ---------- build chip groups ---------- */
+function chipGroup(el, values){
+  el.innerHTML = values.map((v,i)=>
+    `<button class="chip" role="button" data-val="${v}" aria-pressed="${i===0?'true':'false'}">${v}</button>`).join("");
+  el.addEventListener("click",e=>{
+    const b=e.target.closest(".chip"); if(!b) return;
+    [...el.children].forEach(c=>c.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    state[el.dataset.group]=b.dataset.val;
+    render();
+  });
+}
+chipGroup(typeChips,["All","Panel","Point","Tube"]);
+chipGroup(colorChips,["All","RGB","Bi-color","Daylight"]);
+chipGroup(dmxChips,["All","Native XLR","Adapter"]);
+
+/* scale ticks */
+[2000,3000,4000,5600,6500,8000,10000].forEach(k=>{
+  const s=document.createElement("span");s.className="tick";s.style.left=pos(k)+"%";
+  s.textContent=(k>=1000?(k/1000).toFixed(k%1000?1:0):k)+"K";scaleTicks.appendChild(s);
+});
+
+/* money */
+function money(usd, approx){
+  const sym = state.region==="UK" ? "£" : "$";
+  const val = state.region==="UK" ? Math.round(usd*RATE) : usd;
+  const alt = state.region==="UK" ? "$"+usd.toLocaleString() : "£"+Math.round(usd*RATE).toLocaleString();
+  return {main:(approx?"~":"")+sym+val.toLocaleString(), alt:(approx?"~":"")+alt+(approx?" · varies":""), approx};
+}
+
+/* ---------- filter + render ---------- */
+function matches(d){
+  if(state.type!=="All" && d.type!==state.type) return false;
+  if(state.color!=="All" && d.color!==state.color) return false;
+  if(state.dmx==="Native XLR" && !d.dmxNative) return false;
+  if(state.dmx==="Adapter" && d.dmxNative) return false;
+  if(state.price!=="all"){const[a,b]=state.price.split("-").map(Number); if(d.usd<a||d.usd>b) return false;}
+  if(state.q){const s=(d.brand+" "+d.model+" "+d.color+" "+d.type).toLowerCase(); if(!s.includes(state.q.toLowerCase())) return false;}
+  return true;
+}
+function sortFn(a,b){
+  switch(state.sort){
+    case"price-desc":return b.usd-a.usd;
+    case"power-desc":return b.w-a.w;
+    case"name":return (a.brand+a.model).localeCompare(b.brand+b.model);
+    default:return a.usd-b.usd;
+  }
+}
+function buyURL(d){
+  const q=encodeURIComponent(d.brand+" "+d.model);
+  return state.region==="US"
+    ? "https://www.bhphotovideo.com/c/search?q="+q
+    : "https://www.google.com/search?q="+encodeURIComponent(d.brand+" "+d.model+" DMX UK");
+}
+
+function card(d){
+  const dc = d.color==="RGB"?"rgb":(d.color==="Bi-color"?"bi":"day");
+  const rail = dc==='rgb' ? '#7c5cff' : (dc==='bi' ? '#d9791b' : '#2b7fd6');
+  const left=pos(d.kMin), right=pos(d.kMax), width=Math.max(right-left,0);
+  const single = d.kMax<=d.kMin;
+  const segStyle = single
+    ? `left:calc(${left}% - 5px);width:10px;background:${kelvinToRgb(d.kMin)};`
+    : `left:${left}%;width:${width}%;background:linear-gradient(90deg,${kelvinToRgb(d.kMin)},${kelvinToRgb(d.kMax)});`;
+  const axis = single
+    ? `<span style="left:${left}%">${d.kMin>=1000?d.kMin/1000+'k':d.kMin}</span>`
+    : `<span style="left:${left}%">${d.kMin>=1000?(d.kMin/1000)+'k':d.kMin}</span>
+       <span style="left:${Math.min(right,98)}%">${d.kMax>=1000?(d.kMax/1000)+'k':d.kMax}</span>`;
+  const m=money(d.usd,d.approx);
+  const specs=[`<span class="spec"><b>${d.w}</b> W</span>`,`<span class="spec">CRI <b>${d.cri}</b></span>`];
+  if(d.out&&d.out!=="—") specs.push(`<span class="spec">${d.out}</span>`);
+  return `<article class="card enter" style="--dot:${rail}">
+    <div class="c-top">
+      <span class="brand"><span class="dot ${dc}"></span>${d.brand}</span>
+      <span class="tag">${d.type==="Point"?"Point source":d.type}</span>
+    </div>
+    <h2 class="model">${d.model}</h2>
+    <div class="specs">${specs.join("")}</div>
+    <div class="kt">
+      <div class="kt-head"><span class="kt-label">${d.kLabel}</span><span class="kt-tag">${d.color}</span></div>
+      <div class="kt-track"><div class="kt-seg" style="${segStyle}"></div></div>
+      <div class="kt-axis">${axis}</div>
+    </div>
+    <div class="dmx">
+      <span class="dmx-badge ${d.dmxNative?'native':'adapter'}">${d.dmxNative?'Native XLR':'Adapter'}</span>
+      <span class="dmx-text">${d.dmx}</span>
+    </div>
+    <p class="note">${d.note}</p>
+    <div class="c-bottom">
+      <div class="price">
+        <span class="big ${d.approx?'approx':''}">${m.main}</span>
+        <span class="alt">${m.alt}</span>
+      </div>
+      <a class="buy" href="${buyURL(d)}" target="_blank" rel="noopener">Find${state.region==="US"?" · B&H":""} ↗</a>
+    </div>
+  </article>`;
+}
+
+function render(){
+  const list=DATA.filter(matches).sort(sortFn);
+  grid.innerHTML = list.length
+    ? list.map(card).join("")
+    : `<div class="empty"><h3>No fixtures match</h3><p>Loosen a filter — try "Any price" or switch DMX connection back to "All".</p></div>`;
+  count.innerHTML = `<b>${list.length}</b> of ${DATA.length} fixtures`;
+}
+
+/* stats */
+(function(){
+  const prices=DATA.map(d=>d.usd);
+  const native=DATA.filter(d=>d.dmxNative).length;
+  function refreshStats(){
+    const lo2=money(Math.min(...prices)).main, hi2=money(Math.max(...prices)).main;
+    stats.innerHTML=`
+      <div class="stat"><span class="n">${DATA.length}</span><span class="l">fixtures</span></div>
+      <div class="stat warm"><span class="n">${lo2}</span><span class="l">entry price</span></div>
+      <div class="stat cool"><span class="n">${hi2}</span><span class="l">top price</span></div>
+      <div class="stat"><span class="n">${native}</span><span class="l">native 5-pin XLR</span></div>`;
+  }
+  refreshStats();
+  window.__refreshStats=refreshStats;
+})();
+
+/* events */
+q.addEventListener("input",e=>{state.q=e.target.value;render();});
+price.addEventListener("change",e=>{state.price=e.target.value;render();});
+sort.addEventListener("change",e=>{state.sort=e.target.value;render();});
+region.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  [...region.children].forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true");
+  state.region=b.dataset.region; window.__refreshStats(); render();
+});
+reset.addEventListener("click",()=>{
+  state.q="";state.type="All";state.color="All";state.dmx="All";state.price="all";state.sort="price-asc";
+  q.value="";price.value="all";sort.value="price-asc";
+  [["type",typeChips],["color",colorChips],["dmx",dmxChips]].forEach(([g,el])=>{
+    [...el.children].forEach((c,i)=>c.setAttribute("aria-pressed",i===0?"true":"false"));
+  });
+  render();
+});
+document.getElementById("ctx").addEventListener("click",e=>{e.preventDefault();
+  alert("These are the wired-DMX lamps that work with a build like the Better Wakelight — an ESP32 + RS-485 driving a DMX panel. The Neewer PL60C row is the panel from that project.");
+});
+
+render();
+</script>
+</body>
+</html>
