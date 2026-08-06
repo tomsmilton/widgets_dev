@@ -1,32 +1,26 @@
 {
-  "last_updated": "2025-05-26T01:09:28.788122",
+  "last_updated": "2026-08-06T21:45:56.606249",
   "collections": [
     {
       "bin_color": "Black Bin",
       "next_collections": [
-        "2 Jun 2025",
-        "16 Jun 2025",
-        "30 Jun 2025"
+        "10 Aug 2026"
       ],
-      "bin_type": ""
+      "bin_type": "Non-recyclable waste"
     },
     {
       "bin_color": "Brown Bin",
       "next_collections": [
-        "26 May 2025",
-        "23 Jun 2025",
-        "21 Jul 2025"
+        "17 Aug 2026"
       ],
-      "bin_type": ""
+      "bin_type": "Glass bottles, jars, tins, cans, foil, plastic and cartons. Click here"
     },
     {
       "bin_color": "Blue Bin",
       "next_collections": [
-        "9 Jun 2025",
-        "7 Jul 2025",
-        "4 Aug 2025"
+        "31 Aug 2026"
       ],
-      "bin_type": ""
+      "bin_type": "Paper and card. Click here for more information about Sheffield's larger blue bin rollout"
     }
   ],
   "next_color": "#0a0a0a"
