@@ -328,7 +328,13 @@
                         }
                     });
                 });
-                
+
+                if (!nextDate) {
+                    showError('No upcoming collections found — data last updated '
+                        + lastUpdated.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }));
+                    return;
+                }
+
                 const bgColor = colorMap[nextBin] || '#555555';
                 document.body.style.backgroundColor = bgColor;
                 document.body.style.color = getLighterShade(bgColor);

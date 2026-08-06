@@ -5,8 +5,11 @@ from datetime import datetime
 import os
 
 def get_bin_days(property_id):
-    url = f"https://wasteservices.sheffield.gov.uk/property/{property_id}"
-    
+    # Sheffield's waste site (rebuilt mid-2025) exposes a JSON API; the old
+    # /property/<id> HTML pages no longer exist. The property id is the
+    # "pointId" used by the new site's property-search flow.
+    url = "https://wasteservices.sheffield.gov.uk/api/getCollectionDays"
+
     # Color configurations matching the HTML
     color_map = {
         'Black Bin': '#0a0a0a',
@@ -14,78 +17,73 @@ def get_bin_days(property_id):
         'Brown Bin': '#6b3c31'
     }
 
-    # Headers to mimic a browser request
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Content-Type": "application/json",
+        # The site sends this literal value when reCAPTCHA is not enabled
+        "x-recaptcha-token": "BYPASS"
     }
-    
+
+    payload = {
+        "pointId": str(property_id),
+        "pointType": "PointAddress",
+        "councilId": "1"
+    }
+
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
         response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Find the table containing bin information
+        body = response.json()
+
+        services = body.get('activeServices') or []
+        if not services:
+            print(f"API response had no activeServices: {json.dumps(body)[:500]}")
+            raise Exception("No active services returned for this property")
+
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         collection_dates = []
-        services_table = soup.find('table', {'class': 'table'})
-        
-        if not services_table:
-            print("HTML Structure:")
-            print(soup.prettify()[:1000])  # Print first 1000 chars of HTML for debugging
-            raise Exception("Could not find services table on the page")
-            
-        # Find all service rows (excluding detail message rows)
-        service_rows = services_table.find_all('tr', class_=lambda x: x and 'service-id-' in x)
-        
-        if not service_rows:
-            print("Found table but no service rows. Table contents:")
-            print(services_table.prettify())
-            raise Exception("No service rows found in the table")
-        
-        for row in service_rows:
-            try:
-                # Get bin color from the h4 tag
-                bin_header = row.find('h4')
-                if not bin_header:
-                    print(f"Row without h4 tag: {row.prettify()}")
-                    continue
-                    
-                bin_text = bin_header.get_text().strip()
-                if not any(color in bin_text for color in ['Black', 'Blue', 'Brown']):
-                    print(f"Row with unrecognized bin color: {bin_text}")
-                    continue
-                
-                # Get next collections from the next-service cell
-                next_service_cell = row.find('td', {'class': 'next-service'})
-                if not next_service_cell:
-                    print(f"Row without next-service cell: {row.prettify()}")
-                    continue
-                    
-                dates_text = next_service_cell.get_text().strip()
-                # Remove the "Next Collections" label and split by comma
-                dates = [date.strip() for date in dates_text.replace('Next Collections', '').split(',') if date.strip()]
-                
-                if not dates:
-                    print(f"Row with no dates found: {dates_text}")
-                    continue
-                
-                # Get bin type/description from the acceptable-waste cell
-                waste_type_cell = row.find_next_sibling('tr').find('td', {'class': 'acceptable-waste'})
-                waste_type = waste_type_cell.get_text().strip().replace('What goes in my bin?', '').strip() if waste_type_cell else ''
-                
-                collection_dates.append({
-                    "bin_color": bin_text,
-                    "next_collections": dates,
-                    "bin_type": waste_type
-                })
-                
-            except Exception as e:
-                print(f"Error processing row: {str(e)}")
-                print(f"Problematic row HTML: {row.prettify()}")
+
+        for service in services:
+            bin_text = (service.get('serviceName') or '').strip()
+            if not any(color in bin_text for color in ['Black', 'Blue', 'Brown']):
+                print(f"Skipping unrecognized service: {bin_text}")
                 continue
-        
+
+            dates = []
+            for schedule in service.get('serviceSchedules') or []:
+                date_str = schedule.get('currentScheduledDate') or schedule.get('originalScheduledDate')
+                if not date_str:
+                    continue
+                try:
+                    # e.g. "2026-08-17T00:00:00+01:00" - only the date part matters
+                    collection_date = datetime.strptime(date_str[:10], '%Y-%m-%d')
+                except ValueError:
+                    print(f"Could not parse date: {date_str}")
+                    continue
+                # The API includes the previous (completed) collection too
+                if collection_date < today:
+                    continue
+                dates.append(collection_date)
+
+            if not dates:
+                print(f"No upcoming dates for {bin_text}")
+                continue
+
+            # Same "2 Jun 2025" format the HTML pages have always parsed
+            formatted = [d.strftime('%d %b %Y').lstrip('0') for d in sorted(dates)]
+
+            # Strip any HTML tags from the description
+            description = BeautifulSoup(service.get('serviceDescription') or '', 'html.parser').get_text().strip()
+
+            collection_dates.append({
+                "bin_color": bin_text,
+                "next_collections": formatted,
+                "bin_type": description
+            })
+
         if not collection_dates:
             raise Exception("No collection dates found")
-            
+
         # Find the next collection date and corresponding bin color
         today = datetime.now()
         next_bin = None
@@ -243,6 +241,8 @@ def main():
         print("Error: At least one property ID environment variable is required")
         exit(1)
 
+    failures = []
+
     # Process Sheffield properties (Flora and Alex)
     for name, property_id in property_ids.items():
         if not property_id:
@@ -256,6 +256,7 @@ def main():
             save_to_file(data, f"{name}_bin_days.json")
         else:
             print(f"Failed to get bin collection data for {name}")
+            failures.append(name)
 
     # Process Richmond property
     if richmond_property_id:
@@ -266,6 +267,14 @@ def main():
             save_to_file(data, "richmond_bin_days.json")
         else:
             print(f"Failed to get bin collection data for Richmond")
+            failures.append("richmond")
+
+    if failures:
+        # Non-zero exit so the GitHub Action goes red instead of silently
+        # succeeding while the published JSON goes stale (this is what
+        # happened for over a year after Sheffield rebuilt their site).
+        print(f"ERROR: failed to update: {', '.join(failures)}")
+        exit(1)
 
 if __name__ == "__main__":
     main() 
