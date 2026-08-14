@@ -1,27 +1,27 @@
 {
-  "last_updated": "2026-08-13T01:20:31.519455",
+  "last_updated": "2026-08-14T01:19:55.673427",
   "collections": [
     {
       "bin_color": "Glass, can, plastic and carton recycling",
       "next_collections": [
-        "2026-08-13"
+        "2026-08-20"
       ],
       "bin_type": ""
     },
     {
       "bin_color": "Paper and card recycling",
       "next_collections": [
-        "2026-08-13"
+        "2026-08-20"
       ],
       "bin_type": ""
     },
     {
       "bin_color": "Rubbish and food",
       "next_collections": [
-        "2026-08-13"
+        "2026-08-20"
       ],
       "bin_type": ""
     }
   ],
-  "next_color": "#555555"
+  "next_color": "#2d2d2d"
 }
