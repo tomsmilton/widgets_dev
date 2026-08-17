@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-08-16T00:54:10.527151",
+  "last_updated": "2026-08-17T00:52:20.683153",
   "collections": [
     {
       "bin_color": "Black Bin",
@@ -11,7 +11,8 @@
     {
       "bin_color": "Brown Bin",
       "next_collections": [
-        "17 Aug 2026"
+        "17 Aug 2026",
+        "14 Sep 2026"
       ],
       "bin_type": "Glass bottles, jars, tins, cans, foil, plastic and cartons. Click here"
     },
@@ -23,5 +24,5 @@
       "bin_type": "Paper and card. Click here for more information about Sheffield's larger blue bin rollout"
     }
   ],
-  "next_color": "#6b3c31"
+  "next_color": "#0a0a0a"
 }
