@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-09T02:32:16.615619",
+  "last_updated": "2026-09-10T02:33:22.245485",
   "collections": [
     {
       "bin_color": "Glass, can, plastic and carton recycling",
@@ -23,5 +23,5 @@
       "bin_type": ""
     }
   ],
-  "next_color": "#2d2d2d"
+  "next_color": "#555555"
 }
