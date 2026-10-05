@@ -1,10 +1,11 @@
 {
-  "last_updated": "2026-10-04T03:45:31.436515",
+  "last_updated": "2026-10-05T03:29:24.044321",
   "collections": [
     {
       "bin_color": "Black Bin",
       "next_collections": [
-        "5 Oct 2026"
+        "5 Oct 2026",
+        "19 Oct 2026"
       ],
       "bin_type": "Non-recyclable waste"
     },
@@ -23,5 +24,5 @@
       "bin_type": "Paper and card. Click here for more information about Sheffield's larger blue bin rollout"
     }
   ],
-  "next_color": "#0a0a0a"
+  "next_color": "#6b3c31"
 }
