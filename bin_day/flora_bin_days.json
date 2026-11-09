@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-11-08T03:49:03.755627",
+  "last_updated": "2026-11-09T04:00:51.435690",
   "collections": [
     {
       "bin_color": "Black Bin",
@@ -18,10 +18,11 @@
     {
       "bin_color": "Blue Bin",
       "next_collections": [
-        "9 Nov 2026"
+        "9 Nov 2026",
+        "7 Dec 2026"
       ],
       "bin_type": "Paper and card. Click here for more information about Sheffield's larger blue bin rollout"
     }
   ],
-  "next_color": "#125fc7"
+  "next_color": "#0a0a0a"
 }
